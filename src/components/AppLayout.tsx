@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   LogOut,
   Shield,
+  MapPin,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -18,6 +19,7 @@ const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Přehled" },
   { to: "/clients", icon: Users, label: "Klienti" },
   { to: "/training", icon: Dumbbell, label: "Trénink" },
+  { to: "/gyms", icon: MapPin, label: "Posilovny" },
   { to: "/calendar", icon: Calendar, label: "Kalendář" },
   { to: "/messages", icon: MessageSquare, label: "Zprávy" },
   { to: "/payments", icon: CreditCard, label: "Platby" },

@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   LogOut,
   Bell,
+  MapPin,
 } from "lucide-react";
 import { useState } from "react";
 import WorkoutSessionPrompt from "./WorkoutSessionPrompt";
@@ -19,6 +20,7 @@ const navItems = [
   { to: "/klient", icon: LayoutDashboard, label: "Přehled" },
   { to: "/klient/treninky", icon: Dumbbell, label: "Trénink" },
   { to: "/klient/kalendar", icon: Calendar, label: "Kalendář" },
+  { to: "/klient/posilovny", icon: MapPin, label: "Posilovny" },
   { to: "/klient/pokrok", icon: TrendingUp, label: "Pokrok" },
   { to: "/klient/zpravy", icon: MessageSquare, label: "Zprávy" },
   { to: "/klient/platby", icon: CreditCard, label: "Balíčky" },

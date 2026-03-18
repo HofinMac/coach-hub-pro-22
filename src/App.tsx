@@ -18,6 +18,7 @@ import CalendarPage from "@/pages/CalendarPage";
 import MessagesPage from "@/pages/MessagesPage";
 import PaymentsPage from "@/pages/PaymentsPage";
 import AdminPage from "@/pages/AdminPage";
+import GymsPage from "@/pages/GymsPage";
 import NotFound from "@/pages/NotFound";
 import ClientDashboard from "@/pages/client/ClientDashboard";
 import ClientTrainingPage from "@/pages/client/ClientTrainingPage";
@@ -27,6 +28,7 @@ import ClientMessagesPage from "@/pages/client/ClientMessagesPage";
 import ClientPaymentsPage from "@/pages/client/ClientPaymentsPage";
 import CoachOnboarding from "@/pages/onboarding/CoachOnboarding";
 import ClientOnboarding from "@/pages/onboarding/ClientOnboarding";
+import ClientGymsPage from "@/pages/client/ClientGymsPage";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +72,7 @@ const App = () => (
           <Route path="/clients" element={<CoachShell><ClientsPage /></CoachShell>} />
           <Route path="/clients/:id" element={<CoachShell><ClientDetailPage /></CoachShell>} />
           <Route path="/training" element={<CoachShell><TrainingPage /></CoachShell>} />
+          <Route path="/gyms" element={<CoachShell><GymsPage /></CoachShell>} />
           <Route path="/calendar" element={<CoachShell><CalendarPage /></CoachShell>} />
           <Route path="/messages" element={<CoachShell><MessagesPage /></CoachShell>} />
           <Route path="/payments" element={<CoachShell><PaymentsPage /></CoachShell>} />
@@ -80,6 +83,7 @@ const App = () => (
           <Route path="/klient" element={<ClientShell><ClientDashboard /></ClientShell>} />
           <Route path="/klient/treninky" element={<ClientShell><ClientTrainingPage /></ClientShell>} />
           <Route path="/klient/kalendar" element={<ClientShell><ClientCalendarPage /></ClientShell>} />
+          <Route path="/klient/posilovny" element={<ClientShell><ClientGymsPage /></ClientShell>} />
           <Route path="/klient/pokrok" element={<ClientShell><ClientProgressPage /></ClientShell>} />
           <Route path="/klient/zpravy" element={<ClientShell><ClientMessagesPage /></ClientShell>} />
           <Route path="/klient/platby" element={<ClientShell><ClientPaymentsPage /></ClientShell>} />
