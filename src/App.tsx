@@ -88,7 +88,7 @@ const App = () => (
           <Route path="/klient/pokrok" element={<ClientShell><ClientProgressPage /></ClientShell>} />
           <Route path="/klient/zpravy" element={<ClientShell><ClientMessagesPage /></ClientShell>} />
           <Route path="/klient/platby" element={<ClientShell><ClientPaymentsPage /></ClientShell>} />
-          <Route path="/klient/nastaveni" element={<ClientShell><div className="p-6"><h1 className="text-2xl font-semibold text-foreground">Nastavení</h1><p className="text-muted-foreground mt-2">Již brzy.</p></div></ClientShell>} />
+          <Route path="/klient/nastaveni" element={<ClientShell><SettingsPage /></ClientShell>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
