@@ -13,6 +13,7 @@ import {
   Bell,
 } from "lucide-react";
 import { useState } from "react";
+import WorkoutSessionPrompt from "./WorkoutSessionPrompt";
 
 const navItems = [
   { to: "/klient", icon: LayoutDashboard, label: "Přehled" },
@@ -101,6 +102,17 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>
+
+      <WorkoutSessionPrompt />
+
+      {/* Demo trigger – for testing the workout prompt */}
+      <button
+        onClick={() => window.dispatchEvent(new Event("workout-prompt-demo"))}
+        className="fixed bottom-4 left-4 z-50 rounded-full bg-primary/10 text-primary px-3 py-1.5 text-xs font-medium hover:bg-primary/20 transition-colors"
+        title="Demo: spustit výzvu k tréninku"
+      >
+        ⚡ Test prompt
+      </button>
     </div>
   );
 }
