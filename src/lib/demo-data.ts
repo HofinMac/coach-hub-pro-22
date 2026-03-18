@@ -200,6 +200,8 @@ export const bookings: Booking[] = [
   { id: 'b8', coachId: 'c2', clientId: 'cl6', clientName: 'Lily Thompson', startTime: '2026-03-18T08:00', endTime: '2026-03-18T09:00', status: 'booked', type: '1:1' },
   { id: 'b9', coachId: 'c2', clientId: 'cl7', clientName: 'Omar Hassan', startTime: '2026-03-18T10:00', endTime: '2026-03-18T11:00', status: 'booked', type: '1:1' },
   { id: 'b10', coachId: 'c3', clientId: 'cl9', clientName: 'Ryan Brooks', startTime: '2026-03-18T07:00', endTime: '2026-03-18T08:30', status: 'booked', type: '1:1' },
+  { id: 'b11', coachId: 'c1', clientId: 'cl2', clientName: 'Elena Voss', startTime: '2026-03-20T09:00', endTime: '2026-03-20T10:00', status: 'pending', type: '1:1' },
+  { id: 'b12', coachId: 'c1', clientId: 'cl3', clientName: 'James Park', startTime: '2026-03-21T15:00', endTime: '2026-03-21T16:00', status: 'pending', type: '1:1' },
 ];
 
 export const progressEntries: ProgressEntry[] = [
