@@ -257,6 +257,7 @@ export const statusColors: Record<string, string> = {
   at_risk: 'bg-destructive/10 text-destructive',
   draft: 'bg-muted text-muted-foreground',
   completed: 'bg-success/10 text-success',
+  pending: 'bg-warning/10 text-warning',
   booked: 'bg-primary/10 text-primary',
   cancelled: 'bg-muted text-muted-foreground',
   no_show: 'bg-destructive/10 text-destructive',
