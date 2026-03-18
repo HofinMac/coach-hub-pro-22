@@ -78,7 +78,7 @@ const App = () => (
           <Route path="/messages" element={<CoachShell><MessagesPage /></CoachShell>} />
           <Route path="/payments" element={<CoachShell><PaymentsPage /></CoachShell>} />
           <Route path="/admin" element={<CoachShell><AdminPage /></CoachShell>} />
-          <Route path="/settings" element={<CoachShell><div className="p-6"><h1 className="text-2xl font-semibold text-foreground">Nastavení</h1><p className="text-muted-foreground mt-2">Již brzy.</p></div></CoachShell>} />
+          <Route path="/settings" element={<CoachShell><SettingsPage /></CoachShell>} />
 
           {/* Client pages */}
           <Route path="/klient" element={<ClientShell><ClientDashboard /></ClientShell>} />
