@@ -447,28 +447,106 @@ export default function TrainingPage() {
               <Label htmlFor="ex-notes">Poznámky / instrukce</Label>
               <Textarea id="ex-notes" value={exNotes} onChange={(e) => setExNotes(e.target.value)} placeholder="Tipy k provedení cviku..." rows={3} />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="ex-video" className="flex items-center gap-2">
+            <div className="space-y-3">
+              <Label className="flex items-center gap-2">
                 <Video className="h-4 w-4 text-muted-foreground" />
-                Video URL (YouTube / Vimeo / přímý odkaz)
+                Demo video
               </Label>
-              <Input
-                id="ex-video"
-                value={exVideoUrl}
-                onChange={(e) => setExVideoUrl(e.target.value)}
-                placeholder="https://youtube.com/watch?v=..."
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Vložte odkaz na YouTube, Vimeo nebo přímý odkaz na video soubor.
-              </p>
-              {exVideoUrl && getEmbedUrl(exVideoUrl) && (
-                <div className="rounded-lg overflow-hidden border border-border mt-2">
-                  <iframe
-                    src={getEmbedUrl(exVideoUrl)!}
-                    className="w-full aspect-video"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    title="Náhled videa"
+
+              {/* Mode tabs */}
+              <div className="flex gap-1 rounded-lg bg-muted p-1">
+                <button
+                  onClick={() => setVideoInputMode("url")}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    videoInputMode === "url" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Odkaz (URL)
+                </button>
+                <button
+                  onClick={() => setVideoInputMode("upload")}
+                  className={`flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    videoInputMode === "upload" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Nahrát / Natočit
+                </button>
+              </div>
+
+              {videoInputMode === "url" && (
+                <div className="space-y-2">
+                  <Input
+                    value={exVideoUrl}
+                    onChange={(e) => { setExVideoUrl(e.target.value); setExVideoFile(null); }}
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
+                  <p className="text-[11px] text-muted-foreground">YouTube, Vimeo nebo přímý odkaz na video.</p>
+                  {exVideoUrl && getEmbedUrl(exVideoUrl) && (
+                    <div className="rounded-lg overflow-hidden border border-border">
+                      <iframe
+                        src={getEmbedUrl(exVideoUrl)!}
+                        className="w-full aspect-video"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title="Náhled videa"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {videoInputMode === "upload" && (
+                <div className="space-y-3">
+                  {exVideoFile ? (
+                    <div className="space-y-2">
+                      <div className="relative rounded-lg overflow-hidden border border-border">
+                        <video src={exVideoFile} controls className="w-full aspect-video bg-black" />
+                        <button
+                          onClick={() => setExVideoFile(null)}
+                          className="absolute top-2 right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">Video nahráno. Můžete ho odebrat a nahrát jiné.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* Record from camera */}
+                      <button
+                        onClick={() => videoCaptureRef.current?.click()}
+                        className="flex flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border p-4 hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                      >
+                        <Camera className="h-6 w-6 text-primary" />
+                        <span className="text-xs font-medium text-foreground">Natočit video</span>
+                        <span className="text-[10px] text-muted-foreground text-center">Otevře kameru na telefonu/tabletu</span>
+                      </button>
+                      {/* Upload from gallery */}
+                      <button
+                        onClick={() => videoFileRef.current?.click()}
+                        className="flex flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border p-4 hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                      >
+                        <Upload className="h-6 w-6 text-primary" />
+                        <span className="text-xs font-medium text-foreground">Nahrát soubor</span>
+                        <span className="text-[10px] text-muted-foreground text-center">Z galerie nebo počítače</span>
+                      </button>
+                    </div>
+                  )}
+                  {/* Hidden file inputs */}
+                  <input
+                    ref={videoCaptureRef}
+                    type="file"
+                    accept="video/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={handleVideoFileChange}
+                  />
+                  <input
+                    ref={videoFileRef}
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={handleVideoFileChange}
                   />
                 </div>
               )}
