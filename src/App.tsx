@@ -29,6 +29,7 @@ import ClientPaymentsPage from "@/pages/client/ClientPaymentsPage";
 import CoachOnboarding from "@/pages/onboarding/CoachOnboarding";
 import ClientOnboarding from "@/pages/onboarding/ClientOnboarding";
 import ClientGymsPage from "@/pages/client/ClientGymsPage";
+import SettingsPage from "@/pages/SettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -77,7 +78,7 @@ const App = () => (
           <Route path="/messages" element={<CoachShell><MessagesPage /></CoachShell>} />
           <Route path="/payments" element={<CoachShell><PaymentsPage /></CoachShell>} />
           <Route path="/admin" element={<CoachShell><AdminPage /></CoachShell>} />
-          <Route path="/settings" element={<CoachShell><div className="p-6"><h1 className="text-2xl font-semibold text-foreground">Nastavení</h1><p className="text-muted-foreground mt-2">Již brzy.</p></div></CoachShell>} />
+          <Route path="/settings" element={<CoachShell><SettingsPage /></CoachShell>} />
 
           {/* Client pages */}
           <Route path="/klient" element={<ClientShell><ClientDashboard /></ClientShell>} />
@@ -87,7 +88,7 @@ const App = () => (
           <Route path="/klient/pokrok" element={<ClientShell><ClientProgressPage /></ClientShell>} />
           <Route path="/klient/zpravy" element={<ClientShell><ClientMessagesPage /></ClientShell>} />
           <Route path="/klient/platby" element={<ClientShell><ClientPaymentsPage /></ClientShell>} />
-          <Route path="/klient/nastaveni" element={<ClientShell><div className="p-6"><h1 className="text-2xl font-semibold text-foreground">Nastavení</h1><p className="text-muted-foreground mt-2">Již brzy.</p></div></ClientShell>} />
+          <Route path="/klient/nastaveni" element={<ClientShell><SettingsPage /></ClientShell>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
