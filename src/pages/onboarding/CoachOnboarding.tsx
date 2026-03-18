@@ -260,7 +260,8 @@ export default function CoachOnboarding() {
                 {certs.length > 0 && <div><span className="font-medium text-foreground">Certifikace:</span> <span className="text-muted-foreground">{certs.join(", ")}</span></div>}
                 <div><span className="font-medium text-foreground">Specializace:</span> <span className="text-muted-foreground">{specialties.join(", ")}</span></div>
                 <div><span className="font-medium text-foreground">Cena:</span> <span className="text-muted-foreground">{sessionPrice} Kč / {sessionLength} min</span></div>
-                <div><span className="font-medium text-foreground">Forma:</span> <span className="text-muted-foreground">{[offerInPerson && "Osobně", offerOnline && "Online"].filter(Boolean).join(", ")}</span></div>
+                {trainingLocation && <div><span className="font-medium text-foreground">Místo:</span> <span className="text-muted-foreground">{trainingLocation}</span></div>}
+                <div><span className="font-medium text-foreground">Skupinové lekce:</span> <span className="text-muted-foreground">{offerGroup ? `Ano (max ${groupMaxSize || "?"} lidí)` : "Ne"}</span></div>
               </div>
             </div>
           )}
