@@ -1,10 +1,16 @@
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { workoutPlans, exercises, type ExerciseCategory } from "@/lib/demo-data";
+import { Plus, Pencil, Copy } from "lucide-react";
+import { workoutPlans, exercises, clients, type ExerciseCategory, type PlanExercise, type PlanStatus } from "@/lib/demo-data";
+import { planTemplates } from "@/lib/plan-templates";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import PlanEditorDialog from "@/components/PlanEditorDialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 const categoryLabels: Record<ExerciseCategory, string> = {
   knee_dominant: "Dominance kolene",
@@ -18,13 +24,99 @@ const categoryLabels: Record<ExerciseCategory, string> = {
 
 const tabLabels = { plans: 'Plány', exercises: 'Cviky' };
 
+interface LocalPlan {
+  id: string;
+  coachId: string;
+  clientId: string;
+  clientName: string;
+  title: string;
+  status: PlanStatus;
+  exercises: PlanExercise[];
+  createdAt: string;
+}
+
 export default function TrainingPage() {
   const [tab, setTab] = useState<'plans' | 'exercises'>('plans');
+  const [plans, setPlans] = useState<LocalPlan[]>([...workoutPlans]);
+
+  // Editor state
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorMode, setEditorMode] = useState<"create" | "edit">("create");
+  const [editingPlan, setEditingPlan] = useState<LocalPlan | null>(null);
+
+  // Template picker state
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
+
+  const handleNewPlan = () => {
+    setTemplatePickerOpen(true);
+  };
+
+  const handleSelectTemplate = (templateExercises: PlanExercise[], templateName?: string) => {
+    setTemplatePickerOpen(false);
+    setEditorMode("create");
+    setEditingPlan({
+      id: '', coachId: 'c1', clientId: '', clientName: '',
+      title: templateName || '', status: 'draft',
+      exercises: [...templateExercises],
+      createdAt: new Date().toISOString().split('T')[0],
+    });
+    setEditorOpen(true);
+  };
+
+  const handleStartBlank = () => {
+    setTemplatePickerOpen(false);
+    setEditorMode("create");
+    setEditingPlan({
+      id: '', coachId: 'c1', clientId: '', clientName: '',
+      title: '', status: 'draft', exercises: [],
+      createdAt: new Date().toISOString().split('T')[0],
+    });
+    setEditorOpen(true);
+  };
+
+  const handleEditPlan = (plan: LocalPlan) => {
+    setEditorMode("edit");
+    setEditingPlan(plan);
+    setEditorOpen(true);
+  };
+
+  const handleSave = (data: { title: string; clientId: string; status: PlanStatus; exercises: PlanExercise[] }) => {
+    const clientName = clients.find(c => c.id === data.clientId)?.name || "";
+
+    if (editorMode === "create") {
+      const newPlan: LocalPlan = {
+        id: `wp_new_${Date.now()}`,
+        coachId: 'c1',
+        clientId: data.clientId,
+        clientName,
+        title: data.title,
+        status: data.status,
+        exercises: data.exercises,
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+      setPlans(prev => [newPlan, ...prev]);
+      toast.success("Plán vytvořen!");
+    } else if (editingPlan) {
+      setPlans(prev =>
+        prev.map(p =>
+          p.id === editingPlan.id
+            ? { ...p, title: data.title, clientId: data.clientId, clientName, status: data.status, exercises: data.exercises }
+            : p
+        )
+      );
+      toast.success("Plán aktualizován!");
+    }
+  };
+
+  // Group templates by category
+  const templateCategories = Array.from(new Set(planTemplates.map(t => t.category)));
 
   return (
     <div className="p-6 max-w-6xl mx-auto animate-fade-in">
       <PageHeader title="Trénink" description="Plány a knihovna cviků">
-        <Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Nový plán</Button>
+        <Button size="sm" className="gap-1.5" onClick={handleNewPlan}>
+          <Plus className="h-3.5 w-3.5" /> Nový plán
+        </Button>
       </PageHeader>
 
       <div className="flex gap-1 mb-6">
@@ -43,7 +135,7 @@ export default function TrainingPage() {
 
       {tab === 'plans' && (
         <div className="space-y-3">
-          {workoutPlans.map(plan => (
+          {plans.map(plan => (
             <div key={plan.id} className="rounded-xl bg-card shadow-card p-5 hover:shadow-elevated transition-shadow">
               <div className="flex items-center justify-between mb-3">
                 <div>
@@ -55,7 +147,17 @@ export default function TrainingPage() {
                     {' '}· {plan.createdAt}
                   </p>
                 </div>
-                <StatusBadge status={plan.status as any} />
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs"
+                    onClick={() => handleEditPlan(plan)}
+                  >
+                    <Pencil className="h-3 w-3" /> Upravit
+                  </Button>
+                  <StatusBadge status={plan.status as any} />
+                </div>
               </div>
               <div className="rounded-lg bg-subtle overflow-hidden">
                 <table className="w-full">
@@ -110,6 +212,70 @@ export default function TrainingPage() {
             );
           })}
         </div>
+      )}
+
+      {/* Template Picker Dialog */}
+      <Dialog open={templatePickerOpen} onOpenChange={setTemplatePickerOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Vyber šablonu nebo začni od nuly</DialogTitle>
+          </DialogHeader>
+
+          <button
+            onClick={handleStartBlank}
+            className="w-full rounded-lg border-2 border-dashed border-border p-4 text-left hover:border-primary/40 hover:bg-primary/5 transition-colors mb-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-muted p-2.5">
+                <Plus className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Prázdný plán</p>
+                <p className="text-xs text-muted-foreground">Začni od nuly a přidej cviky ručně.</p>
+              </div>
+            </div>
+          </button>
+
+          {templateCategories.map(cat => (
+            <div key={cat} className="mb-4">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{cat}</h4>
+              <div className="space-y-1.5">
+                {planTemplates.filter(t => t.category === cat).map(tpl => (
+                  <button
+                    key={tpl.id}
+                    onClick={() => handleSelectTemplate(tpl.exercises, tpl.name)}
+                    className="w-full rounded-lg border border-border p-3 text-left hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg bg-primary/10 p-2">
+                        <Copy className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground">{tpl.name}</p>
+                        <p className="text-xs text-muted-foreground">{tpl.description}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{tpl.exercises.length} cviků</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </DialogContent>
+      </Dialog>
+
+      {/* Plan Editor Dialog */}
+      {editingPlan && (
+        <PlanEditorDialog
+          open={editorOpen}
+          onOpenChange={setEditorOpen}
+          mode={editorMode}
+          initialTitle={editingPlan.title}
+          initialClientId={editingPlan.clientId}
+          initialStatus={editingPlan.status}
+          initialExercises={editingPlan.exercises}
+          onSave={handleSave}
+        />
       )}
     </div>
   );
