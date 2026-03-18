@@ -28,6 +28,7 @@ import ClientMessagesPage from "@/pages/client/ClientMessagesPage";
 import ClientPaymentsPage from "@/pages/client/ClientPaymentsPage";
 import CoachOnboarding from "@/pages/onboarding/CoachOnboarding";
 import ClientOnboarding from "@/pages/onboarding/ClientOnboarding";
+import ClientGymsPage from "@/pages/client/ClientGymsPage";
 
 const queryClient = new QueryClient();
 
