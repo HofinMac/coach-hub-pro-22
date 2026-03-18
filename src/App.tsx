@@ -46,7 +46,7 @@ const App = () => (
           <Route path="/messages" element={<AppShell><MessagesPage /></AppShell>} />
           <Route path="/payments" element={<AppShell><PaymentsPage /></AppShell>} />
           <Route path="/admin" element={<AppShell><AdminPage /></AppShell>} />
-          <Route path="/settings" element={<AppShell><div className="p-6"><h1 className="text-2xl font-semibold text-foreground">Settings</h1><p className="text-muted-foreground mt-2">Coming soon.</p></div></AppShell>} />
+          <Route path="/settings" element={<AppShell><div className="p-6"><h1 className="text-2xl font-semibold text-foreground">Nastavení</h1><p className="text-muted-foreground mt-2">Již brzy.</p></div></AppShell>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
