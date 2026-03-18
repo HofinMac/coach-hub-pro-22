@@ -113,6 +113,10 @@ export default function CoachOnboarding() {
                 </div>
               </div>
               <div className="grid gap-1.5">
+                <Label>Místo tréninku</Label>
+                <Input value={trainingLocation} onChange={e => setTrainingLocation(e.target.value)} placeholder="Název gymu, adresa studia..." maxLength={150} />
+              </div>
+              <div className="grid gap-1.5">
                 <Label>O mně (krátký popis)</Label>
                 <Textarea
                   value={bio} onChange={e => setBio(e.target.value)}
