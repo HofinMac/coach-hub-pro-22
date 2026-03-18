@@ -48,8 +48,8 @@ export default function CoachOnboarding() {
   // Step 3 – services & pricing
   const [sessionPrice, setSessionPrice] = useState("");
   const [sessionLength, setSessionLength] = useState("60");
-  const [offerOnline, setOfferOnline] = useState(false);
-  const [offerInPerson, setOfferInPerson] = useState(true);
+  const [offerGroup, setOfferGroup] = useState(false);
+  const [groupMaxSize, setGroupMaxSize] = useState("");
   const [maxClients, setMaxClients] = useState("");
 
   const toggleCert = (c: string) =>
