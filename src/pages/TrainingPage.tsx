@@ -1,10 +1,10 @@
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Copy, Trash2, Video, ExternalLink, Search } from "lucide-react";
+import { Plus, Pencil, Copy, Trash2, Video, ExternalLink, Search, Camera, Upload, X } from "lucide-react";
 import { workoutPlans, exercises as defaultExercises, clients, type Exercise, type ExerciseCategory, type PlanExercise, type PlanStatus } from "@/lib/demo-data";
 import { planTemplates } from "@/lib/plan-templates";
 import { StatusBadge } from "@/components/StatusBadge";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import PlanEditorDialog from "@/components/PlanEditorDialog";
 import {
