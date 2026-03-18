@@ -36,6 +36,7 @@ export default function CoachOnboarding() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
+  const [trainingLocation, setTrainingLocation] = useState("");
   const [bio, setBio] = useState("");
 
   // Step 2 – education & experience
@@ -47,8 +48,8 @@ export default function CoachOnboarding() {
   // Step 3 – services & pricing
   const [sessionPrice, setSessionPrice] = useState("");
   const [sessionLength, setSessionLength] = useState("60");
-  const [offerOnline, setOfferOnline] = useState(false);
-  const [offerInPerson, setOfferInPerson] = useState(true);
+  const [offerGroup, setOfferGroup] = useState(false);
+  const [groupMaxSize, setGroupMaxSize] = useState("");
   const [maxClients, setMaxClients] = useState("");
 
   const toggleCert = (c: string) =>
@@ -110,6 +111,10 @@ export default function CoachOnboarding() {
                   <Label>Město</Label>
                   <Input value={city} onChange={e => setCity(e.target.value)} placeholder="Praha" maxLength={50} />
                 </div>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Místo tréninku</Label>
+                <Input value={trainingLocation} onChange={e => setTrainingLocation(e.target.value)} placeholder="Název gymu, adresa studia..." maxLength={150} />
               </div>
               <div className="grid gap-1.5">
                 <Label>O mně (krátký popis)</Label>
@@ -225,17 +230,21 @@ export default function CoachOnboarding() {
               </div>
 
               <div className="grid gap-2">
-                <Label>Forma tréninku</Label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 text-sm">
-                    <Checkbox checked={offerInPerson} onCheckedChange={(v) => setOfferInPerson(!!v)} />
-                    Osobně
-                  </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <Checkbox checked={offerOnline} onCheckedChange={(v) => setOfferOnline(!!v)} />
-                    Online
-                  </label>
-                </div>
+                <Label>Skupinové lekce</Label>
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox checked={offerGroup} onCheckedChange={(v) => setOfferGroup(!!v)} />
+                  Nabízím skupinové lekce
+                </label>
+                {offerGroup && (
+                  <div className="grid gap-1.5 mt-1 max-w-[200px]">
+                    <Label className="text-xs">Max. lidí ve skupině</Label>
+                    <Input
+                      type="number" min={2} max={50} value={groupMaxSize}
+                      onChange={e => setGroupMaxSize(e.target.value)}
+                      placeholder="8"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -251,7 +260,8 @@ export default function CoachOnboarding() {
                 {certs.length > 0 && <div><span className="font-medium text-foreground">Certifikace:</span> <span className="text-muted-foreground">{certs.join(", ")}</span></div>}
                 <div><span className="font-medium text-foreground">Specializace:</span> <span className="text-muted-foreground">{specialties.join(", ")}</span></div>
                 <div><span className="font-medium text-foreground">Cena:</span> <span className="text-muted-foreground">{sessionPrice} Kč / {sessionLength} min</span></div>
-                <div><span className="font-medium text-foreground">Forma:</span> <span className="text-muted-foreground">{[offerInPerson && "Osobně", offerOnline && "Online"].filter(Boolean).join(", ")}</span></div>
+                {trainingLocation && <div><span className="font-medium text-foreground">Místo:</span> <span className="text-muted-foreground">{trainingLocation}</span></div>}
+                <div><span className="font-medium text-foreground">Skupinové lekce:</span> <span className="text-muted-foreground">{offerGroup ? `Ano (max ${groupMaxSize || "?"} lidí)` : "Ne"}</span></div>
               </div>
             </div>
           )}
