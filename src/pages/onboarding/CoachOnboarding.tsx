@@ -226,17 +226,21 @@ export default function CoachOnboarding() {
               </div>
 
               <div className="grid gap-2">
-                <Label>Forma tréninku</Label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 text-sm">
-                    <Checkbox checked={offerInPerson} onCheckedChange={(v) => setOfferInPerson(!!v)} />
-                    Osobně
-                  </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <Checkbox checked={offerOnline} onCheckedChange={(v) => setOfferOnline(!!v)} />
-                    Online
-                  </label>
-                </div>
+                <Label>Skupinové lekce</Label>
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox checked={offerGroup} onCheckedChange={(v) => setOfferGroup(!!v)} />
+                  Nabízím skupinové lekce
+                </label>
+                {offerGroup && (
+                  <div className="grid gap-1.5 mt-1 max-w-[200px]">
+                    <Label className="text-xs">Max. lidí ve skupině</Label>
+                    <Input
+                      type="number" min={2} max={50} value={groupMaxSize}
+                      onChange={e => setGroupMaxSize(e.target.value)}
+                      placeholder="8"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
