@@ -13,6 +13,7 @@ const statusLabels: Record<string, string> = {
   at_risk: 'V ohrožení',
   draft: 'Koncept',
   completed: 'Dokončeno',
+  pending: 'Čeká na schválení',
   booked: 'Rezervováno',
   cancelled: 'Zrušeno',
   no_show: 'Nedostavil se',
