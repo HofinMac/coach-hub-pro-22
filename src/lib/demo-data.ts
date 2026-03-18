@@ -248,9 +248,14 @@ export function getProgressByClient(clientId: string) {
   return progressEntries.filter(p => p.clientId === clientId).sort((a, b) => a.loggedAt.localeCompare(b.loggedAt));
 }
 
-export const statusColors: Record<ClientStatus, string> = {
+export const statusColors: Record<string, string> = {
   active: 'bg-success/10 text-success',
   inactive: 'bg-muted text-muted-foreground',
   lead: 'bg-primary/10 text-primary',
   at_risk: 'bg-destructive/10 text-destructive',
+  draft: 'bg-muted text-muted-foreground',
+  completed: 'bg-success/10 text-success',
+  booked: 'bg-primary/10 text-primary',
+  cancelled: 'bg-muted text-muted-foreground',
+  no_show: 'bg-destructive/10 text-destructive',
 };

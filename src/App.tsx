@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import AppLayout from "@/components/AppLayout";
+import ClientLayout from "@/components/ClientLayout";
+import RoleSwitcher from "@/components/RoleSwitcher";
 import LandingPage from "@/pages/LandingPage";
 import PricingPage from "@/pages/PricingPage";
 import LoginPage from "@/pages/LoginPage";
@@ -17,11 +19,31 @@ import MessagesPage from "@/pages/MessagesPage";
 import PaymentsPage from "@/pages/PaymentsPage";
 import AdminPage from "@/pages/AdminPage";
 import NotFound from "@/pages/NotFound";
+import ClientDashboard from "@/pages/client/ClientDashboard";
+import ClientTrainingPage from "@/pages/client/ClientTrainingPage";
+import ClientCalendarPage from "@/pages/client/ClientCalendarPage";
+import ClientProgressPage from "@/pages/client/ClientProgressPage";
+import ClientMessagesPage from "@/pages/client/ClientMessagesPage";
+import ClientPaymentsPage from "@/pages/client/ClientPaymentsPage";
 
 const queryClient = new QueryClient();
 
-function AppShell({ children }: { children: React.ReactNode }) {
-  return <AppLayout>{children}</AppLayout>;
+function CoachShell({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <AppLayout>{children}</AppLayout>
+      <RoleSwitcher />
+    </>
+  );
+}
+
+function ClientShell({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <ClientLayout>{children}</ClientLayout>
+      <RoleSwitcher />
+    </>
+  );
 }
 
 const App = () => (
@@ -37,16 +59,25 @@ const App = () => (
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* App pages with layout */}
-          <Route path="/dashboard" element={<AppShell><CoachDashboard /></AppShell>} />
-          <Route path="/clients" element={<AppShell><ClientsPage /></AppShell>} />
-          <Route path="/clients/:id" element={<AppShell><ClientDetailPage /></AppShell>} />
-          <Route path="/training" element={<AppShell><TrainingPage /></AppShell>} />
-          <Route path="/calendar" element={<AppShell><CalendarPage /></AppShell>} />
-          <Route path="/messages" element={<AppShell><MessagesPage /></AppShell>} />
-          <Route path="/payments" element={<AppShell><PaymentsPage /></AppShell>} />
-          <Route path="/admin" element={<AppShell><AdminPage /></AppShell>} />
-          <Route path="/settings" element={<AppShell><div className="p-6"><h1 className="text-2xl font-semibold text-foreground">Nastavení</h1><p className="text-muted-foreground mt-2">Již brzy.</p></div></AppShell>} />
+          {/* Coach pages */}
+          <Route path="/dashboard" element={<CoachShell><CoachDashboard /></CoachShell>} />
+          <Route path="/clients" element={<CoachShell><ClientsPage /></CoachShell>} />
+          <Route path="/clients/:id" element={<CoachShell><ClientDetailPage /></CoachShell>} />
+          <Route path="/training" element={<CoachShell><TrainingPage /></CoachShell>} />
+          <Route path="/calendar" element={<CoachShell><CalendarPage /></CoachShell>} />
+          <Route path="/messages" element={<CoachShell><MessagesPage /></CoachShell>} />
+          <Route path="/payments" element={<CoachShell><PaymentsPage /></CoachShell>} />
+          <Route path="/admin" element={<CoachShell><AdminPage /></CoachShell>} />
+          <Route path="/settings" element={<CoachShell><div className="p-6"><h1 className="text-2xl font-semibold text-foreground">Nastavení</h1><p className="text-muted-foreground mt-2">Již brzy.</p></div></CoachShell>} />
+
+          {/* Client pages */}
+          <Route path="/klient" element={<ClientShell><ClientDashboard /></ClientShell>} />
+          <Route path="/klient/treninky" element={<ClientShell><ClientTrainingPage /></ClientShell>} />
+          <Route path="/klient/kalendar" element={<ClientShell><ClientCalendarPage /></ClientShell>} />
+          <Route path="/klient/pokrok" element={<ClientShell><ClientProgressPage /></ClientShell>} />
+          <Route path="/klient/zpravy" element={<ClientShell><ClientMessagesPage /></ClientShell>} />
+          <Route path="/klient/platby" element={<ClientShell><ClientPaymentsPage /></ClientShell>} />
+          <Route path="/klient/nastaveni" element={<ClientShell><div className="p-6"><h1 className="text-2xl font-semibold text-foreground">Nastavení</h1><p className="text-muted-foreground mt-2">Již brzy.</p></div></ClientShell>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
