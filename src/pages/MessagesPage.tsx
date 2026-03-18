@@ -7,32 +7,30 @@ import { useState } from "react";
 import { clients } from "@/lib/demo-data";
 
 const conversations = [
-  { clientId: 'cl1', lastMessage: 'Can we move Thursday to Friday?', time: '10:32 AM', unread: true },
-  { clientId: 'cl2', lastMessage: 'Completed today\'s workout. Felt great!', time: '9:15 AM', unread: false },
-  { clientId: 'cl4', lastMessage: 'Thanks coach!', time: 'Yesterday', unread: false },
-  { clientId: 'cl3', lastMessage: 'Shoulder still bothering me on overhead press', time: 'Yesterday', unread: true },
+  { clientId: 'cl1', lastMessage: 'Můžeme přesunout čtvrtek na pátek?', time: '10:32', unread: true },
+  { clientId: 'cl2', lastMessage: 'Dnešní trénink dokončen. Skvělý pocit!', time: '9:15', unread: false },
+  { clientId: 'cl4', lastMessage: 'Díky trenére!', time: 'Včera', unread: false },
+  { clientId: 'cl3', lastMessage: 'Rameno mě stále trápí při overheadu', time: 'Včera', unread: true },
 ];
 
 const demoMessages = [
-  { from: 'client', text: 'Hey coach, can we move Thursday\'s session to Friday morning?', time: '10:32 AM' },
-  { from: 'coach', text: 'Sure Marcus, I have a slot at 8 AM on Friday. Does that work?', time: '10:35 AM' },
-  { from: 'client', text: 'Perfect, let\'s do that. Also, my knee felt stiff during squats yesterday.', time: '10:36 AM' },
-  { from: 'coach', text: 'Noted. We\'ll add extra mobility work before squats and adjust the depth if needed. See you Friday.', time: '10:40 AM' },
+  { from: 'client', text: 'Ahoj trenére, můžeme přesunout čtvrteční lekci na pátek ráno?', time: '10:32' },
+  { from: 'coach', text: 'Jasně Marcusi, mám volný slot v 8:00 v pátek. Hodí se ti to?', time: '10:35' },
+  { from: 'client', text: 'Perfektní, tak to uděláme. Ještě — koleno mi včera při dřepech tuhlo.', time: '10:36' },
+  { from: 'coach', text: 'Zaznamenáno. Přidáme víc mobilizace před dřepy a případně upravíme hloubku. Uvidíme se v pátek.', time: '10:40' },
 ];
 
 export default function MessagesPage() {
   const [selectedClient, setSelectedClient] = useState('cl1');
   const [messageInput, setMessageInput] = useState('');
 
-  const selectedConv = conversations.find(c => c.clientId === selectedClient);
   const client = clients.find(c => c.id === selectedClient);
 
   return (
     <div className="flex h-[calc(100vh)] animate-fade-in">
-      {/* Sidebar */}
       <div className="w-72 border-r border-border bg-subtle flex flex-col">
         <div className="p-4 border-b border-border">
-          <h2 className="text-sm font-semibold text-foreground">Messages</h2>
+          <h2 className="text-sm font-semibold text-foreground">Zprávy</h2>
         </div>
         <div className="flex-1 overflow-y-auto">
           {conversations.map(conv => {
@@ -61,7 +59,6 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      {/* Chat */}
       <div className="flex-1 flex flex-col">
         {client && (
           <>
@@ -69,7 +66,7 @@ export default function MessagesPage() {
               <AvatarCircle initials={client.avatar} size="sm" />
               <div>
                 <p className="text-sm font-semibold text-foreground">{client.name}</p>
-                <p className="text-xs text-muted-foreground">Active · Last seen 5 min ago</p>
+                <p className="text-xs text-muted-foreground">Online · Naposledy viděn před 5 min</p>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -91,7 +88,7 @@ export default function MessagesPage() {
             <div className="p-4 border-t border-border">
               <div className="flex gap-2">
                 <Input
-                  placeholder="Type a message..."
+                  placeholder="Napište zprávu..."
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
                   className="flex-1"

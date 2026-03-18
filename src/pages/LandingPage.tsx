@@ -3,58 +3,55 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, Dumbbell, Calendar, BarChart3, Shield, Zap } from "lucide-react";
 
 const features = [
-  { icon: Users, title: "Client Management", desc: "Full CRM with status tracking, notes, injuries, and progress history." },
-  { icon: Dumbbell, title: "Training Plans", desc: "Build and assign workouts with exercise libraries, sets, reps, RPE, and templates." },
-  { icon: Calendar, title: "Booking System", desc: "Self-service scheduling with confirmations, cancellations, and waitlists." },
-  { icon: BarChart3, title: "Progress Tracking", desc: "Body metrics, performance data, photos, and automated stagnation alerts." },
-  { icon: Shield, title: "Business Tools", desc: "Packages, payments, invoices, and session credit management." },
-  { icon: Zap, title: "Coach Dashboard", desc: "At-a-glance overview of your roster, bookings, and at-risk clients." },
+  { icon: Users, title: "Správa klientů", desc: "Kompletní CRM se sledováním stavu, poznámkami, zraněními a historií pokroku." },
+  { icon: Dumbbell, title: "Tréninkové plány", desc: "Tvorba a přiřazení tréninků s knihovnou cviků, sériemi, opakováními, RPE a šablonami." },
+  { icon: Calendar, title: "Rezervační systém", desc: "Samoobslužné plánování s potvrzeními, rušením a čekacími listinami." },
+  { icon: BarChart3, title: "Sledování pokroku", desc: "Tělesné metriky, výkonnostní data, fotky a automatická upozornění na stagnaci." },
+  { icon: Shield, title: "Obchodní nástroje", desc: "Balíčky, platby, faktury a správa kreditů za lekce." },
+  { icon: Zap, title: "Dashboard trenéra", desc: "Rychlý přehled klientů, rezervací a klientů v ohrožení." },
 ];
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Nav */}
       <header className="border-b border-border bg-subtle/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto flex items-center justify-between h-14 px-6">
           <span className="text-lg font-semibold tracking-tight text-foreground">apex</span>
           <div className="flex items-center gap-4">
             <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Pricing
+              Ceník
             </Link>
             <Link to="/login">
-              <Button variant="ghost" size="sm">Sign in</Button>
+              <Button variant="ghost" size="sm">Přihlásit se</Button>
             </Link>
             <Link to="/register">
-              <Button size="sm">Get started</Button>
+              <Button size="sm">Začít</Button>
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-24 pb-20">
         <div className="max-w-2xl">
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-foreground leading-tight">
-            Manage your roster,<br />not your spreadsheets.
+            Spravujte své klienty,<br />ne své tabulky.
           </h1>
           <p className="mt-5 text-lg text-muted-foreground leading-relaxed max-w-lg">
-            Apex unifies client management, training plans, bookings, and progress tracking into one platform built for professional coaches.
+            Apex spojuje správu klientů, tréninkové plány, rezervace a sledování pokroku do jedné platformy vytvořené pro profesionální trenéry.
           </p>
           <div className="mt-8 flex items-center gap-3">
             <Link to="/register">
               <Button size="lg" className="gap-2">
-                Start free trial <ArrowRight className="h-4 w-4" />
+                Vyzkoušet zdarma <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link to="/dashboard">
-              <Button variant="outline" size="lg">View demo</Button>
+              <Button variant="outline" size="lg">Zobrazit demo</Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Features */}
       <section className="max-w-6xl mx-auto px-6 pb-24">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((f) => (
@@ -69,30 +66,28 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA */}
       <section className="border-t border-border bg-subtle">
         <div className="max-w-6xl mx-auto px-6 py-20 text-center">
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Built for coaches who take their craft seriously.
+            Vytvořeno pro trenéry, kteří to myslí vážně.
           </h2>
           <p className="text-muted-foreground mt-3 max-w-md mx-auto">
-            Replace your patchwork of tools with one focused platform. Start in minutes.
+            Nahraďte svůj slepenec nástrojů jednou ucelenou platformou. Začněte během minut.
           </p>
           <Link to="/register" className="mt-6 inline-block">
             <Button size="lg" className="gap-2">
-              Get started free <ArrowRight className="h-4 w-4" />
+              Začít zdarma <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-border">
         <div className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">© 2026 Apex. All rights reserved.</span>
+          <span className="text-sm text-muted-foreground">© 2026 Apex. Všechna práva vyhrazena.</span>
           <div className="flex gap-6">
-            <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy</a>
-            <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms</a>
+            <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Ochrana soukromí</a>
+            <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Podmínky</a>
           </div>
         </div>
       </footer>

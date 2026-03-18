@@ -14,8 +14,8 @@ export default function ClientDetailPage() {
   if (!client) {
     return (
       <div className="p-6 max-w-6xl mx-auto">
-        <p className="text-muted-foreground">Client not found.</p>
-        <Link to="/clients" className="text-primary text-sm hover:underline">← Back to clients</Link>
+        <p className="text-muted-foreground">Klient nenalezen.</p>
+        <Link to="/clients" className="text-primary text-sm hover:underline">← Zpět na klienty</Link>
       </div>
     );
   }
@@ -31,7 +31,7 @@ export default function ClientDetailPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto animate-fade-in">
       <Link to="/clients" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4">
-        <ArrowLeft className="h-3.5 w-3.5" /> Clients
+        <ArrowLeft className="h-3.5 w-3.5" /> Klienti
       </Link>
 
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8">
@@ -46,26 +46,25 @@ export default function ClientDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5"><Mail className="h-3.5 w-3.5" /> Message</Button>
-          <Button variant="outline" size="sm" className="gap-1.5"><Edit className="h-3.5 w-3.5" /> Edit</Button>
+          <Button variant="outline" size="sm" className="gap-1.5"><Mail className="h-3.5 w-3.5" /> Zpráva</Button>
+          <Button variant="outline" size="sm" className="gap-1.5"><Edit className="h-3.5 w-3.5" /> Upravit</Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Info */}
         <div className="space-y-4">
           <div className="rounded-xl bg-card shadow-card p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-foreground">Details</h3>
-            <InfoRow label="Goals" value={client.goals} />
-            <InfoRow label="Injuries" value={client.injuries || "None"} />
-            <InfoRow label="Package Credits" value={String(client.packageCredits)} />
-            <InfoRow label="Joined" value={client.joinedAt} />
-            {client.weight && <InfoRow label="Weight" value={`${client.weight} kg`} />}
-            {client.bodyFat && <InfoRow label="Body Fat" value={`${client.bodyFat}%`} />}
+            <h3 className="text-sm font-semibold text-foreground">Detaily</h3>
+            <InfoRow label="Cíle" value={client.goals} />
+            <InfoRow label="Zranění" value={client.injuries || "Žádná"} />
+            <InfoRow label="Kredity balíčku" value={String(client.packageCredits)} />
+            <InfoRow label="Registrace" value={client.joinedAt} />
+            {client.weight && <InfoRow label="Hmotnost" value={`${client.weight} kg`} />}
+            {client.bodyFat && <InfoRow label="Tělesný tuk" value={`${client.bodyFat}%`} />}
           </div>
 
           <div className="rounded-xl bg-card shadow-card p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Tags</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Štítky</h3>
             <div className="flex flex-wrap gap-1.5">
               {client.tags.map((tag) => (
                 <span key={tag} className="px-2 py-0.5 rounded-md bg-accent text-accent-foreground text-xs font-medium">
@@ -76,11 +75,10 @@ export default function ClientDetailPage() {
           </div>
         </div>
 
-        {/* Progress Chart */}
         <div className="lg:col-span-2 space-y-4">
           {chartData.length > 1 && (
             <div className="rounded-xl bg-card shadow-card p-5">
-              <h3 className="text-sm font-semibold text-foreground mb-4">Weight Trend</h3>
+              <h3 className="text-sm font-semibold text-foreground mb-4">Vývoj hmotnosti</h3>
               <ResponsiveContainer width="100%" height={220}>
                 <AreaChart data={chartData}>
                   <defs>
@@ -100,13 +98,12 @@ export default function ClientDetailPage() {
             </div>
           )}
 
-          {/* Plans */}
           <div className="rounded-xl bg-card shadow-card">
             <div className="p-4 border-b border-border">
-              <h3 className="text-sm font-semibold text-foreground">Training Plans</h3>
+              <h3 className="text-sm font-semibold text-foreground">Tréninkové plány</h3>
             </div>
             {plans.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">No plans assigned.</p>
+              <p className="p-4 text-sm text-muted-foreground">Žádné přiřazené plány.</p>
             ) : (
               <div className="divide-y divide-border">
                 {plans.map((plan) => (
@@ -114,7 +111,7 @@ export default function ClientDetailPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-foreground">{plan.title}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{plan.exercises.length} exercises · Created {plan.createdAt}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{plan.exercises.length} cviků · Vytvořeno {plan.createdAt}</p>
                       </div>
                       <StatusBadge status={plan.status as any} />
                     </div>
@@ -131,11 +128,10 @@ export default function ClientDetailPage() {
             )}
           </div>
 
-          {/* Progress Log */}
           {progress.length > 0 && (
             <div className="rounded-xl bg-card shadow-card">
               <div className="p-4 border-b border-border">
-                <h3 className="text-sm font-semibold text-foreground">Progress Log</h3>
+                <h3 className="text-sm font-semibold text-foreground">Záznam pokroku</h3>
               </div>
               <div className="divide-y divide-border">
                 {[...progress].reverse().map((entry) => (
@@ -147,7 +143,7 @@ export default function ClientDetailPage() {
                     <div className="text-right">
                       <p className="text-sm font-mono tabular-nums text-foreground">{entry.weight} kg</p>
                       {entry.bodyFat && (
-                        <p className="text-xs font-mono tabular-nums text-muted-foreground">{entry.bodyFat}% BF</p>
+                        <p className="text-xs font-mono tabular-nums text-muted-foreground">{entry.bodyFat}% TT</p>
                       )}
                     </div>
                   </div>

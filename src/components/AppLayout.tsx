@@ -15,17 +15,17 @@ import {
 import { useState } from "react";
 
 const navItems = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/clients", icon: Users, label: "Clients" },
-  { to: "/training", icon: Dumbbell, label: "Training" },
-  { to: "/calendar", icon: Calendar, label: "Calendar" },
-  { to: "/messages", icon: MessageSquare, label: "Messages" },
-  { to: "/payments", icon: CreditCard, label: "Payments" },
+  { to: "/dashboard", icon: LayoutDashboard, label: "Přehled" },
+  { to: "/clients", icon: Users, label: "Klienti" },
+  { to: "/training", icon: Dumbbell, label: "Trénink" },
+  { to: "/calendar", icon: Calendar, label: "Kalendář" },
+  { to: "/messages", icon: MessageSquare, label: "Zprávy" },
+  { to: "/payments", icon: CreditCard, label: "Platby" },
 ];
 
 const bottomItems = [
-  { to: "/admin", icon: Shield, label: "Admin" },
-  { to: "/settings", icon: Settings, label: "Settings" },
+  { to: "/admin", icon: Shield, label: "Administrace" },
+  { to: "/settings", icon: Settings, label: "Nastavení" },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -34,14 +34,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar */}
       <aside
         className={cn(
           "flex flex-col border-r border-border bg-subtle transition-all duration-200",
           collapsed ? "w-16" : "w-60"
         )}
       >
-        {/* Logo */}
         <div className="flex h-14 items-center justify-between px-4 border-b border-border">
           {!collapsed && (
             <span className="text-lg font-semibold tracking-tight text-foreground">
@@ -56,7 +54,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 flex flex-col gap-1 p-2 pt-4">
           {navItems.map((item) => (
             <NavLink
@@ -77,7 +74,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
-        {/* Bottom nav */}
         <div className="flex flex-col gap-1 p-2 border-t border-border">
           {bottomItems.map((item) => (
             <NavLink
@@ -98,12 +94,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           ))}
           <button className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
             <LogOut className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Sign out</span>}
+            {!collapsed && <span>Odhlásit se</span>}
           </button>
         </div>
       </aside>
 
-      {/* Main */}
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>

@@ -5,23 +5,23 @@ import { Check, ArrowRight } from "lucide-react";
 const plans = [
   {
     name: "Starter",
-    price: 29,
-    description: "For independent trainers getting started.",
-    features: ["Up to 15 clients", "Training plans", "Basic progress tracking", "Calendar & bookings", "Email support"],
+    price: 690,
+    description: "Pro začínající samostatné trenéry.",
+    features: ["Až 15 klientů", "Tréninkové plány", "Základní sledování pokroku", "Kalendář a rezervace", "E-mailová podpora"],
     highlighted: false,
   },
   {
     name: "Professional",
-    price: 79,
-    description: "For established coaches scaling their practice.",
-    features: ["Unlimited clients", "Advanced analytics", "Client self-booking portal", "In-app messaging", "Package & payment tracking", "Priority support"],
+    price: 1890,
+    description: "Pro etablované trenéry rozšiřující praxi.",
+    features: ["Neomezený počet klientů", "Pokročilé analytiky", "Samoobslužný rezervační portál", "Zprávy v aplikaci", "Sledování balíčků a plateb", "Prioritní podpora"],
     highlighted: true,
   },
   {
     name: "Studio",
-    price: 149,
-    description: "For coaching studios and teams.",
-    features: ["Everything in Professional", "Multi-coach support", "Admin dashboard", "Coach verification", "Custom branding", "API access", "Dedicated support"],
+    price: 3590,
+    description: "Pro koučovací studia a týmy.",
+    features: ["Vše z Professional", "Podpora více trenérů", "Administrátorský dashboard", "Ověření trenérů", "Vlastní branding", "API přístup", "Dedikovaná podpora"],
     highlighted: false,
   },
 ];
@@ -33,8 +33,8 @@ export default function PricingPage() {
         <div className="max-w-6xl mx-auto flex items-center justify-between h-14 px-6">
           <Link to="/" className="text-lg font-semibold tracking-tight text-foreground">apex</Link>
           <div className="flex items-center gap-4">
-            <Link to="/login"><Button variant="ghost" size="sm">Sign in</Button></Link>
-            <Link to="/register"><Button size="sm">Get started</Button></Link>
+            <Link to="/login"><Button variant="ghost" size="sm">Přihlásit se</Button></Link>
+            <Link to="/register"><Button size="sm">Začít</Button></Link>
           </div>
         </div>
       </header>
@@ -42,10 +42,10 @@ export default function PricingPage() {
       <section className="max-w-5xl mx-auto px-6 pt-20 pb-24">
         <div className="text-center mb-16">
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
-            Simple, transparent pricing
+            Jednoduchý a transparentní ceník
           </h1>
           <p className="text-muted-foreground mt-3 max-w-md mx-auto">
-            Start free. Upgrade when you're ready. No hidden fees.
+            Začněte zdarma. Upgradujte, až budete připraveni. Žádné skryté poplatky.
           </p>
         </div>
 
@@ -67,9 +67,9 @@ export default function PricingPage() {
               </p>
               <div className="mt-6 mb-6">
                 <span className={`text-4xl font-semibold tabular-nums ${plan.highlighted ? "text-background" : "text-foreground"}`}>
-                  ${plan.price}
+                  {plan.price.toLocaleString('cs-CZ')} Kč
                 </span>
-                <span className={`text-sm ml-1 ${plan.highlighted ? "text-background/60" : "text-muted-foreground"}`}>/month</span>
+                <span className={`text-sm ml-1 ${plan.highlighted ? "text-background/60" : "text-muted-foreground"}`}>/měsíc</span>
               </div>
               <ul className="space-y-2.5 flex-1 mb-6">
                 {plan.features.map((feat) => (
@@ -84,7 +84,7 @@ export default function PricingPage() {
                   className={`w-full gap-2 ${plan.highlighted ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""}`}
                   variant={plan.highlighted ? "default" : "outline"}
                 >
-                  Get started <ArrowRight className="h-4 w-4" />
+                  Začít <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
             </div>

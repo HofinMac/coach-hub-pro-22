@@ -5,11 +5,11 @@ import { clients } from "@/lib/demo-data";
 import { AvatarCircle } from "@/components/AvatarCircle";
 
 const packages = [
-  { id: 'pkg1', clientId: 'cl2', clientName: 'Elena Voss', name: '10 Session Pack', credits: 8, total: 10, price: 950, status: 'active', expiresAt: '2026-06-15' },
-  { id: 'pkg2', clientId: 'cl3', clientName: 'James Park', name: 'Monthly Coaching', credits: 12, total: 12, price: 400, status: 'active', expiresAt: '2026-04-20' },
-  { id: 'pkg3', clientId: 'cl4', clientName: 'Sofia Reyes', name: '10 Session Pack', credits: 6, total: 10, price: 950, status: 'active', expiresAt: '2026-05-01' },
-  { id: 'pkg4', clientId: 'cl1', clientName: 'Marcus Aurelius', name: '10 Session Pack', credits: 4, total: 10, price: 1200, status: 'active', expiresAt: '2026-04-10' },
-  { id: 'pkg5', clientId: 'cl5', clientName: 'David Kim', name: '10 Session Pack', credits: 2, total: 10, price: 1200, status: 'expiring', expiresAt: '2026-03-25' },
+  { id: 'pkg1', clientId: 'cl2', clientName: 'Elena Voss', name: 'Balíček 10 lekcí', credits: 8, total: 10, price: 950, status: 'active', expiresAt: '2026-06-15' },
+  { id: 'pkg2', clientId: 'cl3', clientName: 'James Park', name: 'Měsíční koučink', credits: 12, total: 12, price: 400, status: 'active', expiresAt: '2026-04-20' },
+  { id: 'pkg3', clientId: 'cl4', clientName: 'Sofia Reyes', name: 'Balíček 10 lekcí', credits: 6, total: 10, price: 950, status: 'active', expiresAt: '2026-05-01' },
+  { id: 'pkg4', clientId: 'cl1', clientName: 'Marcus Aurelius', name: 'Balíček 10 lekcí', credits: 4, total: 10, price: 1200, status: 'active', expiresAt: '2026-04-10' },
+  { id: 'pkg5', clientId: 'cl5', clientName: 'David Kim', name: 'Balíček 10 lekcí', credits: 2, total: 10, price: 1200, status: 'expiring', expiresAt: '2026-03-25' },
 ];
 
 const invoices = [
@@ -26,36 +26,34 @@ export default function PaymentsPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto animate-fade-in">
-      <PageHeader title="Payments" description="Packages and invoices">
-        <Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> New package</Button>
+      <PageHeader title="Platby" description="Balíčky a faktury">
+        <Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Nový balíček</Button>
       </PageHeader>
 
-      {/* Revenue summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="rounded-xl p-5 bg-card shadow-card">
-          <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
-          <p className="text-2xl font-semibold tabular-nums text-foreground mt-1">${totalRevenue.toLocaleString()}</p>
+          <p className="text-sm font-medium text-muted-foreground">Celkové příjmy</p>
+          <p className="text-2xl font-semibold tabular-nums text-foreground mt-1">{totalRevenue.toLocaleString('cs-CZ')} Kč</p>
         </div>
         <div className="rounded-xl p-5 bg-card shadow-card">
-          <p className="text-sm font-medium text-muted-foreground">Active Packages</p>
+          <p className="text-sm font-medium text-muted-foreground">Aktivní balíčky</p>
           <p className="text-2xl font-semibold tabular-nums text-foreground mt-1">{packages.filter(p => p.status === 'active').length}</p>
         </div>
         <div className="rounded-xl p-5 bg-card shadow-card">
-          <p className="text-sm font-medium text-muted-foreground">Expiring Soon</p>
+          <p className="text-sm font-medium text-muted-foreground">Brzy vyprší</p>
           <p className="text-2xl font-semibold tabular-nums text-destructive mt-1">{packages.filter(p => p.status === 'expiring').length}</p>
         </div>
       </div>
 
-      {/* Active packages */}
-      <h2 className="text-sm font-semibold text-foreground mb-3">Active Packages</h2>
+      <h2 className="text-sm font-semibold text-foreground mb-3">Aktivní balíčky</h2>
       <div className="rounded-xl bg-card shadow-card overflow-hidden mb-8">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-subtle">
-              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Client</th>
-              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Package</th>
-              <th className="text-center text-xs font-medium text-muted-foreground px-4 py-3">Credits</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">Expires</th>
+              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Klient</th>
+              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Balíček</th>
+              <th className="text-center text-xs font-medium text-muted-foreground px-4 py-3">Kredity</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">Vyprší</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -81,28 +79,27 @@ export default function PaymentsPage() {
         </table>
       </div>
 
-      {/* Invoices */}
-      <h2 className="text-sm font-semibold text-foreground mb-3">Recent Invoices</h2>
+      <h2 className="text-sm font-semibold text-foreground mb-3">Poslední faktury</h2>
       <div className="rounded-xl bg-card shadow-card overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-subtle">
-              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Client</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">Amount</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">Date</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">Status</th>
+              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Klient</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">Částka</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">Datum</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3">Stav</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {invoices.map(inv => (
               <tr key={inv.id} className="hover:bg-subtle transition-colors">
                 <td className="px-4 py-3 text-sm font-medium text-foreground">{inv.client}</td>
-                <td className="px-4 py-3 text-right text-sm font-mono tabular-nums text-foreground">${inv.amount.toLocaleString()}</td>
+                <td className="px-4 py-3 text-right text-sm font-mono tabular-nums text-foreground">{inv.amount.toLocaleString('cs-CZ')} Kč</td>
                 <td className="px-4 py-3 text-right text-sm text-muted-foreground">{inv.date}</td>
                 <td className="px-4 py-3 text-right">
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-md capitalize ${
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${
                     inv.status === 'paid' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
-                  }`}>{inv.status}</span>
+                  }`}>{inv.status === 'paid' ? 'Zaplaceno' : 'Čeká na platbu'}</span>
                 </td>
               </tr>
             ))}

@@ -7,35 +7,36 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 const categoryLabels: Record<ExerciseCategory, string> = {
-  knee_dominant: "Knee Dominant",
-  hip_dominant: "Hip Dominant",
-  push: "Push",
-  pull: "Pull",
-  core: "Core",
-  conditioning: "Conditioning",
-  mobility: "Mobility",
+  knee_dominant: "Dominance kolene",
+  hip_dominant: "Dominance kyčle",
+  push: "Tlak",
+  pull: "Tah",
+  core: "Střed těla",
+  conditioning: "Kondice",
+  mobility: "Mobilita",
 };
+
+const tabLabels = { plans: 'Plány', exercises: 'Cviky' };
 
 export default function TrainingPage() {
   const [tab, setTab] = useState<'plans' | 'exercises'>('plans');
 
   return (
     <div className="p-6 max-w-6xl mx-auto animate-fade-in">
-      <PageHeader title="Training" description="Plans and exercise library">
-        <Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> New plan</Button>
+      <PageHeader title="Trénink" description="Plány a knihovna cviků">
+        <Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Nový plán</Button>
       </PageHeader>
 
-      {/* Tabs */}
       <div className="flex gap-1 mb-6">
         {(['plans', 'exercises'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               tab === t ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
-            {t}
+            {tabLabels[t]}
           </button>
         ))}
       </div>
@@ -60,11 +61,11 @@ export default function TrainingPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2">Exercise</th>
-                      <th className="text-center text-xs font-medium text-muted-foreground px-3 py-2">Sets</th>
-                      <th className="text-center text-xs font-medium text-muted-foreground px-3 py-2">Reps</th>
+                      <th className="text-left text-xs font-medium text-muted-foreground px-3 py-2">Cvik</th>
+                      <th className="text-center text-xs font-medium text-muted-foreground px-3 py-2">Série</th>
+                      <th className="text-center text-xs font-medium text-muted-foreground px-3 py-2">Opakování</th>
                       <th className="text-center text-xs font-medium text-muted-foreground px-3 py-2">RPE</th>
-                      <th className="text-right text-xs font-medium text-muted-foreground px-3 py-2">Rest</th>
+                      <th className="text-right text-xs font-medium text-muted-foreground px-3 py-2">Odpočinek</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">

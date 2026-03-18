@@ -10,6 +10,13 @@ import { getClientsByCoach, type ClientStatus } from "@/lib/demo-data";
 
 const COACH_ID = "c1";
 const filterOptions: (ClientStatus | 'all')[] = ['all', 'active', 'at_risk', 'inactive', 'lead'];
+const filterLabels: Record<string, string> = {
+  all: 'Všichni',
+  active: 'Aktivní',
+  at_risk: 'V ohrožení',
+  inactive: 'Neaktivní',
+  lead: 'Potenciální',
+};
 
 export default function ClientsPage() {
   const allClients = getClientsByCoach(COACH_ID);
@@ -22,16 +29,15 @@ export default function ClientsPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto animate-fade-in">
-      <PageHeader title="Clients" description={`${allClients.length} total clients`}>
-        <Button size="sm" className="gap-1.5"><UserPlus className="h-3.5 w-3.5" /> Add client</Button>
+      <PageHeader title="Klienti" description={`Celkem ${allClients.length} klientů`}>
+        <Button size="sm" className="gap-1.5"><UserPlus className="h-3.5 w-3.5" /> Přidat klienta</Button>
       </PageHeader>
 
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search clients..."
+            placeholder="Hledat klienty..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -42,28 +48,27 @@ export default function ClientsPage() {
             <button
               key={f}
               onClick={() => setStatusFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 statusFilter === f
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
-              {f === 'at_risk' ? 'At Risk' : f}
+              {filterLabels[f]}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Client List */}
       <div className="rounded-xl bg-card shadow-card overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-subtle">
-              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Client</th>
-              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 hidden sm:table-cell">Status</th>
-              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 hidden md:table-cell">Goals</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">Credits</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">Last Active</th>
+              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Klient</th>
+              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 hidden sm:table-cell">Stav</th>
+              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 hidden md:table-cell">Cíle</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">Kredity</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">Poslední aktivita</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -95,7 +100,7 @@ export default function ClientsPage() {
           </tbody>
         </table>
         {filtered.length === 0 && (
-          <p className="p-8 text-center text-sm text-muted-foreground">No clients found.</p>
+          <p className="p-8 text-center text-sm text-muted-foreground">Žádní klienti nenalezeni.</p>
         )}
       </div>
     </div>

@@ -14,8 +14,9 @@ import {
   workoutPlans,
 } from "@/lib/demo-data";
 import { format, parseISO } from "date-fns";
+import { cs } from "date-fns/locale";
 
-const COACH_ID = "c1"; // Demo: Alex Rivera
+const COACH_ID = "c1";
 
 export default function CoachDashboard() {
   const myClients = getClientsByCoach(COACH_ID);
@@ -29,36 +30,34 @@ export default function CoachDashboard() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto animate-fade-in">
-      <PageHeader title="Dashboard" description="Welcome back, Alex.">
+      <PageHeader title="Přehled" description="Vítejte zpět, Alexi.">
         <Link to="/clients">
           <Button variant="outline" size="sm" className="gap-1.5">
-            <UserPlus className="h-3.5 w-3.5" /> Add client
+            <UserPlus className="h-3.5 w-3.5" /> Přidat klienta
           </Button>
         </Link>
         <Link to="/training">
           <Button size="sm" className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" /> New plan
+            <Plus className="h-3.5 w-3.5" /> Nový plán
           </Button>
         </Link>
       </PageHeader>
 
-      {/* Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <MetricCard label="Active Clients" value={activeCount} change="+2 this month" changeType="positive" />
-        <MetricCard label="Today's Sessions" value={todayBookings.length} />
-        <MetricCard label="At Risk" value={atRisk.length} change="needs attention" changeType="negative" />
-        <MetricCard label="Active Plans" value={activePlans.length} />
+        <MetricCard label="Aktivní klienti" value={activeCount} change="+2 tento měsíc" changeType="positive" />
+        <MetricCard label="Dnešní lekce" value={todayBookings.length} />
+        <MetricCard label="V ohrožení" value={atRisk.length} change="vyžaduje pozornost" changeType="negative" />
+        <MetricCard label="Aktivní plány" value={activePlans.length} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upcoming Sessions */}
         <div className="rounded-xl bg-card shadow-card">
           <div className="flex items-center justify-between p-4 border-b border-border">
             <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" /> Upcoming Sessions
+              <Calendar className="h-4 w-4 text-muted-foreground" /> Nadcházející lekce
             </h2>
             <Link to="/calendar" className="text-xs font-medium text-primary hover:underline">
-              View all
+              Zobrazit vše
             </Link>
           </div>
           <div className="divide-y divide-border">
@@ -69,27 +68,26 @@ export default function CoachDashboard() {
                   <div>
                     <p className="text-sm font-medium text-foreground">{booking.clientName}</p>
                     <p className="text-xs text-muted-foreground">
-                      {format(parseISO(booking.startTime), "EEE, MMM d · h:mm a")}
+                      {format(parseISO(booking.startTime), "EEE, d. MMM · H:mm", { locale: cs })}
                     </p>
                   </div>
                 </div>
-                <span className="text-xs font-medium text-muted-foreground capitalize">{booking.type}</span>
+                <span className="text-xs font-medium text-muted-foreground">{booking.type === '1:1' ? 'Individuální' : 'Skupinová'}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* At Risk Clients */}
         <div className="rounded-xl bg-card shadow-card">
           <div className="flex items-center justify-between p-4 border-b border-border">
-            <h2 className="text-sm font-semibold text-foreground">Clients at Risk</h2>
+            <h2 className="text-sm font-semibold text-foreground">Klienti v ohrožení</h2>
             <Link to="/clients" className="text-xs font-medium text-primary hover:underline">
-              View all
+              Zobrazit vše
             </Link>
           </div>
           <div className="divide-y divide-border">
             {atRisk.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">No clients at risk. Nice work.</p>
+              <p className="p-4 text-sm text-muted-foreground">Žádní klienti v ohrožení. Dobrá práce.</p>
             ) : (
               atRisk.map((client) => (
                 <Link
@@ -102,23 +100,22 @@ export default function CoachDashboard() {
                     <div>
                       <p className="text-sm font-medium text-foreground">{client.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        Last active: {format(parseISO(client.lastActivity), "MMM d")}
+                        Poslední aktivita: {format(parseISO(client.lastActivity), "d. MMM", { locale: cs })}
                       </p>
                     </div>
                   </div>
                   <span className="opacity-0 group-hover:opacity-100 text-xs font-medium text-primary transition-opacity">
-                    Message
+                    Napsat
                   </span>
                 </Link>
               ))
             )}
           </div>
 
-          {/* Recent check-ins */}
           <div className="border-t border-border">
             <div className="p-4 border-b border-border">
               <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Dumbbell className="h-4 w-4 text-muted-foreground" /> Active Plans
+                <Dumbbell className="h-4 w-4 text-muted-foreground" /> Aktivní plány
               </h2>
             </div>
             <div className="divide-y divide-border">
@@ -130,7 +127,7 @@ export default function CoachDashboard() {
                 >
                   <div>
                     <p className="text-sm font-medium text-foreground">{plan.title}</p>
-                    <p className="text-xs text-muted-foreground">{plan.clientName} · {plan.exercises.length} exercises</p>
+                    <p className="text-xs text-muted-foreground">{plan.clientName} · {plan.exercises.length} cviků</p>
                   </div>
                   <StatusBadge status="active" />
                 </Link>

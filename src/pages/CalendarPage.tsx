@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { getBookingsByCoach, type BookingStatus } from "@/lib/demo-data";
 import { format, parseISO, startOfDay, addDays } from "date-fns";
+import { cs } from "date-fns/locale";
 import { useState } from "react";
 
 const COACH_ID = "c1";
@@ -15,12 +16,18 @@ const statusStyles: Record<BookingStatus, string> = {
   no_show: "bg-destructive/10 text-destructive",
 };
 
+const statusLabels: Record<BookingStatus, string> = {
+  booked: "Rezervováno",
+  completed: "Dokončeno",
+  cancelled: "Zrušeno",
+  no_show: "Nedostavil se",
+};
+
 export default function CalendarPage() {
   const allBookings = getBookingsByCoach(COACH_ID);
-  const today = startOfDay(new Date(2026, 2, 18)); // Demo date
+  const today = startOfDay(new Date(2026, 2, 18));
   const [selectedDate, setSelectedDate] = useState(today);
 
-  // Generate a week of dates
   const weekDates = Array.from({ length: 7 }, (_, i) => addDays(today, i - 1));
 
   const dayBookings = allBookings
@@ -29,15 +36,13 @@ export default function CalendarPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto animate-fade-in">
-      <PageHeader title="Calendar" description="Manage your schedule">
-        <Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Book session</Button>
+      <PageHeader title="Kalendář" description="Správa rozvrhu">
+        <Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Rezervovat lekci</Button>
       </PageHeader>
 
-      {/* Date selector */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {weekDates.map(date => {
           const isSelected = date.getTime() === selectedDate.getTime();
-          const isToday = date.getTime() === today.getTime();
           const dayBookingCount = allBookings.filter(b => startOfDay(parseISO(b.startTime)).getTime() === date.getTime()).length;
           return (
             <button
@@ -50,7 +55,7 @@ export default function CalendarPage() {
               }`}
             >
               <span className={`text-xs font-medium ${isSelected ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                {format(date, "EEE")}
+                {format(date, "EEE", { locale: cs })}
               </span>
               <span className="text-lg font-semibold tabular-nums">{format(date, "d")}</span>
               {dayBookingCount > 0 && (
@@ -61,16 +66,15 @@ export default function CalendarPage() {
         })}
       </div>
 
-      {/* Bookings for selected day */}
       <div className="rounded-xl bg-card shadow-card">
         <div className="p-4 border-b border-border">
           <h2 className="text-sm font-semibold text-foreground">
-            {format(selectedDate, "EEEE, MMMM d")}
-            <span className="text-muted-foreground font-normal ml-2">· {dayBookings.length} sessions</span>
+            {format(selectedDate, "EEEE, d. MMMM", { locale: cs })}
+            <span className="text-muted-foreground font-normal ml-2">· {dayBookings.length} lekcí</span>
           </h2>
         </div>
         {dayBookings.length === 0 ? (
-          <p className="p-8 text-center text-sm text-muted-foreground">No sessions scheduled.</p>
+          <p className="p-8 text-center text-sm text-muted-foreground">Žádné naplánované lekce.</p>
         ) : (
           <div className="divide-y divide-border">
             {dayBookings.map(booking => (
@@ -89,12 +93,12 @@ export default function CalendarPage() {
                     <AvatarCircle initials={booking.clientName.split(" ").map(n => n[0]).join("")} size="sm" />
                     <div>
                       <p className="text-sm font-medium text-foreground">{booking.clientName}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{booking.type} session</p>
+                      <p className="text-xs text-muted-foreground">{booking.type === '1:1' ? 'Individuální lekce' : 'Skupinová lekce'}</p>
                     </div>
                   </div>
                 </div>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-md capitalize ${statusStyles[booking.status]}`}>
-                  {booking.status}
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${statusStyles[booking.status]}`}>
+                  {statusLabels[booking.status]}
                 </span>
               </div>
             ))}
