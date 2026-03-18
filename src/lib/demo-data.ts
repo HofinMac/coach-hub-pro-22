@@ -1,7 +1,7 @@
 // ===== Types =====
 export type UserRole = 'admin' | 'coach' | 'client';
 export type ClientStatus = 'active' | 'inactive' | 'lead' | 'at_risk';
-export type BookingStatus = 'booked' | 'completed' | 'cancelled' | 'no_show';
+export type BookingStatus = 'pending' | 'booked' | 'completed' | 'cancelled' | 'no_show';
 export type PlanStatus = 'draft' | 'active' | 'completed';
 export type ExerciseCategory = 'knee_dominant' | 'hip_dominant' | 'push' | 'pull' | 'core' | 'conditioning' | 'mobility';
 
