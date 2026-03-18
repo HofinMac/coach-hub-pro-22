@@ -39,6 +39,7 @@ export interface Exercise {
   name: string;
   category: ExerciseCategory;
   defaultNotes: string;
+  videoUrl?: string;
 }
 
 export interface WorkoutPlan {
