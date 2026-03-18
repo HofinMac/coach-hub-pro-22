@@ -25,6 +25,8 @@ import ClientCalendarPage from "@/pages/client/ClientCalendarPage";
 import ClientProgressPage from "@/pages/client/ClientProgressPage";
 import ClientMessagesPage from "@/pages/client/ClientMessagesPage";
 import ClientPaymentsPage from "@/pages/client/ClientPaymentsPage";
+import CoachOnboarding from "@/pages/onboarding/CoachOnboarding";
+import ClientOnboarding from "@/pages/onboarding/ClientOnboarding";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +60,10 @@ const App = () => (
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+
+          {/* Onboarding */}
+          <Route path="/onboarding/trener" element={<CoachOnboarding />} />
+          <Route path="/onboarding/klient" element={<ClientOnboarding />} />
 
           {/* Coach pages */}
           <Route path="/dashboard" element={<CoachShell><CoachDashboard /></CoachShell>} />
