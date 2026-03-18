@@ -59,6 +59,10 @@ export default function TrainingPage() {
   const [exCategory, setExCategory] = useState<ExerciseCategory>("knee_dominant");
   const [exNotes, setExNotes] = useState("");
   const [exVideoUrl, setExVideoUrl] = useState("");
+  const [exVideoFile, setExVideoFile] = useState<string | null>(null); // base64 data URL for recorded/uploaded video
+  const [videoInputMode, setVideoInputMode] = useState<"url" | "upload">("url");
+  const videoFileRef = useRef<HTMLInputElement>(null);
+  const videoCaptureRef = useRef<HTMLInputElement>(null);
 
   // Video preview state
   const [videoPreviewOpen, setVideoPreviewOpen] = useState(false);
