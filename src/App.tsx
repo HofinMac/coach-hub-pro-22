@@ -18,6 +18,7 @@ import CalendarPage from "@/pages/CalendarPage";
 import MessagesPage from "@/pages/MessagesPage";
 import PaymentsPage from "@/pages/PaymentsPage";
 import AdminPage from "@/pages/AdminPage";
+import GymsPage from "@/pages/GymsPage";
 import NotFound from "@/pages/NotFound";
 import ClientDashboard from "@/pages/client/ClientDashboard";
 import ClientTrainingPage from "@/pages/client/ClientTrainingPage";
