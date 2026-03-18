@@ -36,6 +36,7 @@ export default function CoachOnboarding() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
+  const [trainingLocation, setTrainingLocation] = useState("");
   const [bio, setBio] = useState("");
 
   // Step 2 – education & experience
