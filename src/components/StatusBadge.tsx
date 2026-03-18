@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
-import { ClientStatus, statusColors } from "@/lib/demo-data";
+import { statusColors } from "@/lib/demo-data";
 
 interface StatusBadgeProps {
-  status: ClientStatus;
+  status: string;
   className?: string;
 }
 
@@ -22,7 +22,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span className={cn(
       "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium",
-      statusColors[status],
+      (statusColors as Record<string, string>)[status] ?? "bg-muted text-muted-foreground",
       className
     )}>
       {statusLabels[status] || status}
