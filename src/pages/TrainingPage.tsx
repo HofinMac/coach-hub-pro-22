@@ -129,6 +129,8 @@ export default function TrainingPage() {
     setExCategory("knee_dominant");
     setExNotes("");
     setExVideoUrl("");
+    setExVideoFile(null);
+    setVideoInputMode("url");
     setExerciseEditorOpen(true);
   };
 
@@ -139,7 +141,35 @@ export default function TrainingPage() {
     setExCategory(ex.category);
     setExNotes(ex.defaultNotes);
     setExVideoUrl(ex.videoUrl || "");
+    setExVideoFile(null);
+    setVideoInputMode(ex.videoUrl ? "url" : "url");
     setExerciseEditorOpen(true);
+  };
+
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("video/")) {
+      toast.error("Nahrajte prosím video soubor");
+      return;
+    }
+    if (file.size > 100 * 1024 * 1024) {
+      toast.error("Maximální velikost videa je 100 MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setExVideoFile(reader.result as string);
+      setExVideoUrl("");
+    };
+    reader.readAsDataURL(file);
+    toast.success(`Video "${file.name}" nahráno`);
+  };
+
+  const getEffectiveVideoUrl = (): string | undefined => {
+    if (exVideoFile) return exVideoFile;
+    if (exVideoUrl.trim()) return exVideoUrl.trim();
+    return undefined;
   };
 
   const handleSaveExercise = () => {
@@ -147,20 +177,21 @@ export default function TrainingPage() {
       toast.error("Zadejte název cviku");
       return;
     }
+    const videoUrl = getEffectiveVideoUrl();
     if (exerciseEditorMode === "create") {
       const newEx: Exercise = {
         id: `ex_${Date.now()}`,
         name: exName.trim(),
         category: exCategory,
         defaultNotes: exNotes.trim(),
-        videoUrl: exVideoUrl.trim() || undefined,
+        videoUrl,
       };
       setExerciseList(prev => [...prev, newEx]);
       toast.success("Cvik přidán!");
     } else if (editingExercise) {
       setExerciseList(prev => prev.map(e =>
         e.id === editingExercise.id
-          ? { ...e, name: exName.trim(), category: exCategory, defaultNotes: exNotes.trim(), videoUrl: exVideoUrl.trim() || undefined }
+          ? { ...e, name: exName.trim(), category: exCategory, defaultNotes: exNotes.trim(), videoUrl }
           : e
       ));
       toast.success("Cvik upraven!");
