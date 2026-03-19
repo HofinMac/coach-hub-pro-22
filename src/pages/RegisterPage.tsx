@@ -8,8 +8,11 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-subtle flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <Link to="/" className="text-xl font-semibold tracking-tight text-foreground">apex</Link>
+          <Link to="/" className="text-xl font-semibold tracking-tight text-foreground hover:opacity-80 transition-opacity">apex</Link>
           <p className="text-sm text-muted-foreground mt-2">Vytvořte si trenérský účet</p>
+          <Link to="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mt-3 transition-colors">
+            ← Zpět na hlavní stránku
+          </Link>
         </div>
         <div className="rounded-xl bg-card shadow-card p-6 space-y-4">
           <div className="space-y-2">
