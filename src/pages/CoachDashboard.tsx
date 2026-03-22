@@ -104,7 +104,8 @@ export default function CoachDashboard() {
             <Plus className="h-3.5 w-3.5" /> Nový plán
           </Button>
         </Link>
-      </PageHeader>
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <MetricCard label="Aktivní klienti" value={activeCount} change="+2 tento měsíc" changeType="positive" />
