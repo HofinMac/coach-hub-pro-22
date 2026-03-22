@@ -107,7 +107,7 @@ export default function CampaignsPage() {
 
       <div className="space-y-3">
         {campaigns.map(c => (
-          <div key={c.id} className="rounded-xl bg-card shadow-card p-5">
+          <Link to={`/admin/campaigns/${c.id}`} key={c.id} className="rounded-xl bg-card shadow-card p-5 block hover:ring-1 hover:ring-primary/20 transition-all">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
