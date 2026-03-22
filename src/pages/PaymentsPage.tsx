@@ -119,6 +119,51 @@ export default function PaymentsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* New Package Dialog */}
+      <Dialog open={pkgOpen} onOpenChange={setPkgOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nový balíček</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Klient</Label>
+              <Select value={pkgClient} onValueChange={setPkgClient}>
+                <SelectTrigger><SelectValue placeholder="Vyberte klienta" /></SelectTrigger>
+                <SelectContent>
+                  {clients.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Název balíčku</Label>
+              <Input value={pkgName} onChange={e => setPkgName(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Počet kreditů</Label>
+                <Input type="number" value={pkgCredits} onChange={e => setPkgCredits(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Cena (Kč)</Label>
+                <Input type="number" placeholder="950" value={pkgPrice} onChange={e => setPkgPrice(e.target.value)} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPkgOpen(false)}>Zrušit</Button>
+            <Button onClick={() => {
+              if (!pkgClient || !pkgPrice) { toast.error("Vyplňte klienta a cenu"); return; }
+              toast.success("Balíček vytvořen");
+              setPkgOpen(false);
+              setPkgClient(""); setPkgName("Balíček 10 lekcí"); setPkgCredits("10"); setPkgPrice("");
+            }}>Vytvořit</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
