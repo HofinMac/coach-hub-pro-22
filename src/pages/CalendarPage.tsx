@@ -494,7 +494,70 @@ export default function CalendarPage() {
             )}
           </>
         )}
-      </div>
+      {/* New Lesson Dialog */}
+      <Dialog open={newLessonOpen} onOpenChange={setNewLessonOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rezervovat lekci</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Klient</Label>
+              <Select value={nlClient} onValueChange={setNlClient}>
+                <SelectTrigger><SelectValue placeholder="Vyberte klienta" /></SelectTrigger>
+                <SelectContent>
+                  {clients.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Datum</Label>
+                <Input type="date" value={nlDate} onChange={e => setNlDate(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Čas</Label>
+                <Input type="time" value={nlTime} onChange={e => setNlTime(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Délka (min)</Label>
+                <Select value={nlDuration} onValueChange={setNlDuration}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="30">30 min</SelectItem>
+                    <SelectItem value="45">45 min</SelectItem>
+                    <SelectItem value="60">60 min</SelectItem>
+                    <SelectItem value="90">90 min</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Typ</Label>
+                <Select value={nlType} onValueChange={v => setNlType(v as "1:1" | "group")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1:1">Individuální</SelectItem>
+                    <SelectItem value="group">Skupinová</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewLessonOpen(false)}>Zrušit</Button>
+            <Button onClick={() => {
+              if (!nlClient || !nlDate) { toast.error("Vyplňte klienta a datum"); return; }
+              toast.success("Lekce zarezervována");
+              setNewLessonOpen(false);
+              setNlClient(""); setNlDate(""); setNlTime("09:00"); setNlDuration("60"); setNlType("1:1");
+            }}>Rezervovat</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
