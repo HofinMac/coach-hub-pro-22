@@ -481,12 +481,12 @@ export default function CoachOnboarding() {
           {/* Navigation */}
           <div className="flex items-center justify-between mt-8">
             {step > 0 ? (
-              <Button variant="outline" onClick={() => setStep(s => s - 1)} className="gap-1.5">
+              <Button variant="outline" onClick={() => { setStep(s => s - 1); setStepErrors([]); }} className="gap-1.5">
                 <ArrowLeft className="h-3.5 w-3.5" /> Zpět
               </Button>
             ) : <div />}
             {step < 4 ? (
-              <Button onClick={() => setStep(s => s + 1)} disabled={!canProceed()} className="gap-1.5">
+              <Button onClick={handleNext} className="gap-1.5">
                 Další <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             ) : (
