@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight } from "lucide-react";
+import logoHorizontal from "@/assets/logo-trenernik-horizontal.png";
 
 const plans = [
   {
