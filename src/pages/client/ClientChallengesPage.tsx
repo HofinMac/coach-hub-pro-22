@@ -8,6 +8,7 @@ import { Trophy, Gift, Copy, CheckCircle2, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { redeemCode } from "@/lib/partner-engine";
 import { cs } from "date-fns/locale";
 
 interface Challenge {
