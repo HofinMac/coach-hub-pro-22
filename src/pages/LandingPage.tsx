@@ -34,10 +34,10 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-6 pt-24 pb-20">
         <div className="max-w-2xl">
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-foreground leading-tight">
-            Spravujte své klienty,<br />ne své tabulky.
+            Klienti pod kontrolou.
           </h1>
           <p className="mt-5 text-lg text-muted-foreground leading-relaxed max-w-lg">
-            Apex spojuje správu klientů, tréninkové plány, rezervace a sledování pokroku do jedné platformy vytvořené pro profesionální trenéry.
+            Trenérník spojuje správu klientů, tréninkové plány, rezervace a sledování pokroku do jedné platformy vytvořené pro profesionální trenéry.
           </p>
           <div className="mt-8 flex items-center gap-3">
             <Link to="/register">
