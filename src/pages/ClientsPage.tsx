@@ -31,9 +31,14 @@ export default function ClientsPage() {
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   // Add client form
+  const [newName, setNewName] = useState("");
+  const [newNickname, setNewNickname] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newGoal, setNewGoal] = useState("");
+  const [newInjuries, setNewInjuries] = useState("");
+  const [newPhoto, setNewPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const filtered = allClients
@@ -41,9 +46,16 @@ export default function ClientsPage() {
     .filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase()));
 
   const resetForm = () => {
-    setNewEmail("");
-    setNewPhone("");
-    setNewGoal("");
+    setNewName(""); setNewNickname(""); setNewEmail(""); setNewPhone("");
+    setNewGoal(""); setNewInjuries(""); setNewPhoto(null); setPhotoPreview(null);
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewPhoto(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleAddClient = async () => {
