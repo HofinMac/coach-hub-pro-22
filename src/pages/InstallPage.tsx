@@ -100,7 +100,7 @@ export default function InstallPage() {
                 <div>
                   <p className="text-sm font-medium text-foreground">Potvrďte „Přidat"</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Apex se objeví na vaší ploše jako aplikace
+                    Trenérník se objeví na vaší ploše jako aplikace
                   </p>
                 </div>
               </div>
