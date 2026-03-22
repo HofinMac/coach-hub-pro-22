@@ -109,7 +109,7 @@ export const coaches: Coach[] = [
   {
     id: 'c3',
     name: 'Mike Johnson',
-    email: 'mike@apex.app',
+    email: 'mike@trenernik.cz',
     avatar: 'MJ',
     specialties: ['Bodybuilding', 'Contest Prep'],
     bio: 'IFBB Pro coach. Specializing in natural bodybuilding and contest prep.',

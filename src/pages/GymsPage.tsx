@@ -193,7 +193,7 @@ export default function GymsPage() {
           <div className="grid gap-4 py-2">
             <div className="grid gap-1.5">
               <Label>Název posilovny *</Label>
-              <Input value={name} onChange={e => setName(e.target.value)} placeholder="Apex Fitness Praha" maxLength={100} />
+              <Input value={name} onChange={e => setName(e.target.value)} placeholder="FitZone Praha" maxLength={100} />
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2 grid gap-1.5">
