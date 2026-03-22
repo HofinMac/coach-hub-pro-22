@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { useState } from "react";
 import { clients } from "@/lib/demo-data";
+import { toast } from "sonner";
 
 const conversations = [
   { clientId: 'cl1', lastMessage: 'Můžeme přesunout čtvrtek na pátek?', time: '10:32', unread: true },
