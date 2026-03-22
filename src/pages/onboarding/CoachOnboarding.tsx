@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { GraduationCap, User, DollarSign, CheckCircle2, ArrowRight, ArrowLeft, Palette, Upload, X, Image, AlertTriangle } from "lucide-react";
+import TrainingLocationSelect from "@/components/TrainingLocationSelect";
 
 const STEPS = [
   { icon: User, label: "Základní údaje" },
@@ -253,7 +254,7 @@ export default function CoachOnboarding() {
               </div>
               <div className="grid gap-1.5">
                 <Label>Místo tréninku *</Label>
-                <Input value={trainingLocation} onChange={e => setTrainingLocation(e.target.value)} placeholder="Název gymu, adresa studia..." maxLength={150} />
+                <TrainingLocationSelect value={trainingLocation} onChange={setTrainingLocation} />
               </div>
               <div className="grid gap-1.5">
                 <Label>O mně (krátký popis)</Label>
