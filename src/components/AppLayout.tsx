@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import logoHorizontal from "@/assets/logo-trenernik-horizontal.png";
+import logoIcon from "@/assets/logo-trenernik-icon.png";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
