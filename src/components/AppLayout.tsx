@@ -106,7 +106,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               {!collapsed && <span>{item.label}</span>}
             </NavLink>
           ))}
-          <button className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+          <button onClick={handleLogout} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
             <LogOut className="h-4 w-4 shrink-0" />
             {!collapsed && <span>Odhlásit se</span>}
           </button>
