@@ -14,6 +14,127 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_challenges: {
+        Row: {
+          campaign_id: string
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          current_progress: number
+          goal_target: number
+          id: string
+          promo_code: string | null
+          status: string
+        }
+        Insert: {
+          campaign_id: string
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          current_progress?: number
+          goal_target?: number
+          id?: string
+          promo_code?: string | null
+          status?: string
+        }
+        Update: {
+          campaign_id?: string
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          current_progress?: number
+          goal_target?: number
+          id?: string
+          promo_code?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_challenges_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "promo_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_benefits: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          campaign_id: string
+          coach_id: string
+          created_at: string
+          id: string
+          promo_code: string | null
+          status: string
+          valid_until: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          campaign_id: string
+          coach_id: string
+          created_at?: string
+          id?: string
+          promo_code?: string | null
+          status?: string
+          valid_until?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          campaign_id?: string
+          coach_id?: string
+          created_at?: string
+          id?: string
+          promo_code?: string | null
+          status?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_benefits_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "promo_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_certificates: {
+        Row: {
+          certificate_url: string
+          coach_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          certificate_url: string
+          coach_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          certificate_url?: string
+          coach_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       gyms: {
         Row: {
           address: string
@@ -42,6 +163,36 @@ export type Database = {
           created_by?: string | null
           equipment?: string[]
           id?: string
+          name?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      partners: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          website: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          website?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
           name?: string
           website?: string | null
         }
@@ -131,12 +282,121 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_campaigns: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          description: string | null
+          goal_type: string
+          goal_value: number | null
+          id: string
+          partner_id: string
+          promo_code: string | null
+          requires_approval: boolean
+          reward_type: string
+          reward_value: string
+          target_group: string
+          title: string
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          goal_type?: string
+          goal_value?: number | null
+          id?: string
+          partner_id: string
+          promo_code?: string | null
+          requires_approval?: boolean
+          reward_type?: string
+          reward_value?: string
+          target_group?: string
+          title: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          goal_type?: string
+          goal_value?: number | null
+          id?: string
+          partner_id?: string
+          promo_code?: string | null
+          requires_approval?: boolean
+          reward_type?: string
+          reward_value?: string
+          target_group?: string
+          title?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_campaigns_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reward_history: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          promo_code: string | null
+          redeemed: boolean
+          redeemed_at: string | null
+          reward_type: string
+          reward_value: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          promo_code?: string | null
+          redeemed?: boolean
+          redeemed_at?: string | null
+          reward_type: string
+          reward_value?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          promo_code?: string | null
+          redeemed?: boolean
+          redeemed_at?: string | null
+          reward_type?: string
+          reward_value?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_history_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "promo_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
