@@ -30,6 +30,11 @@ import CoachOnboarding from "@/pages/onboarding/CoachOnboarding";
 import ClientOnboarding from "@/pages/onboarding/ClientOnboarding";
 import ClientGymsPage from "@/pages/client/ClientGymsPage";
 import SettingsPage from "@/pages/SettingsPage";
+import PartnersPage from "@/pages/admin/PartnersPage";
+import CampaignsPage from "@/pages/admin/CampaignsPage";
+import ApprovalsPage from "@/pages/admin/ApprovalsPage";
+import CoachBenefitsPage from "@/pages/CoachBenefitsPage";
+import ClientChallengesPage from "@/pages/client/ClientChallengesPage";
 
 const queryClient = new QueryClient();
 
@@ -77,7 +82,11 @@ const App = () => (
           <Route path="/calendar" element={<CoachShell><CalendarPage /></CoachShell>} />
           <Route path="/messages" element={<CoachShell><MessagesPage /></CoachShell>} />
           <Route path="/payments" element={<CoachShell><PaymentsPage /></CoachShell>} />
+          <Route path="/benefits" element={<CoachShell><CoachBenefitsPage /></CoachShell>} />
           <Route path="/admin" element={<CoachShell><AdminPage /></CoachShell>} />
+          <Route path="/admin/partners" element={<CoachShell><PartnersPage /></CoachShell>} />
+          <Route path="/admin/campaigns" element={<CoachShell><CampaignsPage /></CoachShell>} />
+          <Route path="/admin/approvals" element={<CoachShell><ApprovalsPage /></CoachShell>} />
           <Route path="/settings" element={<CoachShell><SettingsPage /></CoachShell>} />
 
           {/* Client pages */}
@@ -88,6 +97,7 @@ const App = () => (
           <Route path="/klient/pokrok" element={<ClientShell><ClientProgressPage /></ClientShell>} />
           <Route path="/klient/zpravy" element={<ClientShell><ClientMessagesPage /></ClientShell>} />
           <Route path="/klient/platby" element={<ClientShell><ClientPaymentsPage /></ClientShell>} />
+          <Route path="/klient/vyzvy" element={<ClientShell><ClientChallengesPage /></ClientShell>} />
           <Route path="/klient/nastaveni" element={<ClientShell><SettingsPage /></ClientShell>} />
 
           <Route path="*" element={<NotFound />} />
