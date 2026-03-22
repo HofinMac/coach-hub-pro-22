@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import logoHorizontal from "@/assets/logo-trenernik-horizontal.png";
 import logoIcon from "@/assets/logo-trenernik-icon.png";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Dumbbell,
@@ -12,11 +12,12 @@ import {
   Settings,
   ChevronLeft,
   LogOut,
-  Bell,
   MapPin,
   Trophy,
+  MoreHorizontal,
 } from "lucide-react";
 import { useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import WorkoutSessionPrompt from "./WorkoutSessionPrompt";
@@ -36,8 +37,13 @@ const bottomItems = [
   { to: "/klient/nastaveni", icon: Settings, label: "Nastavení" },
 ];
 
+const mobileMainItems = navItems.slice(0, 4);
+const mobileOverflowItems = [...navItems.slice(4), ...bottomItems];
+
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileMore, setMobileMore] = useState(false);
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -49,6 +55,83 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     }
   };
 
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-screen bg-background">
+        <main className="flex-1 overflow-y-auto pb-16">
+          {children}
+        </main>
+
+        {mobileMore && (
+          <div className="fixed inset-0 z-40" onClick={() => setMobileMore(false)}>
+            <div className="absolute bottom-16 left-0 right-0 bg-card border-t border-border shadow-elevated rounded-t-2xl p-3 animate-in slide-in-from-bottom-4" onClick={e => e.stopPropagation()}>
+              <div className="grid grid-cols-4 gap-1">
+                {mobileOverflowItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.to === "/klient"}
+                    onClick={() => setMobileMore(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex flex-col items-center gap-1 rounded-xl py-3 text-[10px] font-medium transition-colors",
+                        isActive ? "text-primary bg-primary/10" : "text-muted-foreground"
+                      )
+                    }
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                  </NavLink>
+                ))}
+                <button
+                  onClick={() => { setMobileMore(false); handleLogout(); }}
+                  className="flex flex-col items-center gap-1 rounded-xl py-3 text-[10px] font-medium text-muted-foreground"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span>Odhlásit</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <nav className="fixed bottom-0 left-0 right-0 z-30 bg-card/95 backdrop-blur-sm border-t border-border safe-bottom">
+          <div className="flex items-center justify-around h-14 px-1">
+            {mobileMainItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === "/klient"}
+                className={({ isActive }) =>
+                  cn(
+                    "flex flex-col items-center gap-0.5 min-w-[3rem] py-1 text-[10px] font-medium transition-colors",
+                    isActive ? "text-primary" : "text-muted-foreground"
+                  )
+                }
+              >
+                <item.icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </NavLink>
+            ))}
+            <button
+              onClick={() => setMobileMore(!mobileMore)}
+              className={cn(
+                "flex flex-col items-center gap-0.5 min-w-[3rem] py-1 text-[10px] font-medium transition-colors",
+                mobileMore ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              <MoreHorizontal className="h-5 w-5" />
+              <span>Více</span>
+            </button>
+          </div>
+        </nav>
+
+        <WorkoutSessionPrompt />
+      </div>
+    );
+  }
+
+  // Desktop sidebar
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <aside
@@ -125,15 +208,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       </main>
 
       <WorkoutSessionPrompt />
-
-      {/* Demo trigger – for testing the workout prompt */}
-      <button
-        onClick={() => window.dispatchEvent(new Event("workout-prompt-demo"))}
-        className="fixed bottom-4 left-4 z-50 rounded-full bg-primary/10 text-primary px-3 py-1.5 text-xs font-medium hover:bg-primary/20 transition-colors"
-        title="Demo: spustit výzvu k tréninku"
-      >
-        ⚡ Test prompt
-      </button>
     </div>
   );
 }
