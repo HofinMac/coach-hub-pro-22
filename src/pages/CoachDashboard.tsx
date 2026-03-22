@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { AvatarCircle } from "@/components/AvatarCircle";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Plus, UserPlus, Calendar, Dumbbell } from "lucide-react";
+import { Plus, UserPlus, Calendar, Dumbbell, Users, AlertTriangle, ClipboardList, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   bookings,
@@ -50,6 +50,39 @@ export default function CoachDashboard() {
   const todayBookings = bookings.filter(
     (b) => b.coachId === COACH_ID && b.startTime.startsWith("2026-03-18")
   );
+
+  // Countdown to next lesson
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getLessonStatus = () => {
+    // Use demo date context (2026-03-18) but with real current time for countdown feel
+    const todaySorted = [...todayBookings].sort((a, b) => a.startTime.localeCompare(b.startTime));
+    for (const b of todaySorted) {
+      const start = parseISO(b.startTime);
+      const end = parseISO(b.endTime);
+      // Simulate: compare only hours/minutes against "now"
+      const fakeNow = new Date(start);
+      fakeNow.setHours(now.getHours(), now.getMinutes());
+
+      if (fakeNow >= start && fakeNow <= end) {
+        const remaining = Math.round((end.getTime() - fakeNow.getTime()) / 60000);
+        return `⏱ probíhá · ${remaining} min zbývá`;
+      }
+      if (fakeNow < start) {
+        const diff = Math.round((start.getTime() - fakeNow.getTime()) / 60000);
+        if (diff < 60) return `za ${diff} min`;
+        const h = Math.floor(diff / 60);
+        const m = diff % 60;
+        return `za ${h}h ${m}m`;
+      }
+    }
+    if (todaySorted.length > 0) return "dokončeno ✓";
+    return "žádná lekce";
+  };
 
   const firstName = profile?.full_name?.split(" ")[0] || "trenére";
 
@@ -123,11 +156,11 @@ export default function CoachDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <MetricCard label="Aktivní klienti" value={activeCount} change="+2 tento měsíc" changeType="positive" />
-        <MetricCard label="Dnešní lekce" value={todayBookings.length} />
-        <MetricCard label="V ohrožení" value={atRisk.length} change="vyžaduje pozornost" changeType="negative" />
-        <MetricCard label="Aktivní plány" value={activePlans.length} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <MetricCard label="Aktivní klienti" value={activeCount} change="+2 tento měsíc" changeType="positive" icon={Users} to="/clients" />
+        <MetricCard label="Dnešní lekce" value={todayBookings.length} change={getLessonStatus()} icon={Clock} to="/calendar" />
+        <MetricCard label="V ohrožení" value={atRisk.length} change="vyžaduje pozornost" changeType="negative" icon={AlertTriangle} to="/clients" />
+        <MetricCard label="Aktivní plány" value={activePlans.length} icon={ClipboardList} to="/training" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
