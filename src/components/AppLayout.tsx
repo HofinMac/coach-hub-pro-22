@@ -35,6 +35,16 @@ const bottomItems = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({ title: "Chyba při odhlašování", description: error.message, variant: "destructive" });
+    } else {
+      navigate("/");
+    }
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
