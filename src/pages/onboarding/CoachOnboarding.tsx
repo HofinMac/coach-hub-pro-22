@@ -125,6 +125,10 @@ export default function CoachOnboarding() {
     const errors: string[] = [];
     if (step === 0) {
       if (!fullName.trim()) errors.push("Celé jméno je povinné");
+      if (!phone.trim()) errors.push("Telefon je povinný");
+      if (!city.trim()) errors.push("Město je povinné");
+      if (!trainingLocation.trim()) errors.push("Místo tréninku je povinné");
+      if (coachType.length === 0) errors.push("Vyberte alespoň jeden typ trenéra");
     }
     if (step === 1) {
       if (!yearsExperience) errors.push("Vyberte roky zkušeností");
@@ -239,16 +243,16 @@ export default function CoachOnboarding() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="grid gap-1.5">
-                  <Label>Telefon</Label>
+                  <Label>Telefon *</Label>
                   <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+420 ..." maxLength={20} />
                 </div>
                 <div className="grid gap-1.5">
-                  <Label>Město</Label>
+                  <Label>Město *</Label>
                   <Input value={city} onChange={e => setCity(e.target.value)} placeholder="Praha" maxLength={50} />
                 </div>
               </div>
               <div className="grid gap-1.5">
-                <Label>Místo tréninku</Label>
+                <Label>Místo tréninku *</Label>
                 <Input value={trainingLocation} onChange={e => setTrainingLocation(e.target.value)} placeholder="Název gymu, adresa studia..." maxLength={150} />
               </div>
               <div className="grid gap-1.5">
