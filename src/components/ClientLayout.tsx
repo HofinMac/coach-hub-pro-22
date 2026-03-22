@@ -12,6 +12,7 @@ import {
   LogOut,
   Bell,
   MapPin,
+  Trophy,
 } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +27,7 @@ const navItems = [
   { to: "/klient/pokrok", icon: TrendingUp, label: "Pokrok" },
   { to: "/klient/zpravy", icon: MessageSquare, label: "Zprávy" },
   { to: "/klient/platby", icon: CreditCard, label: "Balíčky" },
+  { to: "/klient/vyzvy", icon: Trophy, label: "Výzvy" },
 ];
 
 const bottomItems = [
