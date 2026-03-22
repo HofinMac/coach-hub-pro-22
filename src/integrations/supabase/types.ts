@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaign_rules: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          description: string | null
+          id: string
+          metric_key: string | null
+          operator: string
+          rule_type: string
+          threshold: number
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          metric_key?: string | null
+          operator?: string
+          rule_type: string
+          threshold?: number
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          metric_key?: string | null
+          operator?: string
+          rule_type?: string
+          threshold?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_rules_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "promo_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_challenges: {
         Row: {
           campaign_id: string
@@ -135,6 +176,47 @@ export type Database = {
         }
         Relationships: []
       }
+      eligibility: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          eligible: boolean
+          evaluated_at: string
+          expires_at: string | null
+          id: string
+          rule_results: Json
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          eligible?: boolean
+          evaluated_at?: string
+          expires_at?: string | null
+          id?: string
+          rule_results?: Json
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          eligible?: boolean
+          evaluated_at?: string
+          expires_at?: string | null
+          id?: string
+          rule_results?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eligibility_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "promo_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gyms: {
         Row: {
           address: string
@@ -165,6 +247,42 @@ export type Database = {
           id?: string
           name?: string
           website?: string | null
+        }
+        Relationships: []
+      }
+      partner_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json | null
+          new_values: Json | null
+          old_values: Json | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
         }
         Relationships: []
       }
@@ -343,6 +461,98 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          active: boolean
+          assigned_to: string | null
+          campaign_id: string
+          code: string
+          created_at: string
+          current_uses: number
+          expires_at: string | null
+          id: string
+          is_personal: boolean
+          max_uses: number | null
+        }
+        Insert: {
+          active?: boolean
+          assigned_to?: string | null
+          campaign_id: string
+          code: string
+          created_at?: string
+          current_uses?: number
+          expires_at?: string | null
+          id?: string
+          is_personal?: boolean
+          max_uses?: number | null
+        }
+        Update: {
+          active?: boolean
+          assigned_to?: string | null
+          campaign_id?: string
+          code?: string
+          created_at?: string
+          current_uses?: number
+          expires_at?: string | null
+          id?: string
+          is_personal?: boolean
+          max_uses?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_codes_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "promo_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      redemptions: {
+        Row: {
+          campaign_id: string
+          id: string
+          notes: string | null
+          promo_code_id: string | null
+          redeemed_at: string
+          source: string | null
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          id?: string
+          notes?: string | null
+          promo_code_id?: string | null
+          redeemed_at?: string
+          source?: string | null
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          id?: string
+          notes?: string | null
+          promo_code_id?: string | null
+          redeemed_at?: string
+          source?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redemptions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "promo_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redemptions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
             referencedColumns: ["id"]
           },
         ]
