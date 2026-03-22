@@ -494,6 +494,7 @@ export default function CalendarPage() {
             )}
           </>
         )}
+      </div>
       {/* New Lesson Dialog */}
       <Dialog open={newLessonOpen} onOpenChange={setNewLessonOpen}>
         <DialogContent className="sm:max-w-md">
