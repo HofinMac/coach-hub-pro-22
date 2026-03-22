@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Download, Smartphone, Share, PlusSquare, Check, ArrowRight } from "lucide-react";
+import logoSquare from "@/assets/logo-trenernik-square.png";
+import logoHorizontal from "@/assets/logo-trenernik-horizontal.png";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -40,13 +42,9 @@ export default function InstallPage() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="w-full max-w-md text-center">
-        <div className="mb-8">
-          <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
-            <Smartphone className="h-10 w-10 text-primary" />
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Nainstalujte si Trenérník
-          </h1>
+        <div className="mb-10">
+          <img src={logoSquare} alt="Trenérník" className="h-24 w-24 rounded-2xl mx-auto mb-6" />
+          <img src={logoHorizontal} alt="Trenérník" className="h-16 mx-auto mb-3" />
           <p className="text-muted-foreground mt-2 text-sm max-w-xs mx-auto">
             Přidejte si Trenérník na domovskou obrazovku a používejte ho jako běžnou aplikaci.
           </p>
