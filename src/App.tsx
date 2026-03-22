@@ -86,6 +86,7 @@ const App = () => (
           <Route path="/benefits" element={<CoachShell><CoachBenefitsPage /></CoachShell>} />
           <Route path="/admin" element={<CoachShell><AdminPage /></CoachShell>} />
           <Route path="/admin/partners" element={<CoachShell><PartnersPage /></CoachShell>} />
+          <Route path="/admin/campaigns/:id" element={<CoachShell><CampaignDetailPage /></CoachShell>} />
           <Route path="/admin/campaigns" element={<CoachShell><CampaignsPage /></CoachShell>} />
           <Route path="/admin/approvals" element={<CoachShell><ApprovalsPage /></CoachShell>} />
           <Route path="/settings" element={<CoachShell><SettingsPage /></CoachShell>} />
