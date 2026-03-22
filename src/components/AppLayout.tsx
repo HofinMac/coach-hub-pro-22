@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
