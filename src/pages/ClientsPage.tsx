@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { UserPlus, Search } from "lucide-react";
+import { UserPlus, Search, Camera } from "lucide-react";
 import { getClientsByCoach, type ClientStatus } from "@/lib/demo-data";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -29,9 +29,14 @@ export default function ClientsPage() {
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   // Add client form
+  const [newName, setNewName] = useState("");
+  const [newNickname, setNewNickname] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newGoal, setNewGoal] = useState("");
+  const [newInjuries, setNewInjuries] = useState("");
+  const [newPhoto, setNewPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const filtered = allClients
@@ -39,9 +44,16 @@ export default function ClientsPage() {
     .filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase()));
 
   const resetForm = () => {
-    setNewEmail("");
-    setNewPhone("");
-    setNewGoal("");
+    setNewName(""); setNewNickname(""); setNewEmail(""); setNewPhone("");
+    setNewGoal(""); setNewInjuries(""); setNewPhoto(null); setPhotoPreview(null);
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewPhoto(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleAddClient = async () => {
@@ -143,43 +155,63 @@ export default function ClientsPage() {
 
       {/* Add Client Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Přidat klienta</DialogTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Zadejte kontakt a cíl. Klient si zbytek nastaví sám po přihlášení.
+              Zadejte základní údaje. Klient si zbytek nastaví sám po přihlášení.
             </p>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="client-email">E-mail</Label>
-              <Input
-                id="client-email"
-                type="email"
-                placeholder="klient@email.cz"
-                value={newEmail}
-                onChange={e => setNewEmail(e.target.value)}
-              />
+            {/* Photo */}
+            <div className="flex justify-center">
+              <label className="relative cursor-pointer group">
+                <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-dashed border-border group-hover:border-primary transition-colors">
+                  {photoPreview ? (
+                    <img src={photoPreview} alt="Náhled" className="h-full w-full object-cover" />
+                  ) : (
+                    <Camera className="h-6 w-6 text-muted-foreground" />
+                  )}
+                </div>
+                <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+                <span className="block text-[10px] text-muted-foreground text-center mt-1">Fotka</span>
+              </label>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="client-phone">Telefon</Label>
-              <Input
-                id="client-phone"
-                type="tel"
-                placeholder="+420 ..."
-                value={newPhone}
-                onChange={e => setNewPhone(e.target.value)}
-              />
+
+            {/* Name + Nickname */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="client-name">Jméno</Label>
+                <Input id="client-name" placeholder="Jan Novák" value={newName} onChange={e => setNewName(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="client-nickname">Přezdívka</Label>
+                <Input id="client-nickname" placeholder="Honza" value={newNickname} onChange={e => setNewNickname(e.target.value)} />
+              </div>
             </div>
-            <div className="space-y-2">
+
+            {/* Contact */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="client-email">E-mail</Label>
+                <Input id="client-email" type="email" placeholder="klient@email.cz" value={newEmail} onChange={e => setNewEmail(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="client-phone">Telefon</Label>
+                <Input id="client-phone" type="tel" placeholder="+420 ..." value={newPhone} onChange={e => setNewPhone(e.target.value)} />
+              </div>
+            </div>
+
+            {/* Goal */}
+            <div className="space-y-1.5">
               <Label htmlFor="client-goal">Cíl klienta</Label>
-              <Textarea
-                id="client-goal"
-                placeholder="Např. zhubnutí, nabírání svalů, rehabilitace..."
-                value={newGoal}
-                onChange={e => setNewGoal(e.target.value)}
-                rows={2}
-              />
+              <Textarea id="client-goal" placeholder="Např. zhubnutí, nabírání svalů, rehabilitace..." value={newGoal} onChange={e => setNewGoal(e.target.value)} rows={2} />
+            </div>
+
+            {/* Injuries */}
+            <div className="space-y-1.5">
+              <Label htmlFor="client-injuries">Zranění / omezení</Label>
+              <Textarea id="client-injuries" placeholder="Např. bolest kolen, hernie L4/L5, omezená rotace ramene..." value={newInjuries} onChange={e => setNewInjuries(e.target.value)} rows={2} />
             </div>
           </div>
           <DialogFooter>
