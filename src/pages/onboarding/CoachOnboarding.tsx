@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { GraduationCap, User, DollarSign, CheckCircle2, ArrowRight, ArrowLeft, Palette, Upload, X, Image } from "lucide-react";
+import { GraduationCap, User, DollarSign, CheckCircle2, ArrowRight, ArrowLeft, Palette, Upload, X, Image, AlertTriangle } from "lucide-react";
 
 const STEPS = [
   { icon: User, label: "Základní údaje" },
@@ -120,11 +121,33 @@ export default function CoachOnboarding() {
     return data.publicUrl;
   };
 
-  const canProceed = () => {
-    if (step === 0) return fullName.trim().length > 0;
-    if (step === 1) return yearsExperience !== "" && specialties.length > 0;
-    if (step === 2) return sessionPrice !== "";
-    return true;
+  const getStepErrors = (): string[] => {
+    const errors: string[] = [];
+    if (step === 0) {
+      if (!fullName.trim()) errors.push("Celé jméno je povinné");
+    }
+    if (step === 1) {
+      if (!yearsExperience) errors.push("Vyberte roky zkušeností");
+      if (specialties.length === 0) errors.push("Vyberte alespoň jednu specializaci");
+    }
+    if (step === 2) {
+      if (!sessionPrice) errors.push("Zadejte cenu za lekci");
+    }
+    return errors;
+  };
+
+  const canProceed = () => getStepErrors().length === 0;
+
+  const [stepErrors, setStepErrors] = useState<string[]>([]);
+
+  const handleNext = () => {
+    const errors = getStepErrors();
+    if (errors.length > 0) {
+      setStepErrors(errors);
+      return;
+    }
+    setStepErrors([]);
+    setStep(s => s + 1);
   };
 
   const handleFinish = async () => {
@@ -194,6 +217,18 @@ export default function CoachOnboarding() {
             {(() => { const Icon = STEPS[step].icon; return <Icon className="h-6 w-6 text-primary" />; })()}
             <h1 className="text-xl font-bold text-foreground">{STEPS[step].label}</h1>
           </div>
+
+          {stepErrors.length > 0 && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <p className="font-medium text-xs mb-1">Pro pokračování vyplňte všechna povinná pole:</p>
+                <ul className="list-disc pl-4 text-xs space-y-0.5">
+                  {stepErrors.map((err, i) => <li key={i}>{err}</li>)}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Step 1: Basics */}
           {step === 0 && (
@@ -446,12 +481,12 @@ export default function CoachOnboarding() {
           {/* Navigation */}
           <div className="flex items-center justify-between mt-8">
             {step > 0 ? (
-              <Button variant="outline" onClick={() => setStep(s => s - 1)} className="gap-1.5">
+              <Button variant="outline" onClick={() => { setStep(s => s - 1); setStepErrors([]); }} className="gap-1.5">
                 <ArrowLeft className="h-3.5 w-3.5" /> Zpět
               </Button>
             ) : <div />}
             {step < 4 ? (
-              <Button onClick={() => setStep(s => s + 1)} disabled={!canProceed()} className="gap-1.5">
+              <Button onClick={handleNext} className="gap-1.5">
                 Další <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             ) : (
