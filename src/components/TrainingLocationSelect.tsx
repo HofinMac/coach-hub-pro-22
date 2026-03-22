@@ -29,7 +29,6 @@ const EQUIPMENT_OPTIONS = [
   { value: "cinky", label: "Činky a jednoručky" },
   { value: "kardio", label: "Kardio zóna" },
   { value: "skupinove", label: "Skupinové lekce" },
-  { value: "boxovna", label: "Boxovna" },
   { value: "crossfit", label: "CrossFit zóna" },
   { value: "bazén", label: "Bazén" },
   { value: "sauna", label: "Sauna / wellness" },
@@ -39,6 +38,15 @@ const EQUIPMENT_OPTIONS = [
   { value: "olympic", label: "Olympijské plošiny" },
   { value: "outdoor", label: "Venkovní prostory" },
   { value: "parkoviště", label: "Parkování" },
+  { value: "box", label: "Box" },
+  { value: "kickbox", label: "Kickbox" },
+  { value: "mma", label: "MMA" },
+  { value: "muay-thai", label: "Muay Thai" },
+  { value: "jiu-jitsu", label: "Jiu-Jitsu / BJJ" },
+  { value: "judo", label: "Judo" },
+  { value: "zapas", label: "Zápas" },
+  { value: "karate", label: "Karate" },
+  { value: "taekwondo", label: "Taekwondo" },
 ];
 
 interface Gym {
