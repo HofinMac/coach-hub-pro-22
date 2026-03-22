@@ -34,11 +34,23 @@ export default function ApprovalsPage() {
 
   const fetchAll = async () => {
     const [{ data: certs }, { data: bens }] = await Promise.all([
-      supabase.from("coach_certificates").select("*, profiles!coach_certificates_coach_id_fkey(full_name, email)").order("created_at", { ascending: false }),
-      supabase.from("coach_benefits").select("*, profiles!coach_benefits_coach_id_fkey(full_name, email), promo_campaigns(title, reward_value, promo_code)").order("created_at", { ascending: false }),
+      supabase.from("coach_certificates").select("*").order("created_at", { ascending: false }),
+      supabase.from("coach_benefits").select("*, promo_campaigns(title, reward_value, promo_code)").order("created_at", { ascending: false }),
     ]);
-    if (certs) setCertificates(certs as Certificate[]);
-    if (bens) setBenefits(bens as BenefitRequest[]);
+
+    // Fetch profile names for coaches
+    const coachIds = new Set<string>();
+    certs?.forEach(c => coachIds.add(c.coach_id));
+    bens?.forEach(b => coachIds.add(b.coach_id));
+    
+    const profileMap: Record<string, { full_name: string; email: string | null }> = {};
+    if (coachIds.size > 0) {
+      const { data: profiles } = await supabase.from("profiles").select("id, full_name, email").in("id", Array.from(coachIds));
+      profiles?.forEach(p => { profileMap[p.id] = { full_name: p.full_name, email: p.email }; });
+    }
+
+    if (certs) setCertificates(certs.map(c => ({ ...c, profiles: profileMap[c.coach_id] || { full_name: "Neznámý", email: null } })) as Certificate[]);
+    if (bens) setBenefits(bens.map(b => ({ ...b, profiles: profileMap[b.coach_id] || { full_name: "Neznámý", email: null } })) as BenefitRequest[]);
   };
 
   useEffect(() => { fetchAll(); }, []);
