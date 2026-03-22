@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      gyms: {
+        Row: {
+          address: string
+          city: string
+          created_at: string
+          created_by: string | null
+          equipment: string[]
+          id: string
+          name: string
+          website: string | null
+        }
+        Insert: {
+          address?: string
+          city?: string
+          created_at?: string
+          created_by?: string | null
+          equipment?: string[]
+          id?: string
+          name: string
+          website?: string | null
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string
+          created_by?: string | null
+          equipment?: string[]
+          id?: string
+          name?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           bg_preset: string | null
