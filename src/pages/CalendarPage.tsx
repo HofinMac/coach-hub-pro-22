@@ -332,7 +332,9 @@ export default function CalendarPage() {
   return (
     <div className="p-6 max-w-[1200px] mx-auto animate-fade-in">
       <PageHeader title="Kalendář" description="Správa rozvrhu">
-        <Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Rezervovat lekci</Button>
+        <Button size="sm" className="gap-1.5" onClick={() => { setNlDate(format(currentDate, "yyyy-MM-dd")); setNewLessonOpen(true); }}>
+          <Plus className="h-3.5 w-3.5" /> Rezervovat lekci
+        </Button>
       </PageHeader>
 
       {/* Pending requests banner */}
