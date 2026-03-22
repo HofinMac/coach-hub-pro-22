@@ -285,6 +285,14 @@ export default function CalendarPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [displayMode, setDisplayMode] = useState<DisplayMode>("graphic");
 
+  const [statusFilter, setStatusFilter] = useState<BookingStatus | 'all'>('all');
+  const [newLessonOpen, setNewLessonOpen] = useState(false);
+  const [nlClient, setNlClient] = useState("");
+  const [nlDate, setNlDate] = useState("");
+  const [nlTime, setNlTime] = useState("09:00");
+  const [nlDuration, setNlDuration] = useState("60");
+  const [nlType, setNlType] = useState<"1:1" | "group">("1:1");
+
   const pendingCount = allBookings.filter(b => b.status === "pending").length;
 
   const navigate = (dir: -1 | 1) => {
