@@ -218,6 +218,18 @@ export default function CoachOnboarding() {
             <h1 className="text-xl font-bold text-foreground">{STEPS[step].label}</h1>
           </div>
 
+          {stepErrors.length > 0 && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <p className="font-medium text-xs mb-1">Pro pokračování vyplňte všechna povinná pole:</p>
+                <ul className="list-disc pl-4 text-xs space-y-0.5">
+                  {stepErrors.map((err, i) => <li key={i}>{err}</li>)}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Step 1: Basics */}
           {step === 0 && (
             <div className="space-y-4">
