@@ -1,8 +1,14 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { clients } from "@/lib/demo-data";
 import { AvatarCircle } from "@/components/AvatarCircle";
+import { toast } from "sonner";
 
 const packages = [
   { id: 'pkg1', clientId: 'cl2', clientName: 'Elena Voss', name: 'Balíček 10 lekcí', credits: 8, total: 10, price: 950, status: 'active', expiresAt: '2026-06-15' },
