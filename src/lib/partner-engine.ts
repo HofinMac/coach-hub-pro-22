@@ -205,13 +205,13 @@ export async function evaluateEligibility(
   const evaluated_at = new Date().toISOString();
 
   // Persist eligibility result
-  await supabase.from("eligibility").upsert({
+  await supabase.from("eligibility").upsert([{
     user_id: userId,
     campaign_id: campaignId,
     eligible,
     evaluated_at,
     rule_results: results as unknown as Record<string, unknown>[],
-  }, { onConflict: "user_id,campaign_id" });
+  }], { onConflict: "user_id,campaign_id" });
 
   return { eligible, results, evaluated_at };
 }
