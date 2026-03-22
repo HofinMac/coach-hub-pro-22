@@ -125,6 +125,10 @@ export default function CoachOnboarding() {
     const errors: string[] = [];
     if (step === 0) {
       if (!fullName.trim()) errors.push("Celé jméno je povinné");
+      if (!phone.trim()) errors.push("Telefon je povinný");
+      if (!city.trim()) errors.push("Město je povinné");
+      if (!trainingLocation.trim()) errors.push("Místo tréninku je povinné");
+      if (coachType.length === 0) errors.push("Vyberte alespoň jeden typ trenéra");
     }
     if (step === 1) {
       if (!yearsExperience) errors.push("Vyberte roky zkušeností");
