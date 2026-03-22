@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Dumbbell,
@@ -14,6 +14,8 @@ import {
   MapPin,
 } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import WorkoutSessionPrompt from "./WorkoutSessionPrompt";
 
 const navItems = [
@@ -32,6 +34,16 @@ const bottomItems = [
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({ title: "Chyba při odhlašování", description: error.message, variant: "destructive" });
+    } else {
+      navigate("/");
+    }
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -94,7 +106,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
               {!collapsed && <span>{item.label}</span>}
             </NavLink>
           ))}
-          <button className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+          <button onClick={handleLogout} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
             <LogOut className="h-4 w-4 shrink-0" />
             {!collapsed && <span>Odhlásit se</span>}
           </button>
