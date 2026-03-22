@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Users, Dumbbell, Calendar, BarChart3, Shield, Zap } from "lucide-react";
+import { ArrowRight, Users, Dumbbell, Calendar, BarChart3, Shield, Zap, Smartphone } from "lucide-react";
 
 const features = [
   { icon: Users, title: "Správa klientů", desc: "Kompletní CRM se sledováním stavu, poznámkami, zraněními a historií pokroku." },
@@ -63,6 +63,25 @@ export default function LandingPage() {
               <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{f.desc}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-6 pb-24">
+        <div className="rounded-2xl bg-foreground p-8 sm:p-12 flex flex-col sm:flex-row items-center gap-8">
+          <div className="h-16 w-16 rounded-2xl bg-primary/20 flex items-center justify-center shrink-0">
+            <Smartphone className="h-8 w-8 text-primary" />
+          </div>
+          <div className="flex-1 text-center sm:text-left">
+            <h3 className="text-lg font-semibold text-background">Trenérník v kapse</h3>
+            <p className="text-sm text-background/60 mt-1.5 max-w-md">
+              Nainstalujte si Trenérník na mobil jako aplikaci — přímo z prohlížeče, bez App Store. Funguje offline i na iPhonu.
+            </p>
+          </div>
+          <Link to="/install">
+            <Button size="lg" variant="secondary" className="gap-2 shrink-0">
+              Nainstalovat <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
         </div>
       </section>
 
