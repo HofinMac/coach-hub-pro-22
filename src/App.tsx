@@ -35,6 +35,7 @@ import CampaignsPage from "@/pages/admin/CampaignsPage";
 import ApprovalsPage from "@/pages/admin/ApprovalsPage";
 import CoachBenefitsPage from "@/pages/CoachBenefitsPage";
 import ClientChallengesPage from "@/pages/client/ClientChallengesPage";
+import CampaignDetailPage from "@/pages/admin/CampaignDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +86,7 @@ const App = () => (
           <Route path="/benefits" element={<CoachShell><CoachBenefitsPage /></CoachShell>} />
           <Route path="/admin" element={<CoachShell><AdminPage /></CoachShell>} />
           <Route path="/admin/partners" element={<CoachShell><PartnersPage /></CoachShell>} />
+          <Route path="/admin/campaigns/:id" element={<CoachShell><CampaignDetailPage /></CoachShell>} />
           <Route path="/admin/campaigns" element={<CoachShell><CampaignsPage /></CoachShell>} />
           <Route path="/admin/approvals" element={<CoachShell><ApprovalsPage /></CoachShell>} />
           <Route path="/settings" element={<CoachShell><SettingsPage /></CoachShell>} />

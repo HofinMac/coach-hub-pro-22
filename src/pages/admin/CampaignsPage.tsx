@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,7 +107,7 @@ export default function CampaignsPage() {
 
       <div className="space-y-3">
         {campaigns.map(c => (
-          <div key={c.id} className="rounded-xl bg-card shadow-card p-5">
+          <Link to={`/admin/campaigns/${c.id}`} key={c.id} className="rounded-xl bg-card shadow-card p-5 block hover:ring-1 hover:ring-primary/20 transition-all">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
@@ -137,7 +138,7 @@ export default function CampaignsPage() {
               </div>
               <Switch checked={c.active} onCheckedChange={() => toggleActive(c)} />
             </div>
-          </div>
+          </Link>
         ))}
         {campaigns.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">Zatím žádné promo akce.</p>
