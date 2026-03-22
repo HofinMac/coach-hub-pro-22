@@ -57,7 +57,7 @@ export default function InstallPage() {
             <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
               <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-lg font-semibold text-foreground">Apex je nainstalován!</h2>
+            <h2 className="text-lg font-semibold text-foreground">Trenérník je nainstalován!</h2>
             <p className="text-sm text-muted-foreground mt-2">
               Aplikaci najdete na domovské obrazovce svého zařízení.
             </p>
