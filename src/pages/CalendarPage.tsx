@@ -1,8 +1,12 @@
 import { PageHeader } from "@/components/PageHeader";
 import { AvatarCircle } from "@/components/AvatarCircle";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Check, X, Clock, ChevronLeft, ChevronRight, List, LayoutGrid, Calendar as CalIcon } from "lucide-react";
-import { getBookingsByCoach, type BookingStatus, type Booking } from "@/lib/demo-data";
+import { getBookingsByCoach, clients, type BookingStatus, type Booking } from "@/lib/demo-data";
 import {
   format, parseISO, startOfDay, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths,
   startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth,
