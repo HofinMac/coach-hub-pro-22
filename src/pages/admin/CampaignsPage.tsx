@@ -138,7 +138,7 @@ export default function CampaignsPage() {
               </div>
               <Switch checked={c.active} onCheckedChange={() => toggleActive(c)} />
             </div>
-          </div>
+          </Link>
         ))}
         {campaigns.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">Zatím žádné promo akce.</p>
