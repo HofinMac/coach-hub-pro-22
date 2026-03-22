@@ -98,7 +98,7 @@ export const coaches: Coach[] = [
   {
     id: 'c2',
     name: 'Sarah Chen',
-    email: 'sarah@apex.app',
+    email: 'sarah@trenernik.cz',
     avatar: 'SC',
     specialties: ['Post-Op Rehab', 'Physiotherapy'],
     bio: 'DPT with a focus on return-to-sport rehabilitation.',
