@@ -156,11 +156,11 @@ export default function CoachDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <MetricCard label="Aktivní klienti" value={activeCount} change="+2 tento měsíc" changeType="positive" />
-        <MetricCard label="Dnešní lekce" value={todayBookings.length} />
-        <MetricCard label="V ohrožení" value={atRisk.length} change="vyžaduje pozornost" changeType="negative" />
-        <MetricCard label="Aktivní plány" value={activePlans.length} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <MetricCard label="Aktivní klienti" value={activeCount} change="+2 tento měsíc" changeType="positive" icon={Users} to="/clients" />
+        <MetricCard label="Dnešní lekce" value={todayBookings.length} change={getLessonStatus()} icon={Clock} to="/calendar" />
+        <MetricCard label="V ohrožení" value={atRisk.length} change="vyžaduje pozornost" changeType="negative" icon={AlertTriangle} to="/clients" />
+        <MetricCard label="Aktivní plány" value={activePlans.length} icon={ClipboardList} to="/training" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
