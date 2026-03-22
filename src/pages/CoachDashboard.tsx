@@ -79,14 +79,21 @@ export default function CoachDashboard() {
         </div>
       )}
 
-      <PageHeader title="Přehled" description={`Vítejte zpět, ${firstName}.`}>
-        {profile?.profile_photo_url && (
-          <img
-            src={profile.profile_photo_url}
-            alt="Profilová fotka"
-            className="h-9 w-9 rounded-full object-cover border-2 border-primary/20"
-          />
-        )}
+      <div className="flex items-center justify-between pb-6">
+        <div className="flex items-center gap-4">
+          {profile?.profile_photo_url && (
+            <img
+              src={profile.profile_photo_url}
+              alt="Profilová fotka"
+              className="h-14 w-14 rounded-full object-cover border-2 border-primary/20"
+            />
+          )}
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Přehled</h1>
+            <p className="text-sm text-muted-foreground mt-1">{`Vítejte zpět, ${firstName}.`}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
         <Link to="/clients">
           <Button variant="outline" size="sm" className="gap-1.5">
             <UserPlus className="h-3.5 w-3.5" /> Přidat klienta
