@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { GraduationCap, User, DollarSign, CheckCircle2, ArrowRight, ArrowLeft, Palette, Upload, X, Image } from "lucide-react";
+import { GraduationCap, User, DollarSign, CheckCircle2, ArrowRight, ArrowLeft, Palette, Upload, X, Image, AlertTriangle } from "lucide-react";
 
 const STEPS = [
   { icon: User, label: "Základní údaje" },
