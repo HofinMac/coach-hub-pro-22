@@ -233,9 +233,9 @@ export async function logAuditEvent(params: {
     entity_id: params.entityId,
     action: params.action,
     actor_id: params.actorId,
-    old_values: params.oldValues || {},
-    new_values: params.newValues || {},
-    metadata: params.metadata || {},
+    old_values: JSON.parse(JSON.stringify(params.oldValues || {})),
+    new_values: JSON.parse(JSON.stringify(params.newValues || {})),
+    metadata: JSON.parse(JSON.stringify(params.metadata || {})),
   }]);
 }
 
