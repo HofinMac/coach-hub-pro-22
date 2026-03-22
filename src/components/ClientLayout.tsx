@@ -57,14 +57,14 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           collapsed ? "w-16" : "w-60"
         )}
       >
-        <div className="flex h-14 items-center justify-between px-4 border-b border-border">
+        <div className="flex h-20 items-center justify-between px-4 border-b border-border">
           {!collapsed ? (
-            <div className="flex items-center gap-2">
-              <img src={logoHorizontal} alt="Trenérník" className="h-9" />
-              <span className="text-xs font-normal text-muted-foreground">klient</span>
+            <div className="flex items-center gap-3">
+              <img src={logoHorizontal} alt="Trenérník" className="h-12" />
+              <span className="text-sm font-medium text-muted-foreground">klient</span>
             </div>
           ) : (
-            <img src={logoIcon} alt="Trenérník" className="h-9 w-9" />
+            <img src={logoIcon} alt="Trenérník" className="h-10 w-10" />
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
