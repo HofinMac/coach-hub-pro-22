@@ -58,11 +58,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           collapsed ? "w-20" : "w-72"
         )}
       >
-        <div className="flex h-20 items-center justify-between px-4 border-b border-border">
+        <div className="flex h-24 items-center justify-between px-5 border-b border-border">
           {!collapsed ? (
-            <img src={logoHorizontal} alt="Trenérník" className="h-12" />
+            <img src={logoHorizontal} alt="Trenérník" className="h-20" />
           ) : (
-            <img src={logoIcon} alt="Trenérník" className="h-10 w-10" />
+            <img src={logoIcon} alt="Trenérník" className="h-14 w-14" />
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
