@@ -54,7 +54,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <aside
         className={cn(
           "flex flex-col border-r border-border bg-subtle transition-all duration-200",
-          collapsed ? "w-16" : "w-60"
+          collapsed ? "w-20" : "w-72"
         )}
       >
         <div className="flex h-20 items-center justify-between px-4 border-b border-border">
