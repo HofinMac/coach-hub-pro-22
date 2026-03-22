@@ -35,6 +35,7 @@ import CampaignsPage from "@/pages/admin/CampaignsPage";
 import ApprovalsPage from "@/pages/admin/ApprovalsPage";
 import CoachBenefitsPage from "@/pages/CoachBenefitsPage";
 import ClientChallengesPage from "@/pages/client/ClientChallengesPage";
+import CampaignDetailPage from "@/pages/admin/CampaignDetailPage";
 
 const queryClient = new QueryClient();
 
