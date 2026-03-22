@@ -81,13 +81,27 @@ export default function CoachBenefitsPage() {
     if (!userId) return;
     const hasCert = certificates.some(c => c.status === "approved");
     if (!hasCert) { toast.error("Nejdříve musíte mít schválený certifikát"); return; }
-    const { error } = await supabase.from("coach_benefits").insert({
+    // Evaluate eligibility using rule engine
+    const eligibility = await evaluateEligibility(userId, campaignId);
+    if (!eligibility.eligible) {
+      const failedRules = eligibility.results.filter(r => !r.passed);
+      toast.error(`Nesplňujete podmínky: ${failedRules.map(r => r.description || r.rule_type).join(", ")}`);
+      return;
+    }
+
+    const { error } = await supabase.from("coach_benefits").insert([{
       campaign_id: campaignId, coach_id: userId
-    });
+    }]);
     if (error) {
       if (error.code === "23505") toast.info("O tento benefit jste již požádali");
       else toast.error("Chyba při žádosti");
-    } else toast.success("Žádost odeslána");
+    } else {
+      toast.success("Žádost odeslána");
+      await logAuditEvent({
+        entityType: "benefit", entityId: campaignId, action: "created", actorId: userId,
+        newValues: { campaign_id: campaignId },
+      });
+    }
     fetchData();
   };
 
