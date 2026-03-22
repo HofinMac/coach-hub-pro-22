@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { MetricCard } from "@/components/MetricCard";
 import { PageHeader } from "@/components/PageHeader";
 import { AvatarCircle } from "@/components/AvatarCircle";
@@ -6,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Plus, UserPlus, Calendar, Dumbbell } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
-  clients,
   bookings,
   getClientsByCoach,
   getAtRiskClients,
@@ -15,10 +15,32 @@ import {
 } from "@/lib/demo-data";
 import { format, parseISO } from "date-fns";
 import { cs } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
 
 const COACH_ID = "c1";
 
 export default function CoachDashboard() {
+  const [profile, setProfile] = useState<{
+    full_name: string;
+    profile_photo_url: string | null;
+    cover_photo_url: string | null;
+    bg_preset: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, profile_photo_url, cover_photo_url, bg_preset")
+        .eq("id", user.id)
+        .single();
+      if (data) setProfile(data);
+    };
+    loadProfile();
+  }, []);
+
   const myClients = getClientsByCoach(COACH_ID);
   const atRisk = getAtRiskClients(COACH_ID);
   const upcoming = getUpcomingBookings(COACH_ID);
@@ -28,9 +50,43 @@ export default function CoachDashboard() {
     (b) => b.coachId === COACH_ID && b.startTime.startsWith("2026-03-18")
   );
 
+  const firstName = profile?.full_name?.split(" ")[0] || "trenére";
+
+  const bgPresetStyle: React.CSSProperties = {};
+  if (profile?.bg_preset && profile.bg_preset !== "none") {
+    const presets: Record<string, string> = {
+      "blue-gradient": "linear-gradient(135deg, hsl(210 80% 92%), hsl(220 70% 85%))",
+      "green-gradient": "linear-gradient(135deg, hsl(140 60% 90%), hsl(160 50% 82%))",
+      "purple-gradient": "linear-gradient(135deg, hsl(270 60% 92%), hsl(290 50% 85%))",
+      "orange-gradient": "linear-gradient(135deg, hsl(30 80% 92%), hsl(20 70% 85%))",
+      "dark-gradient": "linear-gradient(135deg, hsl(220 20% 18%), hsl(220 15% 25%))",
+    };
+    if (presets[profile.bg_preset]) {
+      bgPresetStyle.background = presets[profile.bg_preset];
+      bgPresetStyle.minHeight = "100%";
+    }
+  }
+
   return (
-    <div className="p-6 max-w-6xl mx-auto animate-fade-in">
-      <PageHeader title="Přehled" description="Vítejte zpět, Alexi.">
+    <div className="p-6 max-w-6xl mx-auto animate-fade-in" style={bgPresetStyle}>
+      {profile?.cover_photo_url && (
+        <div className="rounded-xl overflow-hidden mb-6 h-40 w-full">
+          <img
+            src={profile.cover_photo_url}
+            alt="Úvodní fotka"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
+      <PageHeader title="Přehled" description={`Vítejte zpět, ${firstName}.`}>
+        {profile?.profile_photo_url && (
+          <img
+            src={profile.profile_photo_url}
+            alt="Profilová fotka"
+            className="h-9 w-9 rounded-full object-cover border-2 border-primary/20"
+          />
+        )}
         <Link to="/clients">
           <Button variant="outline" size="sm" className="gap-1.5">
             <UserPlus className="h-3.5 w-3.5" /> Přidat klienta
