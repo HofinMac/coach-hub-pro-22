@@ -27,7 +27,7 @@ export interface Review {
 export const gyms: Gym[] = [
   {
     id: "g1",
-    name: "Apex Fitness Praha – Vinohrady",
+    name: "FitZone Praha – Vinohrady",
     address: "Vinohradská 42, Praha 2",
     city: "Praha",
     description: "Moderní posilovna s kompletním vybavením pro silový trénink. Olympijské plošiny, rack station, kardio zóna.",
