@@ -86,15 +86,20 @@ export default function MessagesPage() {
               ))}
             </div>
             <div className="p-4 border-t border-border">
-              <div className="flex gap-2">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if (!messageInput.trim()) return;
+                toast.success("Zpráva odeslána");
+                setMessageInput("");
+              }} className="flex gap-2">
                 <Input
                   placeholder="Napište zprávu..."
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
                   className="flex-1"
                 />
-                <Button size="icon"><Send className="h-4 w-4" /></Button>
-              </div>
+                <Button type="submit" size="icon"><Send className="h-4 w-4" /></Button>
+              </form>
             </div>
           </>
         )}

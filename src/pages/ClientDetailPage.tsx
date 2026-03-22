@@ -48,8 +48,12 @@ export default function ClientDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5"><Mail className="h-3.5 w-3.5" /> Zpráva</Button>
-          <Button variant="outline" size="sm" className="gap-1.5"><Edit className="h-3.5 w-3.5" /> Upravit</Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/messages")}>
+            <Mail className="h-3.5 w-3.5" /> Zpráva
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.info("Úprava klienta bude brzy k dispozici")}>
+            <Edit className="h-3.5 w-3.5" /> Upravit
+          </Button>
         </div>
       </div>
 
