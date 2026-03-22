@@ -1,8 +1,12 @@
 import { PageHeader } from "@/components/PageHeader";
 import { AvatarCircle } from "@/components/AvatarCircle";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Check, X, Clock, ChevronLeft, ChevronRight, List, LayoutGrid, Calendar as CalIcon } from "lucide-react";
-import { getBookingsByCoach, type BookingStatus, type Booking } from "@/lib/demo-data";
+import { getBookingsByCoach, clients, type BookingStatus, type Booking } from "@/lib/demo-data";
 import {
   format, parseISO, startOfDay, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths,
   startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth,
@@ -285,6 +289,14 @@ export default function CalendarPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [displayMode, setDisplayMode] = useState<DisplayMode>("graphic");
 
+  const [statusFilter, setStatusFilter] = useState<BookingStatus | 'all'>('all');
+  const [newLessonOpen, setNewLessonOpen] = useState(false);
+  const [nlClient, setNlClient] = useState("");
+  const [nlDate, setNlDate] = useState("");
+  const [nlTime, setNlTime] = useState("09:00");
+  const [nlDuration, setNlDuration] = useState("60");
+  const [nlType, setNlType] = useState<"1:1" | "group">("1:1");
+
   const pendingCount = allBookings.filter(b => b.status === "pending").length;
 
   const navigate = (dir: -1 | 1) => {
@@ -332,7 +344,9 @@ export default function CalendarPage() {
   return (
     <div className="p-6 max-w-[1200px] mx-auto animate-fade-in">
       <PageHeader title="Kalendář" description="Správa rozvrhu">
-        <Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Rezervovat lekci</Button>
+        <Button size="sm" className="gap-1.5" onClick={() => { setNlDate(format(currentDate, "yyyy-MM-dd")); setNewLessonOpen(true); }}>
+          <Plus className="h-3.5 w-3.5" /> Rezervovat lekci
+        </Button>
       </PageHeader>
 
       {/* Pending requests banner */}
@@ -481,6 +495,70 @@ export default function CalendarPage() {
           </>
         )}
       </div>
+      {/* New Lesson Dialog */}
+      <Dialog open={newLessonOpen} onOpenChange={setNewLessonOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rezervovat lekci</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Klient</Label>
+              <Select value={nlClient} onValueChange={setNlClient}>
+                <SelectTrigger><SelectValue placeholder="Vyberte klienta" /></SelectTrigger>
+                <SelectContent>
+                  {clients.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Datum</Label>
+                <Input type="date" value={nlDate} onChange={e => setNlDate(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Čas</Label>
+                <Input type="time" value={nlTime} onChange={e => setNlTime(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Délka (min)</Label>
+                <Select value={nlDuration} onValueChange={setNlDuration}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="30">30 min</SelectItem>
+                    <SelectItem value="45">45 min</SelectItem>
+                    <SelectItem value="60">60 min</SelectItem>
+                    <SelectItem value="90">90 min</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Typ</Label>
+                <Select value={nlType} onValueChange={v => setNlType(v as "1:1" | "group")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1:1">Individuální</SelectItem>
+                    <SelectItem value="group">Skupinová</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewLessonOpen(false)}>Zrušit</Button>
+            <Button onClick={() => {
+              if (!nlClient || !nlDate) { toast.error("Vyplňte klienta a datum"); return; }
+              toast.success("Lekce zarezervována");
+              setNewLessonOpen(false);
+              setNlClient(""); setNlDate(""); setNlTime("09:00"); setNlDuration("60"); setNlType("1:1");
+            }}>Rezervovat</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

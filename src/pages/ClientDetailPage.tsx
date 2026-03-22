@@ -1,14 +1,16 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { AvatarCircle } from "@/components/AvatarCircle";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Mail, Edit } from "lucide-react";
+import { toast } from "sonner";
 import { clients, getProgressByClient, workoutPlans } from "@/lib/demo-data";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 
 export default function ClientDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const client = clients.find((c) => c.id === id);
 
   if (!client) {
@@ -46,8 +48,12 @@ export default function ClientDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5"><Mail className="h-3.5 w-3.5" /> Zpráva</Button>
-          <Button variant="outline" size="sm" className="gap-1.5"><Edit className="h-3.5 w-3.5" /> Upravit</Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/messages")}>
+            <Mail className="h-3.5 w-3.5" /> Zpráva
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.info("Úprava klienta bude brzy k dispozici")}>
+            <Edit className="h-3.5 w-3.5" /> Upravit
+          </Button>
         </div>
       </div>
 

@@ -1,8 +1,14 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { clients } from "@/lib/demo-data";
 import { AvatarCircle } from "@/components/AvatarCircle";
+import { toast } from "sonner";
 
 const packages = [
   { id: 'pkg1', clientId: 'cl2', clientName: 'Elena Voss', name: 'Balíček 10 lekcí', credits: 8, total: 10, price: 950, status: 'active', expiresAt: '2026-06-15' },
@@ -23,11 +29,18 @@ const invoices = [
 
 export default function PaymentsPage() {
   const totalRevenue = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
+  const [pkgOpen, setPkgOpen] = useState(false);
+  const [pkgClient, setPkgClient] = useState("");
+  const [pkgName, setPkgName] = useState("Balíček 10 lekcí");
+  const [pkgCredits, setPkgCredits] = useState("10");
+  const [pkgPrice, setPkgPrice] = useState("");
 
   return (
     <div className="p-6 max-w-6xl mx-auto animate-fade-in">
       <PageHeader title="Platby" description="Balíčky a faktury">
-        <Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Nový balíček</Button>
+        <Button size="sm" className="gap-1.5" onClick={() => setPkgOpen(true)}>
+          <Plus className="h-3.5 w-3.5" /> Nový balíček
+        </Button>
       </PageHeader>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -106,6 +119,51 @@ export default function PaymentsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* New Package Dialog */}
+      <Dialog open={pkgOpen} onOpenChange={setPkgOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nový balíček</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Klient</Label>
+              <Select value={pkgClient} onValueChange={setPkgClient}>
+                <SelectTrigger><SelectValue placeholder="Vyberte klienta" /></SelectTrigger>
+                <SelectContent>
+                  {clients.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Název balíčku</Label>
+              <Input value={pkgName} onChange={e => setPkgName(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Počet kreditů</Label>
+                <Input type="number" value={pkgCredits} onChange={e => setPkgCredits(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Cena (Kč)</Label>
+                <Input type="number" placeholder="950" value={pkgPrice} onChange={e => setPkgPrice(e.target.value)} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPkgOpen(false)}>Zrušit</Button>
+            <Button onClick={() => {
+              if (!pkgClient || !pkgPrice) { toast.error("Vyplňte klienta a cenu"); return; }
+              toast.success("Balíček vytvořen");
+              setPkgOpen(false);
+              setPkgClient(""); setPkgName("Balíček 10 lekcí"); setPkgCredits("10"); setPkgPrice("");
+            }}>Vytvořit</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
