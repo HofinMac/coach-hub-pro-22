@@ -83,8 +83,8 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-subtle flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <Link to="/"><img src={logoHorizontal} alt="Trenérník" className="h-12 mx-auto" /></Link>
+        <div className="text-center mb-10">
+          <Link to="/"><img src={logoHorizontal} alt="Trenérník" className="h-16 mx-auto" /></Link>
           <p className="text-sm text-muted-foreground mt-2">Vytvořte si trenérský účet</p>
           <Link to="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mt-3 transition-colors">
             ← Zpět na hlavní stránku
