@@ -69,9 +69,23 @@ export default function CoachDashboard() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto animate-fade-in" style={bgPresetStyle}>
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto animate-fade-in" style={bgPresetStyle}>
+      {/* Mobile quick actions */}
+      <div className="flex gap-2 mb-4 md:hidden">
+        <Link to="/clients" className="flex-1">
+          <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs h-9">
+            <UserPlus className="h-4 w-4" /> Klient
+          </Button>
+        </Link>
+        <Link to="/training" className="flex-1">
+          <Button size="sm" className="w-full gap-1.5 text-xs h-9">
+            <Plus className="h-4 w-4" /> Plán
+          </Button>
+        </Link>
+      </div>
+
       {profile?.cover_photo_url && (
-        <div className="rounded-xl overflow-hidden mb-6 h-40 w-full">
+        <div className="rounded-xl overflow-hidden mb-6 h-28 sm:h-40 w-full">
           <img
             src={profile.cover_photo_url}
             alt="Úvodní fotka"
@@ -80,31 +94,32 @@ export default function CoachDashboard() {
         </div>
       )}
 
-      <div className={cn("flex items-center justify-between pb-6", profile?.cover_photo_url && "-mt-12")}>
-        <div className="flex items-center gap-4">
+      <div className={cn("flex items-center justify-between pb-4 sm:pb-6", profile?.cover_photo_url && "-mt-10 sm:-mt-12")}>
+        <div className="flex items-center gap-3 sm:gap-4">
           {profile?.profile_photo_url && (
             <img
               src={profile.profile_photo_url}
               alt="Profilová fotka"
-              className="h-24 w-24 rounded-full object-cover border-4 border-background shadow-lg"
+              className="h-16 w-16 sm:h-24 sm:w-24 rounded-full object-cover border-4 border-background shadow-lg"
             />
           )}
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Přehled</h1>
-            <p className="text-sm text-muted-foreground mt-1">{`Vítejte zpět, ${firstName}.`}</p>
+            <h1 className="text-lg sm:text-2xl font-semibold tracking-tight text-foreground">Přehled</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">{`Vítejte zpět, ${firstName}.`}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-        <Link to="/clients">
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <UserPlus className="h-3.5 w-3.5" /> Přidat klienta
-          </Button>
-        </Link>
-        <Link to="/training">
-          <Button size="sm" className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" /> Nový plán
-          </Button>
-        </Link>
+        {/* Desktop actions */}
+        <div className="hidden md:flex items-center gap-2">
+          <Link to="/clients">
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <UserPlus className="h-3.5 w-3.5" /> Přidat klienta
+            </Button>
+          </Link>
+          <Link to="/training">
+            <Button size="sm" className="gap-1.5">
+              <Plus className="h-3.5 w-3.5" /> Nový plán
+            </Button>
+          </Link>
         </div>
       </div>
 
