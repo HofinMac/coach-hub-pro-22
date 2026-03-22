@@ -120,11 +120,33 @@ export default function CoachOnboarding() {
     return data.publicUrl;
   };
 
-  const canProceed = () => {
-    if (step === 0) return fullName.trim().length > 0;
-    if (step === 1) return yearsExperience !== "" && specialties.length > 0;
-    if (step === 2) return sessionPrice !== "";
-    return true;
+  const getStepErrors = (): string[] => {
+    const errors: string[] = [];
+    if (step === 0) {
+      if (!fullName.trim()) errors.push("Celé jméno je povinné");
+    }
+    if (step === 1) {
+      if (!yearsExperience) errors.push("Vyberte roky zkušeností");
+      if (specialties.length === 0) errors.push("Vyberte alespoň jednu specializaci");
+    }
+    if (step === 2) {
+      if (!sessionPrice) errors.push("Zadejte cenu za lekci");
+    }
+    return errors;
+  };
+
+  const canProceed = () => getStepErrors().length === 0;
+
+  const [stepErrors, setStepErrors] = useState<string[]>([]);
+
+  const handleNext = () => {
+    const errors = getStepErrors();
+    if (errors.length > 0) {
+      setStepErrors(errors);
+      return;
+    }
+    setStepErrors([]);
+    setStep(s => s + 1);
   };
 
   const handleFinish = async () => {
