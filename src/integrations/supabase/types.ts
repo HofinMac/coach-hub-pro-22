@@ -14,7 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          bg_preset: string | null
+          bio: string | null
+          brand_name: string | null
+          certifications: string[] | null
+          city: string | null
+          cover_photo_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          group_max_size: number | null
+          id: string
+          logo_url: string | null
+          max_clients: number | null
+          offer_group: boolean | null
+          onboarding_done: boolean | null
+          phone: string | null
+          profile_photo_url: string | null
+          role: string
+          session_length: number | null
+          session_price: number | null
+          specialties: string[] | null
+          theme: string | null
+          training_location: string | null
+          updated_at: string
+          years_experience: string | null
+        }
+        Insert: {
+          bg_preset?: string | null
+          bio?: string | null
+          brand_name?: string | null
+          certifications?: string[] | null
+          city?: string | null
+          cover_photo_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          group_max_size?: number | null
+          id: string
+          logo_url?: string | null
+          max_clients?: number | null
+          offer_group?: boolean | null
+          onboarding_done?: boolean | null
+          phone?: string | null
+          profile_photo_url?: string | null
+          role?: string
+          session_length?: number | null
+          session_price?: number | null
+          specialties?: string[] | null
+          theme?: string | null
+          training_location?: string | null
+          updated_at?: string
+          years_experience?: string | null
+        }
+        Update: {
+          bg_preset?: string | null
+          bio?: string | null
+          brand_name?: string | null
+          certifications?: string[] | null
+          city?: string | null
+          cover_photo_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          group_max_size?: number | null
+          id?: string
+          logo_url?: string | null
+          max_clients?: number | null
+          offer_group?: boolean | null
+          onboarding_done?: boolean | null
+          phone?: string | null
+          profile_photo_url?: string | null
+          role?: string
+          session_length?: number | null
+          session_price?: number | null
+          specialties?: string[] | null
+          theme?: string | null
+          training_location?: string | null
+          updated_at?: string
+          years_experience?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
