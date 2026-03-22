@@ -51,6 +51,39 @@ export default function CoachDashboard() {
     (b) => b.coachId === COACH_ID && b.startTime.startsWith("2026-03-18")
   );
 
+  // Countdown to next lesson
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getLessonStatus = () => {
+    // Use demo date context (2026-03-18) but with real current time for countdown feel
+    const todaySorted = [...todayBookings].sort((a, b) => a.startTime.localeCompare(b.startTime));
+    for (const b of todaySorted) {
+      const start = parseISO(b.startTime);
+      const end = parseISO(b.endTime);
+      // Simulate: compare only hours/minutes against "now"
+      const fakeNow = new Date(start);
+      fakeNow.setHours(now.getHours(), now.getMinutes());
+
+      if (fakeNow >= start && fakeNow <= end) {
+        const remaining = Math.round((end.getTime() - fakeNow.getTime()) / 60000);
+        return `⏱ probíhá · ${remaining} min zbývá`;
+      }
+      if (fakeNow < start) {
+        const diff = Math.round((start.getTime() - fakeNow.getTime()) / 60000);
+        if (diff < 60) return `za ${diff} min`;
+        const h = Math.floor(diff / 60);
+        const m = diff % 60;
+        return `za ${h}h ${m}m`;
+      }
+    }
+    if (todaySorted.length > 0) return "dokončeno ✓";
+    return "žádná lekce";
+  };
+
   const firstName = profile?.full_name?.split(" ")[0] || "trenére";
 
   const bgPresetStyle: React.CSSProperties = {};
