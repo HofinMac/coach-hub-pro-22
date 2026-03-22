@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 import { MetricCard } from "@/components/MetricCard";
 import { PageHeader } from "@/components/PageHeader";
 import { AvatarCircle } from "@/components/AvatarCircle";
@@ -79,13 +80,13 @@ export default function CoachDashboard() {
         </div>
       )}
 
-      <div className="flex items-center justify-between pb-6">
+      <div className={cn("flex items-center justify-between pb-6", profile?.cover_photo_url && "-mt-12")}>
         <div className="flex items-center gap-4">
           {profile?.profile_photo_url && (
             <img
               src={profile.profile_photo_url}
               alt="Profilová fotka"
-              className="h-14 w-14 rounded-full object-cover border-2 border-primary/20"
+              className="h-24 w-24 rounded-full object-cover border-4 border-background shadow-lg"
             />
           )}
           <div>
