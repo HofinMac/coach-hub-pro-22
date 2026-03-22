@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, Dumbbell, Calendar, BarChart3, Shield, Zap, Smartphone } from "lucide-react";
+import logoHorizontal from "@/assets/logo-trenernik-horizontal.png";
 
 const features = [
   { icon: Users, title: "Správa klientů", desc: "Kompletní CRM se sledováním stavu, poznámkami, zraněními a historií pokroku." },
