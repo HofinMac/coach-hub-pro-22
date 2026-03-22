@@ -12,6 +12,7 @@ import {
   LogOut,
   Shield,
   MapPin,
+  Gift,
 } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
