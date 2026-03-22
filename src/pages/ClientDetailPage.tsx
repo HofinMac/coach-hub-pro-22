@@ -10,6 +10,7 @@ import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "rec
 
 export default function ClientDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const client = clients.find((c) => c.id === id);
 
   if (!client) {
