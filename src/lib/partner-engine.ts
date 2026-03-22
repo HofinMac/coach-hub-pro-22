@@ -228,7 +228,7 @@ export async function logAuditEvent(params: {
   newValues?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
 }) {
-  await supabase.from("partner_audit_log").insert({
+  await supabase.from("partner_audit_log").insert([{
     entity_type: params.entityType,
     entity_id: params.entityId,
     action: params.action,
@@ -236,7 +236,7 @@ export async function logAuditEvent(params: {
     old_values: params.oldValues || {},
     new_values: params.newValues || {},
     metadata: params.metadata || {},
-  });
+  }]);
 }
 
 /**
