@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { AvatarCircle } from "@/components/AvatarCircle";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Plus, UserPlus, Calendar, Dumbbell } from "lucide-react";
+import { Plus, UserPlus, Calendar, Dumbbell, Users, AlertTriangle, ClipboardList, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   bookings,
