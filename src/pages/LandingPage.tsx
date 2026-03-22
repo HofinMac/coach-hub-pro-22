@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, Dumbbell, Calendar, BarChart3, Shield, Zap, Smartphone } from "lucide-react";
+import logoHorizontal from "@/assets/logo-trenernik-horizontal.png";
 
 const features = [
   { icon: Users, title: "Správa klientů", desc: "Kompletní CRM se sledováním stavu, poznámkami, zraněními a historií pokroku." },
@@ -16,7 +17,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-subtle/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto flex items-center justify-between h-14 px-6">
-          <span className="text-lg font-semibold tracking-tight text-foreground">Trenérník</span>
+          <Link to="/"><img src={logoHorizontal} alt="Trenérník" className="h-7" /></Link>
           <div className="flex items-center gap-4">
             <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Ceník
