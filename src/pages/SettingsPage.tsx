@@ -62,7 +62,7 @@ export default function SettingsPage() {
 
   // Appearance
   const [theme, setTheme] = useState<ThemeMode>(() => {
-    const stored = localStorage.getItem("apex-theme");
+    const stored = localStorage.getItem("trenernik-theme");
     return (stored as ThemeMode) || "light";
   });
   const [bgPreset, setBgPreset] = useState("none");
