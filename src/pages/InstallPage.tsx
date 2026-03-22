@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Download, Smartphone, Share, PlusSquare, Check, ArrowRight } from "lucide-react";
+import logoSquare from "@/assets/logo-trenernik-square.png";
+import logoHorizontal from "@/assets/logo-trenernik-horizontal.png";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
