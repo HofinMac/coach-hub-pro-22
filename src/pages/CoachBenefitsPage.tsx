@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
+import { evaluateEligibility, logAuditEvent } from "@/lib/partner-engine";
 
 interface Certificate {
   id: string; status: string; certificate_url: string; created_at: string; notes: string | null;
