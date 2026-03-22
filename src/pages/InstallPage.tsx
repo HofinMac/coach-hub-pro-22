@@ -114,7 +114,7 @@ export default function InstallPage() {
         ) : deferredPrompt ? (
           <div className="rounded-xl bg-card shadow-card p-8">
             <Button onClick={handleInstall} size="lg" className="gap-2">
-              <Download className="h-5 w-5" /> Nainstalovat Apex
+              <Download className="h-5 w-5" /> Nainstalovat Trenérník
             </Button>
           </div>
         ) : (

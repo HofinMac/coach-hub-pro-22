@@ -84,7 +84,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-border">
         <div className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">© 2026 Apex. Všechna práva vyhrazena.</span>
+          <span className="text-sm text-muted-foreground">© 2026 Trenérník. Všechna práva vyhrazena.</span>
           <div className="flex gap-6">
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Ochrana soukromí</a>
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Podmínky</a>

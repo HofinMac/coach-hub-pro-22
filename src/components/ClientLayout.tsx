@@ -58,7 +58,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         <div className="flex h-14 items-center justify-between px-4 border-b border-border">
           {!collapsed && (
             <span className="text-lg font-semibold tracking-tight text-foreground">
-              apex <span className="text-xs font-normal text-muted-foreground ml-1">klient</span>
+              Trenérník <span className="text-xs font-normal text-muted-foreground ml-1">klient</span>
             </span>
           )}
           <button

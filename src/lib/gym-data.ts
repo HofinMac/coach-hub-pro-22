@@ -39,7 +39,7 @@ export const gyms: Gym[] = [
   },
   {
     id: "g2",
-    name: "Apex Fitness Praha – Smíchov",
+    name: "FitZone Praha – Smíchov",
     address: "Plzeňská 115, Praha 5",
     city: "Praha",
     description: "Menší pobočka zaměřená na funkční trénink a skupinové lekce. Skvělé pro HIIT a kondici.",

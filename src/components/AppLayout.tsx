@@ -59,7 +59,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex h-14 items-center justify-between px-4 border-b border-border">
           {!collapsed && (
             <span className="text-lg font-semibold tracking-tight text-foreground">
-              apex
+              Trenérník
             </span>
           )}
           <button
