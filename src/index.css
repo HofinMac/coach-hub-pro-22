@@ -112,4 +112,7 @@
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
