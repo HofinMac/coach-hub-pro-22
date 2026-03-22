@@ -5,8 +5,12 @@ import { AvatarCircle } from "@/components/AvatarCircle";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { UserPlus, Search } from "lucide-react";
 import { getClientsByCoach, type ClientStatus } from "@/lib/demo-data";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 const COACH_ID = "c1";
 const filterOptions: (ClientStatus | 'all')[] = ['all', 'active', 'at_risk', 'inactive', 'lead'];
@@ -22,15 +26,48 @@ export default function ClientsPage() {
   const allClients = getClientsByCoach(COACH_ID);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ClientStatus | 'all'>('all');
+  const [showAddDialog, setShowAddDialog] = useState(false);
+
+  // Add client form
+  const [newEmail, setNewEmail] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newGoal, setNewGoal] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const filtered = allClients
     .filter(c => statusFilter === 'all' || c.status === statusFilter)
     .filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase()));
 
+  const resetForm = () => {
+    setNewEmail("");
+    setNewPhone("");
+    setNewGoal("");
+  };
+
+  const handleAddClient = async () => {
+    if (!newEmail.trim() && !newPhone.trim()) {
+      toast.error("Vyplňte e-mail nebo telefon");
+      return;
+    }
+    if (newEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) {
+      toast.error("Neplatný formát e-mailu");
+      return;
+    }
+    setSaving(true);
+    // TODO: integrate with backend — send invite to client
+    await new Promise(r => setTimeout(r, 600));
+    setSaving(false);
+    toast.success("Pozvánka odeslána klientovi");
+    resetForm();
+    setShowAddDialog(false);
+  };
+
   return (
-    <div className="p-6 max-w-6xl mx-auto animate-fade-in">
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto animate-fade-in">
       <PageHeader title="Klienti" description={`Celkem ${allClients.length} klientů`}>
-        <Button size="sm" className="gap-1.5"><UserPlus className="h-3.5 w-3.5" /> Přidat klienta</Button>
+        <Button size="sm" className="gap-1.5" onClick={() => setShowAddDialog(true)}>
+          <UserPlus className="h-3.5 w-3.5" /> Přidat klienta
+        </Button>
       </PageHeader>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -43,12 +80,12 @@ export default function ClientsPage() {
             className="pl-9"
           />
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 overflow-x-auto">
           {filterOptions.map(f => (
             <button
               key={f}
               onClick={() => setStatusFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                 statusFilter === f
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-muted-foreground hover:bg-accent'
@@ -103,6 +140,59 @@ export default function ClientsPage() {
           <p className="p-8 text-center text-sm text-muted-foreground">Žádní klienti nenalezeni.</p>
         )}
       </div>
+
+      {/* Add Client Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Přidat klienta</DialogTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Zadejte kontakt a cíl. Klient si zbytek nastaví sám po přihlášení.
+            </p>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="client-email">E-mail</Label>
+              <Input
+                id="client-email"
+                type="email"
+                placeholder="klient@email.cz"
+                value={newEmail}
+                onChange={e => setNewEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-phone">Telefon</Label>
+              <Input
+                id="client-phone"
+                type="tel"
+                placeholder="+420 ..."
+                value={newPhone}
+                onChange={e => setNewPhone(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="client-goal">Cíl klienta</Label>
+              <Textarea
+                id="client-goal"
+                placeholder="Např. zhubnutí, nabírání svalů, rehabilitace..."
+                value={newGoal}
+                onChange={e => setNewGoal(e.target.value)}
+                rows={2}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { resetForm(); setShowAddDialog(false); }}>
+              Zrušit
+            </Button>
+            <Button onClick={handleAddClient} disabled={saving} className="gap-1.5">
+              <UserPlus className="h-4 w-4" />
+              {saving ? "Odesílám..." : "Pozvat klienta"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
