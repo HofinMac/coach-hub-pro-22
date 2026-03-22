@@ -16,7 +16,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-subtle/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto flex items-center justify-between h-14 px-6">
-          <span className="text-lg font-semibold tracking-tight text-foreground">apex</span>
+          <span className="text-lg font-semibold tracking-tight text-foreground">Trenérník</span>
           <div className="flex items-center gap-4">
             <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Ceník
@@ -34,10 +34,10 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-6 pt-24 pb-20">
         <div className="max-w-2xl">
           <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-foreground leading-tight">
-            Spravujte své klienty,<br />ne své tabulky.
+            Klienti pod kontrolou.
           </h1>
           <p className="mt-5 text-lg text-muted-foreground leading-relaxed max-w-lg">
-            Apex spojuje správu klientů, tréninkové plány, rezervace a sledování pokroku do jedné platformy vytvořené pro profesionální trenéry.
+            Trenérník spojuje správu klientů, tréninkové plány, rezervace a sledování pokroku do jedné platformy vytvořené pro profesionální trenéry.
           </p>
           <div className="mt-8 flex items-center gap-3">
             <Link to="/register">
@@ -84,7 +84,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-border">
         <div className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">© 2026 Apex. Všechna práva vyhrazena.</span>
+          <span className="text-sm text-muted-foreground">© 2026 Trenérník. Všechna práva vyhrazena.</span>
           <div className="flex gap-6">
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Ochrana soukromí</a>
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Podmínky</a>

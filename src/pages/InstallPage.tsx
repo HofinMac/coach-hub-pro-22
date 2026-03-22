@@ -45,10 +45,10 @@ export default function InstallPage() {
             <Smartphone className="h-10 w-10 text-primary" />
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Nainstalujte si Apex
+            Nainstalujte si Trenérník
           </h1>
           <p className="text-muted-foreground mt-2 text-sm max-w-xs mx-auto">
-            Přidejte si Apex na domovskou obrazovku a používejte ho jako běžnou aplikaci.
+            Přidejte si Trenérník na domovskou obrazovku a používejte ho jako běžnou aplikaci.
           </p>
         </div>
 
@@ -57,7 +57,7 @@ export default function InstallPage() {
             <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
               <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-lg font-semibold text-foreground">Apex je nainstalován!</h2>
+            <h2 className="text-lg font-semibold text-foreground">Trenérník je nainstalován!</h2>
             <p className="text-sm text-muted-foreground mt-2">
               Aplikaci najdete na domovské obrazovce svého zařízení.
             </p>
@@ -100,7 +100,7 @@ export default function InstallPage() {
                 <div>
                   <p className="text-sm font-medium text-foreground">Potvrďte „Přidat"</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Apex se objeví na vaší ploše jako aplikace
+                    Trenérník se objeví na vaší ploše jako aplikace
                   </p>
                 </div>
               </div>
@@ -114,7 +114,7 @@ export default function InstallPage() {
         ) : deferredPrompt ? (
           <div className="rounded-xl bg-card shadow-card p-8">
             <Button onClick={handleInstall} size="lg" className="gap-2">
-              <Download className="h-5 w-5" /> Nainstalovat Apex
+              <Download className="h-5 w-5" /> Nainstalovat Trenérník
             </Button>
           </div>
         ) : (

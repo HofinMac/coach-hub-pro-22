@@ -189,7 +189,7 @@ export default function CoachOnboarding() {
       }).eq("id", userId);
 
       if (error) throw error;
-      toast.success("Profil trenéra vytvořen! Vítej v Apex.");
+      toast.success("Profil trenéra vytvořen! Vítej v Trenérníku.");
       navigate("/dashboard");
     } catch (err: any) {
       toast.error("Chyba při ukládání: " + err.message);

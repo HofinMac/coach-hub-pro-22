@@ -31,7 +31,7 @@ export default function PricingPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-subtle/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto flex items-center justify-between h-14 px-6">
-          <Link to="/" className="text-lg font-semibold tracking-tight text-foreground">apex</Link>
+          <Link to="/" className="text-lg font-semibold tracking-tight text-foreground">Trenérník</Link>
           <div className="flex items-center gap-4">
             <Link to="/login"><Button variant="ghost" size="sm">Přihlásit se</Button></Link>
             <Link to="/register"><Button size="sm">Začít</Button></Link>

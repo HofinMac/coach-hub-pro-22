@@ -81,7 +81,7 @@ export default function ClientOnboarding() {
 
   const handleFinish = () => {
     localStorage.setItem("client_onboarding_done", "true");
-    toast.success("Profil vytvořen! Vítej v Apex.");
+    toast.success("Profil vytvořen! Vítej v Trenérníku.");
     navigate("/klient");
   };
 
