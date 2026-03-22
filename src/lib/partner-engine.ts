@@ -210,7 +210,7 @@ export async function evaluateEligibility(
     campaign_id: campaignId,
     eligible,
     evaluated_at,
-    rule_results: results as unknown as Record<string, unknown>[],
+    rule_results: JSON.parse(JSON.stringify(results)),
   }], { onConflict: "user_id,campaign_id" });
 
   return { eligible, results, evaluated_at };
