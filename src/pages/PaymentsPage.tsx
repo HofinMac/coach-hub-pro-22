@@ -29,11 +29,18 @@ const invoices = [
 
 export default function PaymentsPage() {
   const totalRevenue = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
+  const [pkgOpen, setPkgOpen] = useState(false);
+  const [pkgClient, setPkgClient] = useState("");
+  const [pkgName, setPkgName] = useState("Balíček 10 lekcí");
+  const [pkgCredits, setPkgCredits] = useState("10");
+  const [pkgPrice, setPkgPrice] = useState("");
 
   return (
     <div className="p-6 max-w-6xl mx-auto animate-fade-in">
       <PageHeader title="Platby" description="Balíčky a faktury">
-        <Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Nový balíček</Button>
+        <Button size="sm" className="gap-1.5" onClick={() => setPkgOpen(true)}>
+          <Plus className="h-3.5 w-3.5" /> Nový balíček
+        </Button>
       </PageHeader>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
