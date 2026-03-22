@@ -45,10 +45,10 @@ export default function InstallPage() {
             <Smartphone className="h-10 w-10 text-primary" />
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Nainstalujte si Apex
+            Nainstalujte si Trenérník
           </h1>
           <p className="text-muted-foreground mt-2 text-sm max-w-xs mx-auto">
-            Přidejte si Apex na domovskou obrazovku a používejte ho jako běžnou aplikaci.
+            Přidejte si Trenérník na domovskou obrazovku a používejte ho jako běžnou aplikaci.
           </p>
         </div>
 
