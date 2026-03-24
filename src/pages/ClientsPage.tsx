@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UserPlus, Search, Camera } from "lucide-react";
-import { getClientsByCoach, type ClientStatus } from "@/lib/demo-data";
+import type { ClientStatus } from "@/lib/demo-data";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
-const COACH_ID = "c1";
+
 const filterOptions: (ClientStatus | 'all')[] = ['all', 'active', 'at_risk', 'inactive', 'lead'];
 const filterLabels: Record<string, string> = {
   all: 'Všichni',
@@ -23,7 +23,7 @@ const filterLabels: Record<string, string> = {
 };
 
 export default function ClientsPage() {
-  const allClients = getClientsByCoach(COACH_ID);
+  const allClients: { id: string; name: string; email: string; avatar: string; status: ClientStatus; goals: string; packageCredits: number; lastActivity: string }[] = [];
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ClientStatus | 'all'>('all');
   const [showAddDialog, setShowAddDialog] = useState(false);

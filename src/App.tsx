@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import AppLayout from "@/components/AppLayout";
 import ClientLayout from "@/components/ClientLayout";
-import RoleSwitcher from "@/components/RoleSwitcher";
+
 import LandingPage from "@/pages/LandingPage";
 import PricingPage from "@/pages/PricingPage";
 import LoginPage from "@/pages/LoginPage";
@@ -41,21 +41,11 @@ import InstallPage from "@/pages/InstallPage";
 const queryClient = new QueryClient();
 
 function CoachShell({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <AppLayout>{children}</AppLayout>
-      <RoleSwitcher />
-    </>
-  );
+  return <AppLayout>{children}</AppLayout>;
 }
 
 function ClientShell({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <ClientLayout>{children}</ClientLayout>
-      <RoleSwitcher />
-    </>
-  );
+  return <ClientLayout>{children}</ClientLayout>;
 }
 
 const App = () => (
