@@ -298,6 +298,8 @@ export default function CalendarPage() {
   const [nlTime, setNlTime] = useState("09:00");
   const [nlDuration, setNlDuration] = useState("60");
   const [nlType, setNlType] = useState<"1:1" | "group">("1:1");
+  const [createSlotOpen, setCreateSlotOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const pendingCount = allBookings.filter(b => b.status === "pending").length;
 
