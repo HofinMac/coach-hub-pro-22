@@ -601,6 +601,42 @@ export type Database = {
           },
         ]
       }
+      user_settings: {
+        Row: {
+          bg_preset: string
+          created_at: string
+          email: string
+          id: string
+          notification_settings: Json
+          phone: string
+          reminder_minutes: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bg_preset?: string
+          created_at?: string
+          email?: string
+          id?: string
+          notification_settings?: Json
+          phone?: string
+          reminder_minutes?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bg_preset?: string
+          created_at?: string
+          email?: string
+          id?: string
+          notification_settings?: Json
+          phone?: string
+          reminder_minutes?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
