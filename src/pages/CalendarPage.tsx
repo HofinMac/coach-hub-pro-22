@@ -5,303 +5,148 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Check, X, Clock, ChevronLeft, ChevronRight, List, LayoutGrid, Calendar as CalIcon, CalendarPlus, Share2 } from "lucide-react";
-import { getBookingsByCoach, clients, type BookingStatus, type Booking } from "@/lib/demo-data";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Check, X, Clock, ChevronLeft, ChevronRight, List, LayoutGrid, CalendarPlus, Share2 } from "lucide-react";
 import {
   format, parseISO, startOfDay, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths,
   startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth,
   differenceInMinutes,
 } from "date-fns";
 import { cs } from "date-fns/locale";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import CreateSlotDialog from "@/components/CreateSlotDialog";
 import ShareSlotsDialog from "@/components/ShareSlotsDialog";
-
-const COACH_ID = "c1";
+import SlotDetailDialog from "@/components/SlotDetailDialog";
 
 type ViewMode = "day" | "week" | "month";
 type DisplayMode = "graphic" | "text";
 
-const statusStyles: Record<BookingStatus, string> = {
-  pending: "bg-warning/10 text-warning border-warning/30",
-  booked: "bg-primary/10 text-primary border-primary/30",
-  completed: "bg-success/10 text-success border-success/30",
-  cancelled: "bg-muted text-muted-foreground border-border",
-  no_show: "bg-destructive/10 text-destructive border-destructive/30",
+interface SlotRow {
+  id: string;
+  coach_id: string;
+  start_time: string;
+  end_time: string;
+  slot_type: string;
+  capacity: number;
+  booked_count: number;
+  status: string;
+  notes: string | null;
+}
+
+interface BookingRow {
+  id: string;
+  slot_id: string;
+  client_id: string;
+  status: string;
+}
+
+interface SlotWithBookings extends SlotRow {
+  bookings: Array<BookingRow & { client_name?: string }>;
+}
+
+const slotTypeLabels: Record<string, string> = {
+  individual: "Individuální",
+  online: "Online",
+  group: "Skupinová",
 };
 
-const statusBlockColors: Record<BookingStatus, string> = {
-  pending: "bg-warning/20 border-l-warning text-warning-foreground",
-  booked: "bg-primary/15 border-l-primary text-foreground",
-  completed: "bg-success/15 border-l-success text-foreground",
+const statusBlockColors: Record<string, string> = {
+  available: "bg-primary/10 border-l-primary text-foreground",
+  partially_booked: "bg-warning/15 border-l-warning text-foreground",
+  booked: "bg-success/15 border-l-success text-foreground",
   cancelled: "bg-muted/50 border-l-muted-foreground text-muted-foreground",
+  completed: "bg-success/10 border-l-success text-muted-foreground",
   no_show: "bg-destructive/10 border-l-destructive text-destructive",
 };
 
-const statusLabels: Record<BookingStatus, string> = {
-  pending: "Čeká",
-  booked: "Rezervováno",
+const statusLabels: Record<string, string> = {
+  available: "Volný",
+  partially_booked: "Částečně",
+  booked: "Obsazený",
+  cancelled: "Zrušený",
   completed: "Dokončeno",
-  cancelled: "Zrušeno",
   no_show: "Neúčast",
 };
 
-const HOURS = Array.from({ length: 16 }, (_, i) => i + 6); // 6:00 – 21:00
+const statusBadgeVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  available: "outline",
+  partially_booked: "secondary",
+  booked: "default",
+  cancelled: "destructive",
+  completed: "default",
+  no_show: "destructive",
+};
 
-function BookingActions({ booking }: { booking: Booking }) {
-  if (booking.status !== "pending") return null;
-  return (
-    <div className="flex items-center gap-1 mt-1">
-      <button
-        className="text-xs px-1.5 py-0.5 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
-        onClick={(e) => { e.stopPropagation(); toast.success(`Zamítnuto: ${booking.clientName}`); }}
-      >
-        <X className="h-3 w-3 inline" />
-      </button>
-      <button
-        className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-        onClick={(e) => { e.stopPropagation(); toast.success(`Schváleno: ${booking.clientName}`); }}
-      >
-        <Check className="h-3 w-3 inline" />
-      </button>
-    </div>
-  );
-}
+const HOURS = Array.from({ length: 16 }, (_, i) => i + 6);
 
-// ── Text list view for a set of bookings ──
-function TextBookingList({ bookings }: { bookings: Booking[] }) {
-  if (bookings.length === 0) return <p className="p-6 text-center text-sm text-muted-foreground">Žádné lekce.</p>;
-  return (
-    <div className="divide-y divide-border">
-      {bookings.map(b => (
-        <div key={b.id} className="flex items-center justify-between p-4 hover:bg-subtle transition-colors">
-          <div className="flex items-center gap-4">
-            <div className="text-right min-w-[60px]">
-              <p className="text-sm font-mono tabular-nums font-medium text-foreground">{format(parseISO(b.startTime), "HH:mm")}</p>
-              <p className="text-xs font-mono tabular-nums text-muted-foreground">{format(parseISO(b.endTime), "HH:mm")}</p>
-            </div>
-            <div className="h-10 w-px bg-border" />
-            <div className="flex items-center gap-3">
-              <AvatarCircle initials={b.clientName.split(" ").map(n => n[0]).join("")} size="sm" />
-              <div>
-                <p className="text-sm font-medium text-foreground">{b.clientName}</p>
-                <p className="text-xs text-muted-foreground">{b.type === "1:1" ? "Individuální" : "Skupinová"}</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {b.status === "pending" ? (
-              <>
-                <Button size="sm" variant="outline" className="h-7 gap-1 text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
-                  onClick={() => toast.success(`Zamítnuto: ${b.clientName}`)}>
-                  <X className="h-3 w-3" /> Zamítnout
-                </Button>
-                <Button size="sm" className="h-7 gap-1" onClick={() => toast.success(`Schváleno: ${b.clientName}`)}>
-                  <Check className="h-3 w-3" /> Schválit
-                </Button>
-              </>
-            ) : (
-              <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${statusStyles[b.status]}`}>{statusLabels[b.status]}</span>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ── Graphic day view (Outlook-style time grid) ──
-function GraphicDayView({ date, bookings }: { date: Date; bookings: Booking[] }) {
-  return (
-    <div className="relative">
-      {HOURS.map(hour => (
-        <div key={hour} className="flex border-b border-border/50 min-h-[60px]">
-          <div className="w-14 shrink-0 py-1 pr-2 text-right">
-            <span className="text-xs font-mono tabular-nums text-muted-foreground">{`${hour}:00`}</span>
-          </div>
-          <div className="flex-1 relative">
-            {bookings
-              .filter(b => {
-                const start = parseISO(b.startTime);
-                return start.getHours() === hour && isSameDay(start, date);
-              })
-              .map(b => {
-                const start = parseISO(b.startTime);
-                const end = parseISO(b.endTime);
-                const duration = differenceInMinutes(end, start);
-                const topOffset = start.getMinutes();
-                const height = Math.max(duration, 30);
-                return (
-                  <div
-                    key={b.id}
-                    className={cn(
-                      "absolute left-1 right-2 rounded-md border-l-[3px] px-2 py-1 text-xs overflow-hidden transition-shadow hover:shadow-md cursor-pointer",
-                      statusBlockColors[b.status]
-                    )}
-                    style={{ top: `${topOffset}px`, height: `${height}px` }}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-semibold truncate">{b.clientName}</span>
-                      <span className="text-[10px] opacity-70 shrink-0">
-                        {format(start, "H:mm")}–{format(end, "H:mm")}
-                      </span>
-                    </div>
-                    {height >= 40 && (
-                      <span className="text-[10px] opacity-60">{b.type === "1:1" ? "Individuální" : "Skupinová"}</span>
-                    )}
-                    <BookingActions booking={b} />
-                  </div>
-                );
-              })}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ── Graphic week view ──
-function GraphicWeekView({ weekStart, allBookings }: { weekStart: Date; allBookings: Booking[] }) {
-  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[700px]">
-        {/* Day headers */}
-        <div className="flex border-b border-border sticky top-0 bg-card z-10">
-          <div className="w-14 shrink-0" />
-          {days.map(d => (
-            <div key={d.toISOString()} className="flex-1 text-center py-2 border-l border-border/50">
-              <span className="text-xs text-muted-foreground">{format(d, "EEE", { locale: cs })}</span>
-              <span className="block text-sm font-semibold text-foreground tabular-nums">{format(d, "d")}</span>
-            </div>
-          ))}
-        </div>
-        {/* Time grid */}
-        {HOURS.map(hour => (
-          <div key={hour} className="flex border-b border-border/30 min-h-[48px]">
-            <div className="w-14 shrink-0 py-0.5 pr-2 text-right">
-              <span className="text-[10px] font-mono tabular-nums text-muted-foreground">{`${hour}:00`}</span>
-            </div>
-            {days.map(d => {
-              const hourBookings = allBookings.filter(b => {
-                const start = parseISO(b.startTime);
-                return start.getHours() === hour && isSameDay(start, d);
-              });
-              return (
-                <div key={d.toISOString()} className="flex-1 border-l border-border/30 relative px-0.5">
-                  {hourBookings.map(b => {
-                    const start = parseISO(b.startTime);
-                    const end = parseISO(b.endTime);
-                    const duration = differenceInMinutes(end, start);
-                    const topOff = start.getMinutes() * (48 / 60);
-                    const h = Math.max((duration / 60) * 48, 20);
-                    return (
-                      <div
-                        key={b.id}
-                        className={cn(
-                          "absolute left-0.5 right-0.5 rounded border-l-2 px-1 py-0.5 text-[10px] leading-tight overflow-hidden cursor-pointer hover:shadow-sm",
-                          statusBlockColors[b.status]
-                        )}
-                        style={{ top: `${topOff}px`, height: `${h}px` }}
-                        title={`${b.clientName} ${format(start, "H:mm")}–${format(end, "H:mm")}`}
-                      >
-                        <span className="font-semibold truncate block">{b.clientName.split(" ")[0]}</span>
-                        {h >= 30 && <span className="opacity-60">{format(start, "H:mm")}</span>}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Month view ──
-function MonthView({ month, allBookings, onSelectDay }: { month: Date; allBookings: Booking[]; onSelectDay: (d: Date) => void }) {
-  const monthStart = startOfMonth(month);
-  const monthEnd = endOfMonth(month);
-  const calStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-  const calEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
-  const allDays = eachDayOfInterval({ start: calStart, end: calEnd });
-
-  const dayNames = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
-
-  return (
-    <div>
-      <div className="grid grid-cols-7 border-b border-border">
-        {dayNames.map(d => (
-          <div key={d} className="text-center py-2 text-xs font-medium text-muted-foreground">{d}</div>
-        ))}
-      </div>
-      <div className="grid grid-cols-7">
-        {allDays.map(day => {
-          const dayBks = allBookings.filter(b => isSameDay(parseISO(b.startTime), day));
-          const isCurrentMonth = isSameMonth(day, month);
-          const hasPending = dayBks.some(b => b.status === "pending");
-          return (
-            <button
-              key={day.toISOString()}
-              onClick={() => onSelectDay(day)}
-              className={cn(
-                "min-h-[80px] border-b border-r border-border/50 p-1.5 text-left transition-colors hover:bg-subtle",
-                !isCurrentMonth && "opacity-40"
-              )}
-            >
-              <span className={cn(
-                "text-xs font-medium tabular-nums",
-                isSameDay(day, new Date(2026, 2, 18)) ? "bg-primary text-primary-foreground rounded-full px-1.5 py-0.5" : "text-foreground"
-              )}>
-                {format(day, "d")}
-              </span>
-              <div className="mt-1 space-y-0.5">
-                {dayBks.slice(0, 3).map(b => (
-                  <div
-                    key={b.id}
-                    className={cn(
-                      "text-[10px] leading-tight px-1 py-0.5 rounded truncate border-l-2",
-                      statusBlockColors[b.status]
-                    )}
-                  >
-                    {format(parseISO(b.startTime), "H:mm")} {b.clientName.split(" ")[0]}
-                  </div>
-                ))}
-                {dayBks.length > 3 && (
-                  <span className="text-[10px] text-muted-foreground">+{dayBks.length - 3} dalších</span>
-                )}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ── Main Calendar Page ──
 export default function CalendarPage() {
-  const allBookings = getBookingsByCoach(COACH_ID);
-  const today = new Date(2026, 2, 18);
+  const today = new Date();
   const [currentDate, setCurrentDate] = useState(today);
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [displayMode, setDisplayMode] = useState<DisplayMode>("graphic");
-
-  const [statusFilter, setStatusFilter] = useState<BookingStatus | 'all'>('all');
-  const [newLessonOpen, setNewLessonOpen] = useState(false);
-  const [nlClient, setNlClient] = useState("");
-  const [nlDate, setNlDate] = useState("");
-  const [nlTime, setNlTime] = useState("09:00");
-  const [nlDuration, setNlDuration] = useState("60");
-  const [nlType, setNlType] = useState<"1:1" | "group">("1:1");
   const [createSlotOpen, setCreateSlotOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [slots, setSlots] = useState<SlotWithBookings[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedSlot, setSelectedSlot] = useState<SlotWithBookings | null>(null);
 
-  const pendingCount = allBookings.filter(b => b.status === "pending").length;
+  const fetchSlots = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: slotsData, error } = await supabase
+        .from("coach_slots")
+        .select("*")
+        .eq("coach_id", user.id)
+        .order("start_time", { ascending: true });
+
+      if (error) throw error;
+
+      const slotIds = (slotsData || []).map((s: any) => s.id);
+      let bookingsData: any[] = [];
+      if (slotIds.length > 0) {
+        const { data: bData } = await supabase
+          .from("slot_bookings")
+          .select("*")
+          .in("slot_id", slotIds);
+        bookingsData = bData || [];
+      }
+
+      // Fetch client names
+      const clientIds = [...new Set(bookingsData.map((b: any) => b.client_id))];
+      const profileMap: Record<string, string> = {};
+      if (clientIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", clientIds);
+        profiles?.forEach((p: any) => { profileMap[p.id] = p.full_name; });
+      }
+
+      const enriched: SlotWithBookings[] = (slotsData || []).map((s: any) => ({
+        ...s,
+        bookings: bookingsData
+          .filter((b: any) => b.slot_id === s.id)
+          .map((b: any) => ({ ...b, client_name: profileMap[b.client_id] || "Klient" })),
+      }));
+
+      setSlots(enriched);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchSlots(); }, [fetchSlots]);
+
+  const pendingBookings = slots.flatMap(s => 
+    s.bookings.filter(b => b.status === "pending").map(b => ({ ...b, slot: s }))
+  );
 
   const navigate = (dir: -1 | 1) => {
     if (viewMode === "day") setCurrentDate(d => addDays(d, dir));
@@ -321,29 +166,257 @@ export default function CalendarPage() {
     return format(currentDate, "LLLL yyyy", { locale: cs });
   };
 
-  // Filtered bookings for current view
-  const getVisibleBookings = () => {
+  const getVisibleSlots = () => {
     if (viewMode === "day") {
-      return allBookings.filter(b => isSameDay(parseISO(b.startTime), currentDate))
-        .sort((a, b) => a.startTime.localeCompare(b.startTime));
+      return slots.filter(s => isSameDay(new Date(s.start_time), currentDate));
     }
     if (viewMode === "week") {
       const ws = startOfWeek(currentDate, { weekStartsOn: 1 });
       const we = endOfWeek(currentDate, { weekStartsOn: 1 });
-      return allBookings.filter(b => {
-        const d = parseISO(b.startTime);
+      return slots.filter(s => {
+        const d = new Date(s.start_time);
         return d >= ws && d <= we;
-      }).sort((a, b) => a.startTime.localeCompare(b.startTime));
+      });
     }
     const ms = startOfMonth(currentDate);
     const me = endOfMonth(currentDate);
-    return allBookings.filter(b => {
-      const d = parseISO(b.startTime);
+    return slots.filter(s => {
+      const d = new Date(s.start_time);
       return d >= ms && d <= me;
-    }).sort((a, b) => a.startTime.localeCompare(b.startTime));
+    });
   };
 
-  const visibleBookings = getVisibleBookings();
+  const visibleSlots = getVisibleSlots();
+
+  const handleQuickApprove = async (bookingId: string, slotId: string) => {
+    const { error } = await supabase.from("slot_bookings").update({ status: "confirmed" } as any).eq("id", bookingId);
+    if (error) { toast.error("Chyba"); return; }
+    toast.success("Rezervace schválena");
+    fetchSlots();
+  };
+
+  const handleQuickReject = async (bookingId: string, slot: SlotWithBookings) => {
+    const { error } = await supabase.from("slot_bookings").update({ status: "rejected" } as any).eq("id", bookingId);
+    if (error) { toast.error("Chyba"); return; }
+    await supabase.from("coach_slots").update({ 
+      booked_count: Math.max(0, slot.booked_count - 1), 
+      status: "available" 
+    } as any).eq("id", slot.id);
+    toast.success("Rezervace zamítnuta");
+    fetchSlots();
+  };
+
+  // ── Text list view ──
+  const TextSlotList = ({ items }: { items: SlotWithBookings[] }) => {
+    if (items.length === 0) return <p className="p-8 text-center text-sm text-muted-foreground">Žádné termíny.</p>;
+    return (
+      <div className="divide-y divide-border">
+        {items.map(s => {
+          const start = new Date(s.start_time);
+          const end = new Date(s.end_time);
+          const hasPending = s.bookings.some(b => b.status === "pending");
+          return (
+            <button key={s.id} onClick={() => setSelectedSlot(s)}
+              className="flex items-center justify-between p-4 hover:bg-subtle transition-colors w-full text-left">
+              <div className="flex items-center gap-4">
+                <div className="text-right min-w-[60px]">
+                  <p className="text-sm font-mono tabular-nums font-medium text-foreground">{format(start, "HH:mm")}</p>
+                  <p className="text-xs font-mono tabular-nums text-muted-foreground">{format(end, "HH:mm")}</p>
+                </div>
+                <div className="h-10 w-px bg-border" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {slotTypeLabels[s.slot_type] || s.slot_type}
+                    {s.bookings.length > 0 && (
+                      <span className="text-xs text-muted-foreground ml-2">
+                        ({s.bookings.filter(b => b.status === "confirmed" || b.status === "pending").map(b => b.client_name).join(", ")})
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {s.booked_count}/{s.capacity} obsazeno
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {hasPending && <Badge variant="outline" className="text-warning border-warning/30 text-[10px]">Žádost</Badge>}
+                <Badge variant={statusBadgeVariants[s.status] || "secondary"} className="text-[10px]">
+                  {statusLabels[s.status] || s.status}
+                </Badge>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // ── Graphic day view ──
+  const GraphicDayView = ({ date, items }: { date: Date; items: SlotWithBookings[] }) => (
+    <div className="relative">
+      {HOURS.map(hour => (
+        <div key={hour} className="flex border-b border-border/50 min-h-[60px]">
+          <div className="w-14 shrink-0 py-1 pr-2 text-right">
+            <span className="text-xs font-mono tabular-nums text-muted-foreground">{`${hour}:00`}</span>
+          </div>
+          <div className="flex-1 relative">
+            {items
+              .filter(s => new Date(s.start_time).getHours() === hour && isSameDay(new Date(s.start_time), date))
+              .map(s => {
+                const start = new Date(s.start_time);
+                const end = new Date(s.end_time);
+                const duration = differenceInMinutes(end, start);
+                const topOffset = start.getMinutes();
+                const height = Math.max(duration, 30);
+                const hasPending = s.bookings.some(b => b.status === "pending");
+                return (
+                  <button key={s.id} onClick={() => setSelectedSlot(s)}
+                    className={cn(
+                      "absolute left-1 right-2 rounded-md border-l-[3px] px-2 py-1 text-xs overflow-hidden transition-shadow hover:shadow-md cursor-pointer text-left",
+                      statusBlockColors[s.status] || "bg-muted"
+                    )}
+                    style={{ top: `${topOffset}px`, height: `${height}px` }}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold truncate">
+                        {s.bookings.length > 0 
+                          ? s.bookings.filter(b => b.status !== "cancelled" && b.status !== "rejected").map(b => b.client_name).join(", ") || slotTypeLabels[s.slot_type]
+                          : slotTypeLabels[s.slot_type]}
+                      </span>
+                      <span className="text-[10px] opacity-70 shrink-0">
+                        {format(start, "H:mm")}–{format(end, "H:mm")}
+                      </span>
+                      {hasPending && <Clock className="h-3 w-3 text-warning shrink-0" />}
+                    </div>
+                    {height >= 40 && (
+                      <span className="text-[10px] opacity-60">{statusLabels[s.status]}</span>
+                    )}
+                  </button>
+                );
+              })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // ── Graphic week view ──
+  const GraphicWeekView = ({ weekStart, items }: { weekStart: Date; items: SlotWithBookings[] }) => {
+    const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    return (
+      <div className="overflow-x-auto">
+        <div className="min-w-[700px]">
+          <div className="flex border-b border-border sticky top-0 bg-card z-10">
+            <div className="w-14 shrink-0" />
+            {days.map(d => (
+              <div key={d.toISOString()} className="flex-1 text-center py-2 border-l border-border/50">
+                <span className="text-xs text-muted-foreground">{format(d, "EEE", { locale: cs })}</span>
+                <span className={cn("block text-sm font-semibold tabular-nums",
+                  isSameDay(d, today) ? "text-primary" : "text-foreground"
+                )}>{format(d, "d")}</span>
+              </div>
+            ))}
+          </div>
+          {HOURS.map(hour => (
+            <div key={hour} className="flex border-b border-border/30 min-h-[48px]">
+              <div className="w-14 shrink-0 py-0.5 pr-2 text-right">
+                <span className="text-[10px] font-mono tabular-nums text-muted-foreground">{`${hour}:00`}</span>
+              </div>
+              {days.map(d => {
+                const hourSlots = items.filter(s => {
+                  const start = new Date(s.start_time);
+                  return start.getHours() === hour && isSameDay(start, d);
+                });
+                return (
+                  <div key={d.toISOString()} className="flex-1 border-l border-border/30 relative px-0.5">
+                    {hourSlots.map(s => {
+                      const start = new Date(s.start_time);
+                      const end = new Date(s.end_time);
+                      const duration = differenceInMinutes(end, start);
+                      const topOff = start.getMinutes() * (48 / 60);
+                      const h = Math.max((duration / 60) * 48, 20);
+                      const hasPending = s.bookings.some(b => b.status === "pending");
+                      return (
+                        <button key={s.id} onClick={() => setSelectedSlot(s)}
+                          className={cn(
+                            "absolute left-0.5 right-0.5 rounded border-l-2 px-1 py-0.5 text-[10px] leading-tight overflow-hidden cursor-pointer hover:shadow-sm text-left",
+                            statusBlockColors[s.status] || "bg-muted"
+                          )}
+                          style={{ top: `${topOff}px`, height: `${h}px` }}
+                          title={`${slotTypeLabels[s.slot_type]} ${format(start, "H:mm")}–${format(end, "H:mm")}`}
+                        >
+                          <span className="font-semibold truncate block">
+                            {s.bookings.length > 0
+                              ? s.bookings.filter(b => b.status !== "cancelled").map(b => (b.client_name || "").split(" ")[0]).join(", ") || slotTypeLabels[s.slot_type]
+                              : slotTypeLabels[s.slot_type]}
+                          </span>
+                          {h >= 30 && <span className="opacity-60">{format(start, "H:mm")}</span>}
+                          {hasPending && <Clock className="h-2.5 w-2.5 text-warning" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // ── Month view ──
+  const MonthView = ({ month, items }: { month: Date; items: SlotWithBookings[] }) => {
+    const monthStart = startOfMonth(month);
+    const monthEnd = endOfMonth(month);
+    const calStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+    const calEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+    const allDays = eachDayOfInterval({ start: calStart, end: calEnd });
+    const dayNames = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
+
+    return (
+      <div>
+        <div className="grid grid-cols-7 border-b border-border">
+          {dayNames.map(d => (
+            <div key={d} className="text-center py-2 text-xs font-medium text-muted-foreground">{d}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7">
+          {allDays.map(day => {
+            const daySlots = items.filter(s => isSameDay(new Date(s.start_time), day));
+            const isCurrentMonth = isSameMonth(day, month);
+            return (
+              <button key={day.toISOString()}
+                onClick={() => { setCurrentDate(day); setViewMode("day"); }}
+                className={cn(
+                  "min-h-[80px] border-b border-r border-border/50 p-1.5 text-left transition-colors hover:bg-subtle",
+                  !isCurrentMonth && "opacity-40"
+                )}>
+                <span className={cn("text-xs font-medium tabular-nums",
+                  isSameDay(day, today) ? "bg-primary text-primary-foreground rounded-full px-1.5 py-0.5" : "text-foreground"
+                )}>{format(day, "d")}</span>
+                <div className="mt-1 space-y-0.5">
+                  {daySlots.slice(0, 3).map(s => (
+                    <div key={s.id}
+                      className={cn("text-[10px] leading-tight px-1 py-0.5 rounded truncate border-l-2", statusBlockColors[s.status] || "bg-muted")}>
+                      {format(new Date(s.start_time), "H:mm")} {
+                        s.bookings.length > 0
+                          ? s.bookings[0].client_name?.split(" ")[0]
+                          : slotTypeLabels[s.slot_type]
+                      }
+                    </div>
+                  ))}
+                  {daySlots.length > 3 && (
+                    <span className="text-[10px] text-muted-foreground">+{daySlots.length - 3} dalších</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="p-6 max-w-[1200px] mx-auto animate-fade-in">
@@ -352,81 +425,90 @@ export default function CalendarPage() {
           <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShareOpen(true)}>
             <Share2 className="h-3.5 w-3.5" /> Sdílet termíny
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => { setCreateSlotOpen(true); }}>
+          <Button size="sm" className="gap-1.5" onClick={() => setCreateSlotOpen(true)}>
             <CalendarPlus className="h-3.5 w-3.5" /> Volný termín
-          </Button>
-          <Button size="sm" className="gap-1.5" onClick={() => { setNlDate(format(currentDate, "yyyy-MM-dd")); setNewLessonOpen(true); }}>
-            <Plus className="h-3.5 w-3.5" /> Rezervovat lekci
           </Button>
         </div>
       </PageHeader>
 
       {/* Pending requests banner */}
-      {pendingCount > 0 && (
-        <div className="mb-4 rounded-xl bg-warning/10 border border-warning/20 p-3 flex items-center gap-3">
-          <Clock className="h-4 w-4 text-warning shrink-0" />
-          <p className="text-sm font-medium text-foreground">
-            {pendingCount} {pendingCount === 1 ? "žádost" : pendingCount < 5 ? "žádosti" : "žádostí"} čeká na schválení
-          </p>
+      {pendingBookings.length > 0 && (
+        <div className="mb-4 space-y-2">
+          <div className="rounded-xl bg-warning/10 border border-warning/20 p-3">
+            <div className="flex items-center gap-3 mb-2">
+              <Clock className="h-4 w-4 text-warning shrink-0" />
+              <p className="text-sm font-medium text-foreground">
+                {pendingBookings.length} {pendingBookings.length === 1 ? "žádost čeká" : pendingBookings.length < 5 ? "žádosti čekají" : "žádostí čeká"} na schválení
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              {pendingBookings.map(pb => {
+                const start = new Date(pb.slot.start_time);
+                return (
+                  <div key={pb.id} className="flex items-center justify-between bg-card rounded-lg p-2.5 border border-border">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div>
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {pb.client_name || "Klient"} — {slotTypeLabels[pb.slot.slot_type]}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(start, "EEEE d. MMMM, H:mm", { locale: cs })} – {format(new Date(pb.slot.end_time), "H:mm")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                      <Button size="sm" variant="outline" className="h-7 gap-1 text-destructive"
+                        onClick={() => handleQuickReject(pb.id, pb.slot)}>
+                        <X className="h-3 w-3" /> Zamítnout
+                      </Button>
+                      <Button size="sm" className="h-7 gap-1"
+                        onClick={() => handleQuickApprove(pb.id, pb.slot.id)}>
+                        <Check className="h-3 w-3" /> Schválit
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
       {/* Toolbar */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        {/* Navigation */}
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={goToday} className="text-xs">
-            Dnes
-          </Button>
+          <Button variant="outline" size="sm" onClick={goToday} className="text-xs">Dnes</Button>
           <Button variant="outline" size="sm" onClick={() => navigate(1)}>
             <ChevronRight className="h-4 w-4" />
           </Button>
           <h2 className="text-sm font-semibold text-foreground ml-2 capitalize">{headerLabel()}</h2>
         </div>
-
-        {/* View mode + display toggle */}
         <div className="flex items-center gap-1">
-          {/* View mode */}
           <div className="flex bg-muted rounded-lg p-0.5">
             {(["day", "week", "month"] as ViewMode[]).map(vm => (
-              <button
-                key={vm}
-                onClick={() => setViewMode(vm)}
-                className={cn(
-                  "px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+              <button key={vm} onClick={() => setViewMode(vm)}
+                className={cn("px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
                   viewMode === vm ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
+                )}>
                 {vm === "day" ? "Den" : vm === "week" ? "Týden" : "Měsíc"}
               </button>
             ))}
           </div>
-
           <div className="w-px h-6 bg-border mx-1" />
-
-          {/* Display mode */}
           <div className="flex bg-muted rounded-lg p-0.5">
-            <button
-              onClick={() => setDisplayMode("graphic")}
-              className={cn(
-                "p-1.5 rounded-md transition-colors",
+            <button onClick={() => setDisplayMode("graphic")}
+              className={cn("p-1.5 rounded-md transition-colors",
                 displayMode === "graphic" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              )}
-              title="Grafické zobrazení"
-            >
+              )} title="Grafické zobrazení">
               <LayoutGrid className="h-3.5 w-3.5" />
             </button>
-            <button
-              onClick={() => setDisplayMode("text")}
-              className={cn(
-                "p-1.5 rounded-md transition-colors",
+            <button onClick={() => setDisplayMode("text")}
+              className={cn("p-1.5 rounded-md transition-colors",
                 displayMode === "text" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              )}
-              title="Textový seznam"
-            >
+              )} title="Textový seznam">
               <List className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -435,27 +517,28 @@ export default function CalendarPage() {
 
       {/* Calendar content */}
       <div className="rounded-xl bg-card shadow-card overflow-hidden">
-        {displayMode === "text" ? (
+        {loading ? (
+          <p className="p-8 text-center text-sm text-muted-foreground">Načítám...</p>
+        ) : displayMode === "text" ? (
           <>
             {viewMode === "month" ? (
-              // Month text: group by day
               <div>
                 {(() => {
-                  const days = new Map<string, Booking[]>();
-                  visibleBookings.forEach(b => {
-                    const key = format(parseISO(b.startTime), "yyyy-MM-dd");
+                  const days = new Map<string, SlotWithBookings[]>();
+                  visibleSlots.forEach(s => {
+                    const key = format(new Date(s.start_time), "yyyy-MM-dd");
                     if (!days.has(key)) days.set(key, []);
-                    days.get(key)!.push(b);
+                    days.get(key)!.push(s);
                   });
-                  if (days.size === 0) return <p className="p-8 text-center text-sm text-muted-foreground">Žádné lekce tento měsíc.</p>;
-                  return Array.from(days.entries()).map(([key, bks]) => (
+                  if (days.size === 0) return <p className="p-8 text-center text-sm text-muted-foreground">Žádné termíny tento měsíc.</p>;
+                  return Array.from(days.entries()).map(([key, slts]) => (
                     <div key={key}>
                       <div className="px-4 py-2 bg-subtle border-b border-border">
                         <span className="text-xs font-semibold text-muted-foreground uppercase">
                           {format(parseISO(key), "EEEE, d. MMMM", { locale: cs })}
                         </span>
                       </div>
-                      <TextBookingList bookings={bks} />
+                      <TextSlotList items={slts} />
                     </div>
                   ));
                 })()}
@@ -465,9 +548,9 @@ export default function CalendarPage() {
                 {(() => {
                   const ws = startOfWeek(currentDate, { weekStartsOn: 1 });
                   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
-                  return weekDays.map(d => {
-                    const dayBks = visibleBookings.filter(b => isSameDay(parseISO(b.startTime), d));
-                    if (dayBks.length === 0) return null;
+                  const rendered = weekDays.map(d => {
+                    const daySlots = visibleSlots.filter(s => isSameDay(new Date(s.start_time), d));
+                    if (daySlots.length === 0) return null;
                     return (
                       <div key={d.toISOString()}>
                         <div className="px-4 py-2 bg-subtle border-b border-border">
@@ -475,113 +558,46 @@ export default function CalendarPage() {
                             {format(d, "EEEE, d. MMMM", { locale: cs })}
                           </span>
                         </div>
-                        <TextBookingList bookings={dayBks} />
+                        <TextSlotList items={daySlots} />
                       </div>
                     );
                   }).filter(Boolean);
+                  return rendered.length > 0 ? rendered : <p className="p-8 text-center text-sm text-muted-foreground">Žádné termíny tento týden.</p>;
                 })()}
-                {visibleBookings.length === 0 && <p className="p-8 text-center text-sm text-muted-foreground">Žádné lekce tento týden.</p>}
               </div>
             ) : (
-              <TextBookingList bookings={visibleBookings} />
+              <TextSlotList items={visibleSlots} />
             )}
           </>
         ) : (
           <>
-            {viewMode === "day" && (
-              <GraphicDayView date={currentDate} bookings={visibleBookings} />
-            )}
+            {viewMode === "day" && <GraphicDayView date={currentDate} items={visibleSlots} />}
             {viewMode === "week" && (
-              <GraphicWeekView
-                weekStart={startOfWeek(currentDate, { weekStartsOn: 1 })}
-                allBookings={visibleBookings}
-              />
+              <GraphicWeekView weekStart={startOfWeek(currentDate, { weekStartsOn: 1 })} items={visibleSlots} />
             )}
-            {viewMode === "month" && (
-              <MonthView
-                month={currentDate}
-                allBookings={allBookings}
-                onSelectDay={(d) => { setCurrentDate(d); setViewMode("day"); }}
-              />
-            )}
+            {viewMode === "month" && <MonthView month={currentDate} items={slots} />}
           </>
         )}
       </div>
-      {/* New Lesson Dialog */}
-      <Dialog open={newLessonOpen} onOpenChange={setNewLessonOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Rezervovat lekci</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Klient</Label>
-              <Select value={nlClient} onValueChange={setNlClient}>
-                <SelectTrigger><SelectValue placeholder="Vyberte klienta" /></SelectTrigger>
-                <SelectContent>
-                  {clients.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Datum</Label>
-                <Input type="date" value={nlDate} onChange={e => setNlDate(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Čas</Label>
-                <Input type="time" value={nlTime} onChange={e => setNlTime(e.target.value)} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Délka (min)</Label>
-                <Select value={nlDuration} onValueChange={setNlDuration}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="30">30 min</SelectItem>
-                    <SelectItem value="45">45 min</SelectItem>
-                    <SelectItem value="60">60 min</SelectItem>
-                    <SelectItem value="90">90 min</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Typ</Label>
-                <Select value={nlType} onValueChange={v => setNlType(v as "1:1" | "group")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1:1">Individuální</SelectItem>
-                    <SelectItem value="group">Skupinová</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNewLessonOpen(false)}>Zrušit</Button>
-            <Button onClick={() => {
-              if (!nlClient || !nlDate) { toast.error("Vyplňte klienta a datum"); return; }
-              toast.success("Lekce zarezervována");
-              setNewLessonOpen(false);
-              setNlClient(""); setNlDate(""); setNlTime("09:00"); setNlDuration("60"); setNlType("1:1");
-            }}>Rezervovat</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <CreateSlotDialog
         open={createSlotOpen}
         onOpenChange={setCreateSlotOpen}
         defaultDate={format(currentDate, "yyyy-MM-dd")}
+        onCreated={fetchSlots}
       />
 
       <ShareSlotsDialog
         open={shareOpen}
         onOpenChange={setShareOpen}
-        slotCount={3}
+        slotCount={slots.filter(s => s.status === "available").length}
+      />
+
+      <SlotDetailDialog
+        slot={selectedSlot}
+        open={!!selectedSlot}
+        onOpenChange={(v) => { if (!v) setSelectedSlot(null); }}
+        onUpdated={fetchSlots}
       />
     </div>
   );
