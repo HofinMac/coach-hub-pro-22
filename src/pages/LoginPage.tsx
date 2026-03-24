@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import logoHorizontal from "@/assets/logo-trenernik-horizontal.png";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,26 @@ export default function LoginPage() {
       navigate("/dashboard");
     }
   };
+
+  // Listen for OAuth callback session
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_done, role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profile && !profile.onboarding_done) {
+          navigate(profile.role === "client" ? "/onboarding/klient" : "/onboarding/trener");
+        } else {
+          navigate(profile?.role === "client" ? "/klient" : "/dashboard");
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const handleGoogleLogin = async () => {
     const { error } = await lovable.auth.signInWithOAuth("google", {
