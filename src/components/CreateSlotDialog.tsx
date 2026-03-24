@@ -84,8 +84,8 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
       if (recurrence === "none") {
         slots.push({
           coach_id: user.id,
-          start_time: `${date}T${startTime}:00`,
-          end_time: `${date}T${endTime}:00`,
+          start_time: toLocalISO(date, startTime),
+          end_time: toLocalISO(date, endTime),
           slot_type: slotType,
           capacity: cap,
           notes,
