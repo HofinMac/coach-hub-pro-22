@@ -33,6 +33,13 @@ export default function LoginPage() {
       toast.error(error.message);
       return;
     }
+
+    // If "remember me" is unchecked, mark session as temporary
+    if (!rememberMe) {
+      sessionStorage.setItem("trenernik_temp_session", "true");
+    } else {
+      sessionStorage.removeItem("trenernik_temp_session");
+    }
     const { data: profile } = await supabase
       .from("profiles")
       .select("onboarding_done")
