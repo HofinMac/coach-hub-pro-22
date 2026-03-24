@@ -18,6 +18,39 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<string[]>([]);
 
+  const routeAuthenticatedUser = async (userId: string) => {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarding_done, role")
+      .eq("id", userId)
+      .single();
+
+    if (profile && !profile.onboarding_done) {
+      navigate(profile.role === "client" ? "/onboarding/klient" : "/onboarding/trener");
+      return;
+    }
+
+    navigate(profile?.role === "client" ? "/klient" : "/dashboard");
+  };
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
+        void routeAuthenticatedUser(session.user.id);
+      }
+    });
+
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        void routeAuthenticatedUser(session.user.id);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const errors: string[] = [];
@@ -34,44 +67,14 @@ export default function LoginPage() {
       return;
     }
 
-    // If "remember me" is unchecked, mark session as temporary
     if (!rememberMe) {
       sessionStorage.setItem("trenernik_temp_session", "true");
     } else {
       sessionStorage.removeItem("trenernik_temp_session");
     }
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarding_done")
-      .eq("id", data.user.id)
-      .single();
 
-    if (profile && !profile.onboarding_done) {
-      navigate("/onboarding/trener");
-    } else {
-      navigate("/dashboard");
-    }
+    await routeAuthenticatedUser(data.user.id);
   };
-
-  // Listen for OAuth callback session
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("onboarding_done, role")
-          .eq("id", session.user.id)
-          .single();
-
-        if (profile && !profile.onboarding_done) {
-          navigate(profile.role === "client" ? "/onboarding/klient" : "/onboarding/trener");
-        } else {
-          navigate(profile?.role === "client" ? "/klient" : "/dashboard");
-        }
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [navigate]);
 
   const handleGoogleLogin = async () => {
     const { error } = await lovable.auth.signInWithOAuth("google", {
