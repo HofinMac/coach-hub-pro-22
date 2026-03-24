@@ -101,8 +101,8 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
           const dateStr = format(currentDate, "yyyy-MM-dd");
           slots.push({
             coach_id: user.id,
-            start_time: `${dateStr}T${startTime}:00`,
-            end_time: `${dateStr}T${endTime}:00`,
+            start_time: toLocalISO(dateStr, startTime),
+            end_time: toLocalISO(dateStr, endTime),
             slot_type: slotType,
             capacity: cap,
             notes,
