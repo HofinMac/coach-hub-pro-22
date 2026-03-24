@@ -111,6 +111,8 @@ export default function SettingsPage() {
   const cameraCoverRef = useRef<HTMLInputElement>(null);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [showCoverPicker, setShowCoverPicker] = useState(false);
+  const [cropImage, setCropImage] = useState<string | null>(null);
+  const [cropType, setCropType] = useState<"profile" | "cover">("profile");
 
   // Load settings from DB
   const loadSettings = useCallback(async () => {
