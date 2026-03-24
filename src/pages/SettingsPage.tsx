@@ -7,9 +7,37 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bell, Mail, Phone, Smartphone, Calendar, MessageSquare, CreditCard, Dumbbell, Star, Sun, Moon, Monitor, Upload, X, Image, Palette, Loader2, CalendarClock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Bell, Mail, Phone, Smartphone, Calendar, MessageSquare, CreditCard, Dumbbell, Star, Sun, Moon, Monitor, Upload, X, Image, Palette, Loader2, CalendarClock, Camera, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+
+import avatarMale1 from "@/assets/avatars/avatar-male-1.png";
+import avatarFemale1 from "@/assets/avatars/avatar-female-1.png";
+import avatarMale2 from "@/assets/avatars/avatar-male-2.png";
+import avatarFemale2 from "@/assets/avatars/avatar-female-2.png";
+import avatarMale3 from "@/assets/avatars/avatar-male-3.png";
+import avatarFemale3 from "@/assets/avatars/avatar-female-3.png";
+import cover1 from "@/assets/covers/vault-1.jpg";
+import cover2 from "@/assets/covers/vault-2.jpg";
+import cover3 from "@/assets/covers/vault-3.jpg";
+import cover4 from "@/assets/covers/vault-4.jpg";
+
+const defaultAvatars = [
+  { src: avatarMale1, label: "Trenér 1" },
+  { src: avatarFemale1, label: "Trenérka 1" },
+  { src: avatarMale2, label: "Trenér 2" },
+  { src: avatarFemale2, label: "Trenérka 2" },
+  { src: avatarMale3, label: "Trenér 3" },
+  { src: avatarFemale3, label: "Trenérka 3" },
+];
+
+const defaultCovers = [
+  { src: cover1, label: "Vault Gym 1" },
+  { src: cover2, label: "RPG Gym" },
+  { src: cover3, label: "Vault Gym 2" },
+  { src: cover4, label: "Vault Gym 3" },
+];
 
 interface NotificationChannel {
   email: boolean;
@@ -78,6 +106,10 @@ export default function SettingsPage() {
   const [coverPhoto, setCoverPhoto] = useState<string | null>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const cameraProfileRef = useRef<HTMLInputElement>(null);
+  const cameraCoverRef = useRef<HTMLInputElement>(null);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [showCoverPicker, setShowCoverPicker] = useState(false);
 
   // Load settings from DB
   const loadSettings = useCallback(async () => {
@@ -336,13 +368,21 @@ export default function SettingsPage() {
                       <Image className="h-6 w-6 text-muted-foreground" />
                     )}
                   </div>
-                  <div>
-                    <Button variant="outline" size="sm" onClick={() => profileInputRef.current?.click()}>
-                      <Upload className="h-3.5 w-3.5 mr-1.5" />
-                      Nahrát
-                    </Button>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-wrap gap-1.5">
+                      <Button variant="outline" size="sm" onClick={() => profileInputRef.current?.click()}>
+                        <Upload className="h-3.5 w-3.5 mr-1" /> Nahrát
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => cameraProfileRef.current?.click()}>
+                        <Camera className="h-3.5 w-3.5 mr-1" /> Foto
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setShowAvatarPicker(true)}>
+                        <ImageIcon className="h-3.5 w-3.5 mr-1" /> Avatar
+                      </Button>
+                    </div>
                     <input ref={profileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, setProfilePhoto)} />
-                    <p className="text-[11px] text-muted-foreground mt-1">Max 5 MB, JPG/PNG</p>
+                    <input ref={cameraProfileRef} type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => handleFileUpload(e, setProfilePhoto)} />
+                    <p className="text-[11px] text-muted-foreground">Max 5 MB, JPG/PNG</p>
                   </div>
                 </div>
               </div>
@@ -350,15 +390,12 @@ export default function SettingsPage() {
               {/* Cover photo */}
               <div className="space-y-2">
                 <span className="text-xs text-muted-foreground">Úvodní fotka (cover)</span>
-                <div
-                  className="relative h-24 w-full rounded-lg border-2 border-dashed border-border bg-muted flex items-center justify-center overflow-hidden cursor-pointer hover:border-muted-foreground/40 transition-colors"
-                  onClick={() => coverInputRef.current?.click()}
-                >
+                <div className="relative h-24 w-full rounded-lg border-2 border-dashed border-border bg-muted flex items-center justify-center overflow-hidden">
                   {coverPhoto ? (
                     <>
                       <img src={coverPhoto} alt="Cover" className="h-full w-full object-cover" />
                       <button
-                        onClick={(e) => { e.stopPropagation(); setCoverPhoto(null); }}
+                        onClick={() => setCoverPhoto(null)}
                         className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
                       >
                         <X className="h-3 w-3" />
@@ -366,15 +403,69 @@ export default function SettingsPage() {
                     </>
                   ) : (
                     <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                      <Upload className="h-5 w-5" />
-                      <span className="text-xs">Klikněte pro nahrání</span>
+                      <Image className="h-5 w-5" />
+                      <span className="text-xs">Vyberte cover fotku</span>
                     </div>
                   )}
                 </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <Button variant="outline" size="sm" onClick={() => coverInputRef.current?.click()}>
+                    <Upload className="h-3.5 w-3.5 mr-1" /> Nahrát
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => cameraCoverRef.current?.click()}>
+                    <Camera className="h-3.5 w-3.5 mr-1" /> Foto
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setShowCoverPicker(true)}>
+                    <ImageIcon className="h-3.5 w-3.5 mr-1" /> Základní
+                  </Button>
+                </div>
                 <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, setCoverPhoto)} />
+                <input ref={cameraCoverRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFileUpload(e, setCoverPhoto)} />
               </div>
             </div>
           </div>
+
+          {/* Avatar picker dialog */}
+          <Dialog open={showAvatarPicker} onOpenChange={setShowAvatarPicker}>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>Vyberte avatar</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-3 gap-3">
+                {defaultAvatars.map((avatar) => (
+                  <button
+                    key={avatar.label}
+                    onClick={() => { setProfilePhoto(avatar.src); setShowAvatarPicker(false); }}
+                    className="rounded-xl border-2 border-border p-2 hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <img src={avatar.src} alt={avatar.label} className="w-full aspect-square object-cover rounded-full" loading="lazy" />
+                    <p className="text-[10px] text-muted-foreground text-center mt-1">{avatar.label}</p>
+                  </button>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Cover picker dialog */}
+          <Dialog open={showCoverPicker} onOpenChange={setShowCoverPicker}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Vyberte úvodní fotku</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-2 gap-3">
+                {defaultCovers.map((cover) => (
+                  <button
+                    key={cover.label}
+                    onClick={() => { setCoverPhoto(cover.src); setShowCoverPicker(false); }}
+                    className="rounded-xl border-2 border-border overflow-hidden hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <img src={cover.src} alt={cover.label} className="w-full aspect-[16/9] object-cover" loading="lazy" />
+                    <p className="text-[10px] text-muted-foreground text-center py-1">{cover.label}</p>
+                  </button>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
 
