@@ -451,8 +451,8 @@ export default function SettingsPage() {
                         <ImageIcon className="h-3.5 w-3.5 mr-1" /> Avatar
                       </Button>
                     </div>
-                    <input ref={profileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, setProfilePhoto)} />
-                    <input ref={cameraProfileRef} type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => handleFileUpload(e, setProfilePhoto)} />
+                    <input ref={profileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "profile")} />
+                    <input ref={cameraProfileRef} type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => handleFileUpload(e, "profile")} />
                     <p className="text-[11px] text-muted-foreground">Max 5 MB, JPG/PNG</p>
                   </div>
                 </div>
