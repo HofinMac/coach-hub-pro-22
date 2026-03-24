@@ -40,7 +40,7 @@ export default function LandingPage() {
           <p className="mt-5 text-lg text-muted-foreground leading-relaxed max-w-lg">
             Trenérník spojuje správu klientů, tréninkové plány, rezervace a sledování pokroku do jedné platformy vytvořené pro profesionální trenéry.
           </p>
-          <div className="mt-8 flex items-center gap-3">
+          <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <Link to="/register">
               <Button size="lg" className="gap-2">
                 Vyzkoušet zdarma <ArrowRight className="h-4 w-4" />
