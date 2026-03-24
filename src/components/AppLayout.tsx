@@ -29,6 +29,7 @@ const navItems = [
   { to: "/training", icon: Dumbbell, label: "Trénink" },
   { to: "/gyms", icon: MapPin, label: "Posilovny" },
   { to: "/calendar", icon: Calendar, label: "Kalendář" },
+  { to: "/timer", icon: Timer, label: "Časovač" },
   { to: "/messages", icon: MessageSquare, label: "Zprávy" },
   { to: "/payments", icon: CreditCard, label: "Platby" },
   { to: "/benefits", icon: Gift, label: "Benefity" },
