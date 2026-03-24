@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -110,6 +111,8 @@ export default function SettingsPage() {
   const cameraCoverRef = useRef<HTMLInputElement>(null);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [showCoverPicker, setShowCoverPicker] = useState(false);
+  const [cropImage, setCropImage] = useState<string | null>(null);
+  const [cropType, setCropType] = useState<"profile" | "cover">("profile");
 
   // Load settings from DB
   const loadSettings = useCallback(async () => {
@@ -173,7 +176,7 @@ export default function SettingsPage() {
     localStorage.setItem("trenernik-theme", theme);
   }, [theme]);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (url: string | null) => void) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: "profile" | "cover") => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -185,8 +188,27 @@ export default function SettingsPage() {
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => setter(reader.result as string);
+    reader.onload = () => {
+      setCropType(type);
+      setCropImage(reader.result as string);
+    };
     reader.readAsDataURL(file);
+    // Reset input so the same file can be re-selected
+    e.target.value = "";
+  };
+
+  const openCropForDefault = (src: string, type: "profile" | "cover") => {
+    setCropType(type);
+    setCropImage(src);
+  };
+
+  const handleCropComplete = (croppedDataUrl: string) => {
+    if (cropType === "profile") {
+      setProfilePhoto(croppedDataUrl);
+    } else {
+      setCoverPhoto(croppedDataUrl);
+    }
+    setCropImage(null);
   };
 
   const toggleChannel = (event: keyof NotificationSettings, channel: keyof NotificationChannel) => {
@@ -429,8 +451,8 @@ export default function SettingsPage() {
                         <ImageIcon className="h-3.5 w-3.5 mr-1" /> Avatar
                       </Button>
                     </div>
-                    <input ref={profileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, setProfilePhoto)} />
-                    <input ref={cameraProfileRef} type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => handleFileUpload(e, setProfilePhoto)} />
+                    <input ref={profileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "profile")} />
+                    <input ref={cameraProfileRef} type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => handleFileUpload(e, "profile")} />
                     <p className="text-[11px] text-muted-foreground">Max 5 MB, JPG/PNG</p>
                   </div>
                 </div>
@@ -468,8 +490,8 @@ export default function SettingsPage() {
                     <ImageIcon className="h-3.5 w-3.5 mr-1" /> Základní
                   </Button>
                 </div>
-                <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, setCoverPhoto)} />
-                <input ref={cameraCoverRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFileUpload(e, setCoverPhoto)} />
+                <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "cover")} />
+                <input ref={cameraCoverRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFileUpload(e, "cover")} />
               </div>
             </div>
           </div>
@@ -484,7 +506,7 @@ export default function SettingsPage() {
                 {defaultAvatars.map((avatar) => (
                   <button
                     key={avatar.label}
-                    onClick={() => { setProfilePhoto(avatar.src); setShowAvatarPicker(false); }}
+                    onClick={() => { openCropForDefault(avatar.src, "profile"); setShowAvatarPicker(false); }}
                     className="rounded-xl border-2 border-border p-2 hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
                   >
                     <img src={avatar.src} alt={avatar.label} className="w-full aspect-square object-cover rounded-full" loading="lazy" />
@@ -505,7 +527,7 @@ export default function SettingsPage() {
                 {defaultCovers.map((cover) => (
                   <button
                     key={cover.label}
-                    onClick={() => { setCoverPhoto(cover.src); setShowCoverPicker(false); }}
+                    onClick={() => { openCropForDefault(cover.src, "cover"); setShowCoverPicker(false); }}
                     className="rounded-xl border-2 border-border overflow-hidden hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
                   >
                     <img src={cover.src} alt={cover.label} className="w-full aspect-[16/9] object-cover" loading="lazy" />
@@ -515,6 +537,17 @@ export default function SettingsPage() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Crop dialog */}
+          <ImageCropDialog
+            open={!!cropImage}
+            onOpenChange={(open) => { if (!open) setCropImage(null); }}
+            imageSrc={cropImage || ""}
+            onCropComplete={handleCropComplete}
+            aspect={cropType === "profile" ? 1 : 16 / 9}
+            cropShape={cropType === "profile" ? "round" : "rect"}
+            title={cropType === "profile" ? "Upravit profilovou fotku" : "Upravit úvodní fotku"}
+          />
         </CardContent>
       </Card>
 
