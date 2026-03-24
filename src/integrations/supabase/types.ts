@@ -176,6 +176,59 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_slots: {
+        Row: {
+          booked_count: number
+          capacity: number
+          coach_id: string
+          created_at: string
+          end_time: string
+          id: string
+          notes: string | null
+          recurrence_parent_id: string | null
+          recurrence_rule: Json | null
+          slot_type: string
+          start_time: string
+          status: string
+        }
+        Insert: {
+          booked_count?: number
+          capacity?: number
+          coach_id: string
+          created_at?: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          recurrence_parent_id?: string | null
+          recurrence_rule?: Json | null
+          slot_type?: string
+          start_time: string
+          status?: string
+        }
+        Update: {
+          booked_count?: number
+          capacity?: number
+          coach_id?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          recurrence_parent_id?: string | null
+          recurrence_rule?: Json | null
+          slot_type?: string
+          start_time?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_slots_recurrence_parent_id_fkey"
+            columns: ["recurrence_parent_id"]
+            isOneToOne: false
+            referencedRelation: "coach_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       eligibility: {
         Row: {
           campaign_id: string
@@ -601,6 +654,71 @@ export type Database = {
           },
         ]
       }
+      slot_bookings: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          slot_id: string
+          status: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          slot_id: string
+          status?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          slot_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slot_bookings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "coach_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      slot_share_log: {
+        Row: {
+          coach_id: string
+          created_at: string
+          external_emails: string[] | null
+          id: string
+          message: string | null
+          recipient_ids: string[] | null
+          share_type: string
+          slot_ids: string[]
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          external_emails?: string[] | null
+          id?: string
+          message?: string | null
+          recipient_ids?: string[] | null
+          share_type?: string
+          slot_ids?: string[]
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          external_emails?: string[] | null
+          id?: string
+          message?: string | null
+          recipient_ids?: string[] | null
+          share_type?: string
+          slot_ids?: string[]
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           bg_preset: string
@@ -610,6 +728,8 @@ export type Database = {
           notification_settings: Json
           phone: string
           reminder_minutes: number
+          slot_reminder_enabled: boolean
+          slot_reminder_frequency: string
           updated_at: string
           user_id: string
         }
@@ -621,6 +741,8 @@ export type Database = {
           notification_settings?: Json
           phone?: string
           reminder_minutes?: number
+          slot_reminder_enabled?: boolean
+          slot_reminder_frequency?: string
           updated_at?: string
           user_id: string
         }
@@ -632,6 +754,8 @@ export type Database = {
           notification_settings?: Json
           phone?: string
           reminder_minutes?: number
+          slot_reminder_enabled?: boolean
+          slot_reminder_frequency?: string
           updated_at?: string
           user_id?: string
         }
