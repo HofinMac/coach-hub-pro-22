@@ -1,12 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Bell, Mail, Phone, Smartphone, Calendar, MessageSquare, CreditCard, Dumbbell, Star, Sun, Moon, Monitor, Upload, X, Image, Palette } from "lucide-react";
+import { Bell, Mail, Phone, Smartphone, Calendar, MessageSquare, CreditCard, Dumbbell, Star, Sun, Moon, Monitor, Upload, X, Image, Palette, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NotificationChannel {
   email: boolean;
@@ -24,7 +25,7 @@ interface NotificationSettings {
   planChange: NotificationChannel;
 }
 
-const defaultSettings: NotificationSettings = {
+const defaultNotifications: NotificationSettings = {
   newBooking: { email: true, sms: false, push: true },
   cancelledBooking: { email: true, sms: true, push: true },
   reminder: { email: false, sms: false, push: true },
@@ -55,10 +56,12 @@ const backgroundPresets = [
 ];
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<NotificationSettings>(defaultSettings);
-  const [phoneNumber, setPhoneNumber] = useState("+420 ");
-  const [email, setEmail] = useState("jan.novak@email.cz");
+  const [settings, setSettings] = useState<NotificationSettings>(defaultNotifications);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
   const [reminderMinutes, setReminderMinutes] = useState("60");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // Appearance
   const [theme, setTheme] = useState<ThemeMode>(() => {
@@ -70,6 +73,55 @@ export default function SettingsPage() {
   const [coverPhoto, setCoverPhoto] = useState<string | null>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+
+  // Load settings from DB
+  const loadSettings = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Load email from profile as fallback
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email, phone, bg_preset, profile_photo_url, cover_photo_url")
+        .eq("id", user.id)
+        .single();
+
+      // Load user_settings
+      const { data: userSettings } = await supabase
+        .from("user_settings" as any)
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (userSettings) {
+        const s = userSettings as any;
+        setEmail(s.email || profile?.email || user.email || "");
+        setPhoneNumber(s.phone || profile?.phone || "");
+        setReminderMinutes(String(s.reminder_minutes || 60));
+        setBgPreset(s.bg_preset || profile?.bg_preset || "none");
+        if (s.notification_settings) {
+          setSettings({ ...defaultNotifications, ...s.notification_settings });
+        }
+      } else {
+        // No settings row yet — use profile data as defaults
+        setEmail(profile?.email || user.email || "");
+        setPhoneNumber(profile?.phone || "");
+        setBgPreset(profile?.bg_preset || "none");
+      }
+
+      if (profile?.profile_photo_url) setProfilePhoto(profile.profile_photo_url);
+      if (profile?.cover_photo_url) setCoverPhoto(profile.cover_photo_url);
+    } catch (err) {
+      console.error("Failed to load settings:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -107,8 +159,45 @@ export default function SettingsPage() {
     }));
   };
 
-  const handleSave = () => {
-    toast.success("Nastavení uloženo");
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Nejste přihlášen/a");
+        return;
+      }
+
+      const payload = {
+        user_id: user.id,
+        email,
+        phone: phoneNumber,
+        reminder_minutes: parseInt(reminderMinutes) || 60,
+        notification_settings: settings,
+        bg_preset: bgPreset,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Upsert user_settings
+      const { error } = await supabase
+        .from("user_settings" as any)
+        .upsert(payload as any, { onConflict: "user_id" });
+
+      if (error) throw error;
+
+      // Also update profile with bg_preset
+      await supabase
+        .from("profiles")
+        .update({ bg_preset: bgPreset, phone: phoneNumber, email })
+        .eq("id", user.id);
+
+      toast.success("Nastavení uloženo");
+    } catch (err: any) {
+      console.error("Save error:", err);
+      toast.error("Nepodařilo se uložit nastavení: " + (err.message || ""));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const enableAll = (channel: keyof NotificationChannel) => {
@@ -136,6 +225,14 @@ export default function SettingsPage() {
     { value: "dark", label: "Tmavý", icon: Moon },
     { value: "system", label: "Systém", icon: Monitor },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
@@ -380,7 +477,8 @@ export default function SettingsPage() {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} size="lg">
+        <Button onClick={handleSave} size="lg" disabled={saving}>
+          {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           Uložit nastavení
         </Button>
       </div>
