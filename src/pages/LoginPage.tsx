@@ -151,6 +151,9 @@ export default function LoginPage() {
           </div>
 
           <p className="text-xs text-center text-muted-foreground">
+            <Link to="/forgot-password" className="text-primary hover:underline font-medium">Zapomenuté heslo?</Link>
+          </p>
+          <p className="text-xs text-center text-muted-foreground">
             Nemáte účet?{" "}
             <Link to="/register" className="text-primary hover:underline font-medium">Zaregistrujte se</Link>
           </p>

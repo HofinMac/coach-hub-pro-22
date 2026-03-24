@@ -37,6 +37,8 @@ import CoachBenefitsPage from "@/pages/CoachBenefitsPage";
 import ClientChallengesPage from "@/pages/client/ClientChallengesPage";
 import CampaignDetailPage from "@/pages/admin/CampaignDetailPage";
 import InstallPage from "@/pages/InstallPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +63,8 @@ const App = () => (
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/install" element={<InstallPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Onboarding */}
           <Route path="/onboarding/trener" element={<CoachOnboarding />} />
