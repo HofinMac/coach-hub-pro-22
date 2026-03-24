@@ -58,6 +58,9 @@ const backgroundPresets = [
 ];
 
 export default function SettingsPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isClient = location.pathname.startsWith("/klient");
   const [settings, setSettings] = useState<NotificationSettings>(defaultNotifications);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
