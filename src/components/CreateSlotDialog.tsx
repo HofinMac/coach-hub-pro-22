@@ -43,6 +43,16 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Build a proper local ISO string with timezone offset
+  const toLocalISO = (dateStr: string, timeStr: string) => {
+    const dt = new Date(`${dateStr}T${timeStr}:00`);
+    const offset = -dt.getTimezoneOffset();
+    const sign = offset >= 0 ? "+" : "-";
+    const hh = String(Math.floor(Math.abs(offset) / 60)).padStart(2, "0");
+    const mm = String(Math.abs(offset) % 60).padStart(2, "0");
+    return `${dateStr}T${timeStr}:00${sign}${hh}:${mm}`;
+  };
+
   const handleSave = async () => {
     if (!date || !startTime || !endTime) {
       toast.error("Vyplňte datum a čas.");
