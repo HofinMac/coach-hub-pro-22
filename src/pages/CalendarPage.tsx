@@ -347,10 +347,18 @@ export default function CalendarPage() {
 
   return (
     <div className="p-6 max-w-[1200px] mx-auto animate-fade-in">
-      <PageHeader title="Kalendář" description="Správa rozvrhu">
-        <Button size="sm" className="gap-1.5" onClick={() => { setNlDate(format(currentDate, "yyyy-MM-dd")); setNewLessonOpen(true); }}>
-          <Plus className="h-3.5 w-3.5" /> Rezervovat lekci
-        </Button>
+      <PageHeader title="Kalendář" description="Správa rozvrhu a volných termínů">
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShareOpen(true)}>
+            <Share2 className="h-3.5 w-3.5" /> Sdílet termíny
+          </Button>
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => { setCreateSlotOpen(true); }}>
+            <CalendarPlus className="h-3.5 w-3.5" /> Volný termín
+          </Button>
+          <Button size="sm" className="gap-1.5" onClick={() => { setNlDate(format(currentDate, "yyyy-MM-dd")); setNewLessonOpen(true); }}>
+            <Plus className="h-3.5 w-3.5" /> Rezervovat lekci
+          </Button>
+        </div>
       </PageHeader>
 
       {/* Pending requests banner */}
