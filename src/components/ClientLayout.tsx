@@ -15,6 +15,7 @@ import {
   MapPin,
   Trophy,
   MoreHorizontal,
+  Timer,
 } from "lucide-react";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -26,6 +27,7 @@ const navItems = [
   { to: "/klient", icon: LayoutDashboard, label: "Přehled" },
   { to: "/klient/treninky", icon: Dumbbell, label: "Trénink" },
   { to: "/klient/kalendar", icon: Calendar, label: "Kalendář" },
+  { to: "/klient/casovac", icon: Timer, label: "Časovač" },
   { to: "/klient/posilovny", icon: MapPin, label: "Posilovny" },
   { to: "/klient/pokrok", icon: TrendingUp, label: "Pokrok" },
   { to: "/klient/zpravy", icon: MessageSquare, label: "Zprávy" },

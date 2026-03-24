@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Bell, Mail, Phone, Smartphone, Calendar, MessageSquare, CreditCard, Dumbbell, Star, Sun, Moon, Monitor, Upload, X, Image, Palette, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Bell, Mail, Phone, Smartphone, Calendar, MessageSquare, CreditCard, Dumbbell, Star, Sun, Moon, Monitor, Upload, X, Image, Palette, Loader2, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -472,6 +473,38 @@ export default function SettingsPage() {
                 </div>
               );
             })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Slot reminder settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CalendarClock className="h-5 w-5" />
+            Připomínka aktualizace termínů
+          </CardTitle>
+          <CardDescription>Připomenutí, abyste pravidelně doplňovali volné hodiny v kalendáři</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">Zapnout připomínky</p>
+              <p className="text-xs text-muted-foreground">Dostanete notifikaci, když nemáte vyplněné sloty</p>
+            </div>
+            <Switch checked={false} />
+          </div>
+          <div className="grid gap-2 max-w-[250px]">
+            <Label className="text-xs">Frekvence připomínky</Label>
+            <Select defaultValue="weekly">
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="daily">Každý den</SelectItem>
+                <SelectItem value="weekly">1× týdně</SelectItem>
+                <SelectItem value="biweekly">2× týdně</SelectItem>
+                <SelectItem value="custom">Vlastní interval</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>

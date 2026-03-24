@@ -39,6 +39,7 @@ import CampaignDetailPage from "@/pages/admin/CampaignDetailPage";
 import InstallPage from "@/pages/InstallPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import TimerPage from "@/pages/TimerPage";
 
 const queryClient = new QueryClient();
 
@@ -77,6 +78,7 @@ const App = () => (
           <Route path="/training" element={<CoachShell><TrainingPage /></CoachShell>} />
           <Route path="/gyms" element={<CoachShell><GymsPage /></CoachShell>} />
           <Route path="/calendar" element={<CoachShell><CalendarPage /></CoachShell>} />
+          <Route path="/timer" element={<CoachShell><TimerPage /></CoachShell>} />
           <Route path="/messages" element={<CoachShell><MessagesPage /></CoachShell>} />
           <Route path="/payments" element={<CoachShell><PaymentsPage /></CoachShell>} />
           <Route path="/benefits" element={<CoachShell><CoachBenefitsPage /></CoachShell>} />
@@ -91,6 +93,7 @@ const App = () => (
           <Route path="/klient" element={<ClientShell><ClientDashboard /></ClientShell>} />
           <Route path="/klient/treninky" element={<ClientShell><ClientTrainingPage /></ClientShell>} />
           <Route path="/klient/kalendar" element={<ClientShell><ClientCalendarPage /></ClientShell>} />
+          <Route path="/klient/casovac" element={<ClientShell><TimerPage /></ClientShell>} />
           <Route path="/klient/posilovny" element={<ClientShell><ClientGymsPage /></ClientShell>} />
           <Route path="/klient/pokrok" element={<ClientShell><ClientProgressPage /></ClientShell>} />
           <Route path="/klient/zpravy" element={<ClientShell><ClientMessagesPage /></ClientShell>} />
