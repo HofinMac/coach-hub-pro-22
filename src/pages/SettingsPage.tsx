@@ -477,6 +477,38 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Slot reminder settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CalendarClock className="h-5 w-5" />
+            Připomínka aktualizace termínů
+          </CardTitle>
+          <CardDescription>Připomenutí, abyste pravidelně doplňovali volné hodiny v kalendáři</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">Zapnout připomínky</p>
+              <p className="text-xs text-muted-foreground">Dostanete notifikaci, když nemáte vyplněné sloty</p>
+            </div>
+            <Switch checked={false} />
+          </div>
+          <div className="grid gap-2 max-w-[250px]">
+            <Label className="text-xs">Frekvence připomínky</Label>
+            <Select defaultValue="weekly">
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="daily">Každý den</SelectItem>
+                <SelectItem value="weekly">1× týdně</SelectItem>
+                <SelectItem value="biweekly">2× týdně</SelectItem>
+                <SelectItem value="custom">Vlastní interval</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-end">
         <Button onClick={handleSave} size="lg" disabled={saving}>
           {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
