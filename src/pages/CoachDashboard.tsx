@@ -1,14 +1,9 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { MetricCard } from "@/components/MetricCard";
-import { PageHeader } from "@/components/PageHeader";
-import { AvatarCircle } from "@/components/AvatarCircle";
-import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Plus, UserPlus, Calendar, Dumbbell, Users, AlertTriangle, ClipboardList, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
-import { format, parseISO } from "date-fns";
-import { cs } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function CoachDashboard() {
