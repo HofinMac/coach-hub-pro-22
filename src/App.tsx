@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import AppLayout from "@/components/AppLayout";
 import ClientLayout from "@/components/ClientLayout";
+import AdminGuard from "@/components/AdminGuard";
 
 import LandingPage from "@/pages/LandingPage";
 import PricingPage from "@/pages/PricingPage";
