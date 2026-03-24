@@ -197,6 +197,7 @@ export default function SettingsPage() {
         .eq("id", user.id);
 
       toast.success("Nastavení uloženo");
+      setTimeout(() => navigate(isClient ? "/klient" : "/dashboard"), 600);
     } catch (err: any) {
       console.error("Save error:", err);
       toast.error("Nepodařilo se uložit nastavení: " + (err.message || ""));
