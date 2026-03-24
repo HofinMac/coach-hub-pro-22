@@ -12,7 +12,7 @@ import type { ClientStatus } from "@/lib/demo-data";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
-const COACH_ID = "c1";
+
 const filterOptions: (ClientStatus | 'all')[] = ['all', 'active', 'at_risk', 'inactive', 'lead'];
 const filterLabels: Record<string, string> = {
   all: 'Všichni',
