@@ -537,6 +537,17 @@ export default function SettingsPage() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Crop dialog */}
+          <ImageCropDialog
+            open={!!cropImage}
+            onOpenChange={(open) => { if (!open) setCropImage(null); }}
+            imageSrc={cropImage || ""}
+            onCropComplete={handleCropComplete}
+            aspect={cropType === "profile" ? 1 : 16 / 9}
+            cropShape={cropType === "profile" ? "round" : "rect"}
+            title={cropType === "profile" ? "Upravit profilovou fotku" : "Upravit úvodní fotku"}
+          />
         </CardContent>
       </Card>
 
