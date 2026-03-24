@@ -15,7 +15,7 @@ const features = [
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-subtle/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-border bg-subtle/50 backdrop-blur-sm sticky top-0 z-50 safe-top">
         <div className="max-w-6xl mx-auto flex items-center justify-between h-24 px-6">
           <Link to="/"><img src={logoHorizontal} alt="Trenérník" className="h-20" /></Link>
           <div className="flex items-center gap-4">
