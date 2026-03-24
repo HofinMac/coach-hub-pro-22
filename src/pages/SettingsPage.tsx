@@ -490,8 +490,8 @@ export default function SettingsPage() {
                     <ImageIcon className="h-3.5 w-3.5 mr-1" /> Základní
                   </Button>
                 </div>
-                <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, setCoverPhoto)} />
-                <input ref={cameraCoverRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFileUpload(e, setCoverPhoto)} />
+                <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "cover")} />
+                <input ref={cameraCoverRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFileUpload(e, "cover")} />
               </div>
             </div>
           </div>
