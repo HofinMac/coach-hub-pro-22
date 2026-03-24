@@ -7,13 +7,6 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Plus, UserPlus, Calendar, Dumbbell, Users, AlertTriangle, ClipboardList, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
-import {
-  bookings,
-  getClientsByCoach,
-  getAtRiskClients,
-  getUpcomingBookings,
-  workoutPlans,
-} from "@/lib/demo-data";
 import { format, parseISO } from "date-fns";
 import { cs } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
