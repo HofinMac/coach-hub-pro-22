@@ -527,7 +527,7 @@ export default function SettingsPage() {
                 {defaultCovers.map((cover) => (
                   <button
                     key={cover.label}
-                    onClick={() => { setCoverPhoto(cover.src); setShowCoverPicker(false); }}
+                    onClick={() => { openCropForDefault(cover.src, "cover"); setShowCoverPicker(false); }}
                     className="rounded-xl border-2 border-border overflow-hidden hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
                   >
                     <img src={cover.src} alt={cover.label} className="w-full aspect-[16/9] object-cover" loading="lazy" />
