@@ -571,6 +571,18 @@ export default function CalendarPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <CreateSlotDialog
+        open={createSlotOpen}
+        onOpenChange={setCreateSlotOpen}
+        defaultDate={format(currentDate, "yyyy-MM-dd")}
+      />
+
+      <ShareSlotsDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        slotCount={3}
+      />
     </div>
   );
 }
