@@ -506,7 +506,7 @@ export default function SettingsPage() {
                 {defaultAvatars.map((avatar) => (
                   <button
                     key={avatar.label}
-                    onClick={() => { setProfilePhoto(avatar.src); setShowAvatarPicker(false); }}
+                    onClick={() => { openCropForDefault(avatar.src, "profile"); setShowAvatarPicker(false); }}
                     className="rounded-xl border-2 border-border p-2 hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
                   >
                     <img src={avatar.src} alt={avatar.label} className="w-full aspect-square object-cover rounded-full" loading="lazy" />
