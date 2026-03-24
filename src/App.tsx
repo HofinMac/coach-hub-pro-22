@@ -39,6 +39,7 @@ import CampaignDetailPage from "@/pages/admin/CampaignDetailPage";
 import InstallPage from "@/pages/InstallPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import TimerPage from "@/pages/TimerPage";
 
 const queryClient = new QueryClient();
 
