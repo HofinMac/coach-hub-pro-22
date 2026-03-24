@@ -283,7 +283,7 @@ export default function ExerciseTimer({
               <div key={i} className={cn(
                 "h-3 w-3 rounded-full transition-all duration-300",
                 i + 1 < currentRound ? "bg-success scale-90"
-                  : i + 1 === currentRound && phase !== "idle" ? "bg-primary scale-110 ring-2 ring-primary/30"
+                  : i + 1 === currentRound ? "bg-primary scale-110 ring-2 ring-primary/30"
                   : "bg-border"
               )} />
             ))}
