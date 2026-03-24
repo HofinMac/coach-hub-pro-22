@@ -14,6 +14,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<string[]>([]);
 
@@ -31,6 +32,13 @@ export default function LoginPage() {
     if (error) {
       toast.error(error.message);
       return;
+    }
+
+    // If "remember me" is unchecked, mark session as temporary
+    if (!rememberMe) {
+      sessionStorage.setItem("trenernik_temp_session", "true");
+    } else {
+      sessionStorage.removeItem("trenernik_temp_session");
     }
     const { data: profile } = await supabase
       .from("profiles")
@@ -88,6 +96,16 @@ export default function LoginPage() {
           <div className="space-y-2">
             <Label htmlFor="password">Heslo</Label>
             <Input id="password" type="password" value={password} onChange={e => { setPassword(e.target.value); setFieldErrors([]); }} placeholder="••••••••" />
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              id="remember"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={e => setRememberMe(e.target.checked)}
+              className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+            />
+            <Label htmlFor="remember" className="text-sm font-normal text-muted-foreground cursor-pointer">Zapamatovat si mě</Label>
           </div>
           <Button type="submit" className="w-full mt-2" disabled={loading}>
             {loading ? "Přihlašuji..." : "Přihlásit se"}
