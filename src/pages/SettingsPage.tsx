@@ -236,10 +236,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="px-4 py-4 sm:p-6 max-w-4xl mx-auto space-y-4 sm:space-y-6 pb-24">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Nastavení</h1>
-        <p className="text-muted-foreground mt-1">Správa vzhledu, notifikací a kontaktních údajů</p>
+        <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Nastavení</h1>
+        <p className="text-sm text-muted-foreground mt-1">Správa vzhledu, notifikací a kontaktních údajů</p>
       </div>
 
       {/* Appearance */}
@@ -282,7 +282,7 @@ export default function SettingsPage() {
           {/* Background presets */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Pozadí přehledu</Label>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
               {backgroundPresets.map((preset) => (
                 <button
                   key={preset.value}
@@ -413,7 +413,8 @@ export default function SettingsPage() {
           <CardDescription>Vyberte, jak chcete být informováni o jednotlivých událostech</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-[1fr_80px_80px_80px] items-center gap-2 mb-2 px-2">
+          {/* Mobile: stacked layout / Desktop: grid */}
+          <div className="hidden sm:grid grid-cols-[1fr_80px_80px_80px] items-center gap-2 mb-2 px-2">
             <div />
             <div className="text-center">
               <div className="flex flex-col items-center gap-1">
@@ -435,9 +436,9 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <Separator className="mb-2" />
+          <Separator className="mb-2 hidden sm:block" />
 
-          <div className="grid grid-cols-[1fr_80px_80px_80px] items-center gap-2 px-2 mb-3">
+          <div className="hidden sm:grid grid-cols-[1fr_80px_80px_80px] items-center gap-2 px-2 mb-3">
             <span className="text-xs text-muted-foreground">Zapnout/vypnout vše:</span>
             {(["email", "sms", "push"] as const).map((ch) => (
               <div key={ch} className="flex justify-center gap-1">
@@ -447,9 +448,10 @@ export default function SettingsPage() {
             ))}
           </div>
 
-          <Separator className="mb-2" />
+          <Separator className="mb-2 hidden sm:block" />
 
-          <div className="space-y-1">
+          {/* Desktop grid layout */}
+          <div className="hidden sm:block space-y-1">
             {(Object.keys(notificationLabels) as (keyof NotificationSettings)[]).map((key) => {
               const { label, desc, icon: Icon } = notificationLabels[key];
               return (
@@ -469,6 +471,37 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex justify-center">
                     <Switch checked={settings[key].push} onCheckedChange={() => toggleChannel(key, "push")} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Mobile stacked layout */}
+          <div className="sm:hidden space-y-3">
+            {(Object.keys(notificationLabels) as (keyof NotificationSettings)[]).map((key) => {
+              const { label, icon: Icon } = notificationLabels[key];
+              return (
+                <div key={key} className="rounded-lg border border-border p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <p className="text-sm font-medium text-foreground">{label}</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Switch checked={settings[key].email} onCheckedChange={() => toggleChannel(key, "email")} className="scale-90" />
+                        E-mail
+                      </label>
+                      <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Switch checked={settings[key].sms} onCheckedChange={() => toggleChannel(key, "sms")} className="scale-90" />
+                        SMS
+                      </label>
+                      <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Switch checked={settings[key].push} onCheckedChange={() => toggleChannel(key, "push")} className="scale-90" />
+                        Push
+                      </label>
+                    </div>
                   </div>
                 </div>
               );
