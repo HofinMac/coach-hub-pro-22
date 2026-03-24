@@ -196,6 +196,38 @@ export default function SettingsPage() {
     }));
   };
 
+  const uploadPhoto = async (userId: string, photoData: string, type: "profile" | "cover"): Promise<string | null> => {
+    // If it's already a supabase URL, skip upload
+    if (photoData.startsWith("http")) return photoData;
+
+    // Convert local asset import or data URL to blob
+    let blob: Blob;
+    if (photoData.startsWith("data:")) {
+      const res = await fetch(photoData);
+      blob = await res.blob();
+    } else {
+      // Local asset import (e.g. /src/assets/avatars/...)
+      const res = await fetch(photoData);
+      blob = await res.blob();
+    }
+
+    const ext = blob.type === "image/png" ? "png" : "jpeg";
+    const filePath = `${userId}/${type}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from("profile-assets")
+      .upload(filePath, blob, { upsert: true, contentType: blob.type });
+
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage
+      .from("profile-assets")
+      .getPublicUrl(filePath);
+
+    // Add cache-busting param
+    return `${urlData.publicUrl}?t=${Date.now()}`;
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -222,10 +254,27 @@ export default function SettingsPage() {
 
       if (error) throw error;
 
-      // Also update profile with bg_preset
+      // Upload photos if changed
+      let profilePhotoUrl = profilePhoto;
+      let coverPhotoUrl = coverPhoto;
+
+      if (profilePhoto) {
+        profilePhotoUrl = await uploadPhoto(user.id, profilePhoto, "profile");
+      }
+      if (coverPhoto) {
+        coverPhotoUrl = await uploadPhoto(user.id, coverPhoto, "cover");
+      }
+
+      // Update profile with photos and other data
       await supabase
         .from("profiles")
-        .update({ bg_preset: bgPreset, phone: phoneNumber, email })
+        .update({
+          bg_preset: bgPreset,
+          phone: phoneNumber,
+          email,
+          profile_photo_url: profilePhotoUrl || "",
+          cover_photo_url: coverPhotoUrl || "",
+        })
         .eq("id", user.id);
 
       toast.success("Nastavení uloženo");
