@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Check, X, Clock, ChevronLeft, ChevronRight, List, LayoutGrid, Calendar as CalIcon } from "lucide-react";
+import { Plus, Check, X, Clock, ChevronLeft, ChevronRight, List, LayoutGrid, Calendar as CalIcon, CalendarPlus, Share2 } from "lucide-react";
 import { getBookingsByCoach, clients, type BookingStatus, type Booking } from "@/lib/demo-data";
 import {
   format, parseISO, startOfDay, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths,
@@ -16,6 +16,8 @@ import { cs } from "date-fns/locale";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import CreateSlotDialog from "@/components/CreateSlotDialog";
+import ShareSlotsDialog from "@/components/ShareSlotsDialog";
 
 const COACH_ID = "c1";
 
