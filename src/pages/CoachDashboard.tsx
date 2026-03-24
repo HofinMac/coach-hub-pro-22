@@ -106,10 +106,10 @@ export default function CoachDashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <MetricCard label="Aktivní klienti" value={activeCount} change="+2 tento měsíc" changeType="positive" icon={Users} to="/clients" />
-        <MetricCard label="Dnešní lekce" value={todayBookings.length} change={getLessonStatus()} icon={Clock} to="/calendar" />
-        <MetricCard label="V ohrožení" value={atRisk.length} change="vyžaduje pozornost" changeType="negative" icon={AlertTriangle} to="/clients" />
-        <MetricCard label="Aktivní plány" value={activePlans.length} icon={ClipboardList} to="/training" />
+        <MetricCard label="Aktivní klienti" value={0} icon={Users} to="/clients" />
+        <MetricCard label="Dnešní lekce" value={0} change="žádná lekce" icon={Clock} to="/calendar" />
+        <MetricCard label="V ohrožení" value={0} icon={AlertTriangle} to="/clients" />
+        <MetricCard label="Aktivní plány" value={0} icon={ClipboardList} to="/training" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -122,22 +122,7 @@ export default function CoachDashboard() {
               Zobrazit vše
             </Link>
           </div>
-          <div className="divide-y divide-border">
-            {upcoming.slice(0, 5).map((booking) => (
-              <div key={booking.id} className="flex items-center justify-between p-3 px-4 hover:bg-subtle transition-colors">
-                <div className="flex items-center gap-3">
-                  <AvatarCircle initials={booking.clientName.split(" ").map((n) => n[0]).join("")} size="sm" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{booking.clientName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(parseISO(booking.startTime), "EEE, d. MMM · H:mm", { locale: cs })}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-xs font-medium text-muted-foreground">{booking.type === '1:1' ? 'Individuální' : 'Skupinová'}</span>
-              </div>
-            ))}
-          </div>
+          <p className="p-4 text-sm text-muted-foreground">Zatím nemáte žádné naplánované lekce.</p>
         </div>
 
         <div className="rounded-xl bg-card shadow-card">
@@ -147,32 +132,7 @@ export default function CoachDashboard() {
               Zobrazit vše
             </Link>
           </div>
-          <div className="divide-y divide-border">
-            {atRisk.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">Žádní klienti v ohrožení. Dobrá práce.</p>
-            ) : (
-              atRisk.map((client) => (
-                <Link
-                  key={client.id}
-                  to={`/clients/${client.id}`}
-                  className="flex items-center justify-between p-3 px-4 hover:bg-subtle transition-colors group"
-                >
-                  <div className="flex items-center gap-3">
-                    <AvatarCircle initials={client.avatar} size="sm" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{client.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Poslední aktivita: {format(parseISO(client.lastActivity), "d. MMM", { locale: cs })}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="opacity-0 group-hover:opacity-100 text-xs font-medium text-primary transition-opacity">
-                    Napsat
-                  </span>
-                </Link>
-              ))
-            )}
-          </div>
+          <p className="p-4 text-sm text-muted-foreground">Žádní klienti v ohrožení. Dobrá práce.</p>
 
           <div className="border-t border-border">
             <div className="p-4 border-b border-border">
@@ -180,21 +140,7 @@ export default function CoachDashboard() {
                 <Dumbbell className="h-4 w-4 text-muted-foreground" /> Aktivní plány
               </h2>
             </div>
-            <div className="divide-y divide-border">
-              {activePlans.map((plan) => (
-                <Link
-                  key={plan.id}
-                  to="/training"
-                  className="flex items-center justify-between p-3 px-4 hover:bg-subtle transition-colors"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{plan.title}</p>
-                    <p className="text-xs text-muted-foreground">{plan.clientName} · {plan.exercises.length} cviků</p>
-                  </div>
-                  <StatusBadge status="active" />
-                </Link>
-              ))}
-            </div>
+            <p className="p-4 text-sm text-muted-foreground">Zatím nemáte žádné aktivní plány.</p>
           </div>
         </div>
       </div>

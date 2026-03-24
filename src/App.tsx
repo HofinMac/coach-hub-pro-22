@@ -41,21 +41,11 @@ import InstallPage from "@/pages/InstallPage";
 const queryClient = new QueryClient();
 
 function CoachShell({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <AppLayout>{children}</AppLayout>
-      <RoleSwitcher />
-    </>
-  );
+  return <AppLayout>{children}</AppLayout>;
 }
 
 function ClientShell({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <ClientLayout>{children}</ClientLayout>
-      <RoleSwitcher />
-    </>
-  );
+  return <ClientLayout>{children}</ClientLayout>;
 }
 
 const App = () => (

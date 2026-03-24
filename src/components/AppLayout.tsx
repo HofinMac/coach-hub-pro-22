@@ -59,7 +59,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (isMobile) {
     return (
-      <div className="flex flex-col h-screen bg-background">
+      <div className="flex flex-col h-screen bg-background safe-top">
         <main className="flex-1 overflow-y-auto pb-16">
           {children}
         </main>
