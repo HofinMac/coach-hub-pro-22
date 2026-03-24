@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, Dumbbell, Calendar, MessageSquare, CreditCard,
   Settings, ChevronLeft, LogOut, Shield, MapPin, Gift, MoreHorizontal, Timer, Pencil,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTabOrder } from "@/hooks/use-tab-order";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,17 +25,31 @@ const navItems = [
   { to: "/benefits", icon: Gift, label: "Benefity" },
 ];
 
-const bottomItems = [
-  { to: "/admin", icon: Shield, label: "Admin" },
-  { to: "/settings", icon: Settings, label: "Nastavení" },
-];
+const adminItem = { to: "/admin", icon: Shield, label: "Admin" };
+const settingsItem = { to: "/settings", icon: Settings, label: "Nastavení" };
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMore, setMobileMore] = useState(false);
   const [editTabsOpen, setEditTabsOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.rpc("get_user_role", { _user_id: user.id });
+      setIsAdmin(data === "admin");
+    };
+    checkAdmin();
+  }, []);
+
+  const bottomItems = [
+    ...(isAdmin ? [adminItem] : []),
+    settingsItem,
+  ];
 
   const { mainItems, overflowItems, mainTabs, moveUp, moveDown, addToMain, removeFromMain, resetToDefault } =
     useTabOrder("coach", navItems, 4);
