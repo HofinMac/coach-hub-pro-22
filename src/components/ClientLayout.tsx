@@ -3,25 +3,17 @@ import logoHorizontal from "@/assets/logo-trenernik-horizontal.png";
 import logoIcon from "@/assets/logo-trenernik-icon.png";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Dumbbell,
-  Calendar,
-  MessageSquare,
-  TrendingUp,
-  CreditCard,
-  Settings,
-  ChevronLeft,
-  LogOut,
-  MapPin,
-  Trophy,
-  MoreHorizontal,
-  Timer,
+  LayoutDashboard, Dumbbell, Calendar, MessageSquare, TrendingUp,
+  CreditCard, Settings, ChevronLeft, LogOut, MapPin, Trophy,
+  MoreHorizontal, Timer, Pencil,
 } from "lucide-react";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTabOrder } from "@/hooks/use-tab-order";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import WorkoutSessionPrompt from "./WorkoutSessionPrompt";
+import TabOrderDialog from "@/components/TabOrderDialog";
 
 const navItems = [
   { to: "/klient", icon: LayoutDashboard, label: "Přehled" },
@@ -39,14 +31,20 @@ const bottomItems = [
   { to: "/klient/nastaveni", icon: Settings, label: "Nastavení" },
 ];
 
-const mobileMainItems = navItems.slice(0, 4);
-const mobileOverflowItems = [...navItems.slice(4), ...bottomItems];
-
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMore, setMobileMore] = useState(false);
+  const [editTabsOpen, setEditTabsOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+
+  const { mainItems, overflowItems, mainTabs, moveUp, moveDown, addToMain, removeFromMain, resetToDefault } =
+    useTabOrder("client", navItems, 4);
+
+  const mobileOverflowFull = [
+    ...overflowItems.map(oi => navItems.find(n => n.to === oi.to)!),
+    ...bottomItems,
+  ];
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -68,7 +66,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           <div className="fixed inset-0 z-40" onClick={() => setMobileMore(false)}>
             <div className="absolute bottom-16 left-0 right-0 bg-card border-t border-border shadow-elevated rounded-t-2xl p-3 animate-in slide-in-from-bottom-4" onClick={e => e.stopPropagation()}>
               <div className="grid grid-cols-4 gap-1">
-                {mobileOverflowItems.map((item) => (
+                {mobileOverflowFull.map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}
@@ -92,6 +90,13 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                   <LogOut className="h-5 w-5" />
                   <span>Odhlásit</span>
                 </button>
+                <button
+                  onClick={() => { setMobileMore(false); setEditTabsOpen(true); }}
+                  className="flex flex-col items-center gap-1 rounded-xl py-3 text-[10px] font-medium text-muted-foreground"
+                >
+                  <Pencil className="h-5 w-5" />
+                  <span>Upravit</span>
+                </button>
               </div>
             </div>
           </div>
@@ -99,22 +104,25 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
         <nav className="fixed bottom-0 left-0 right-0 z-30 bg-card/95 backdrop-blur-sm border-t border-border safe-bottom">
           <div className="flex items-center justify-around h-14 px-1">
-            {mobileMainItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === "/klient"}
-                className={({ isActive }) =>
-                  cn(
-                    "flex flex-col items-center gap-0.5 min-w-[3rem] py-1 text-[10px] font-medium transition-colors",
-                    isActive ? "text-primary" : "text-muted-foreground"
-                  )
-                }
-              >
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
-              </NavLink>
-            ))}
+            {mainItems.map((item) => {
+              const fullItem = navItems.find(n => n.to === item.to)!;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === "/klient"}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex flex-col items-center gap-0.5 min-w-[3rem] py-1 text-[10px] font-medium transition-colors",
+                      isActive ? "text-primary" : "text-muted-foreground"
+                    )
+                  }
+                >
+                  <fullItem.icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </NavLink>
+              );
+            })}
             <button
               onClick={() => setMobileMore(!mobileMore)}
               className={cn(
@@ -127,6 +135,18 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             </button>
           </div>
         </nav>
+
+        <TabOrderDialog
+          open={editTabsOpen}
+          onOpenChange={setEditTabsOpen}
+          allItems={navItems}
+          mainTabs={mainTabs}
+          onMoveUp={moveUp}
+          onMoveDown={moveDown}
+          onAdd={addToMain}
+          onRemove={removeFromMain}
+          onReset={resetToDefault}
+        />
 
         <WorkoutSessionPrompt />
       </div>
