@@ -37,6 +37,8 @@ import CoachBenefitsPage from "@/pages/CoachBenefitsPage";
 import ClientChallengesPage from "@/pages/client/ClientChallengesPage";
 import CampaignDetailPage from "@/pages/admin/CampaignDetailPage";
 import InstallPage from "@/pages/InstallPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 
 const queryClient = new QueryClient();
 
