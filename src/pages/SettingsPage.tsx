@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,9 @@ const backgroundPresets = [
 ];
 
 export default function SettingsPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isClient = location.pathname.startsWith("/klient");
   const [settings, setSettings] = useState<NotificationSettings>(defaultNotifications);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -193,6 +197,7 @@ export default function SettingsPage() {
         .eq("id", user.id);
 
       toast.success("Nastavení uloženo");
+      setTimeout(() => navigate(isClient ? "/klient" : "/dashboard"), 600);
     } catch (err: any) {
       console.error("Save error:", err);
       toast.error("Nepodařilo se uložit nastavení: " + (err.message || ""));
