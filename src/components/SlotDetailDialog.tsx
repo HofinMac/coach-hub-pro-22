@@ -168,8 +168,8 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
         if (user) {
           const { data: newSlot } = await supabase.from("coach_slots").insert({
             coach_id: user.id,
-            start_time: `${newDate}T${newStartTime}:00`,
-            end_time: `${newDate}T${newEndTime}:00`,
+            start_time: (() => { const dt = new Date(`${newDate}T${newStartTime}:00`); const o = -dt.getTimezoneOffset(); const s = o >= 0 ? "+" : "-"; return `${newDate}T${newStartTime}:00${s}${String(Math.floor(Math.abs(o)/60)).padStart(2,"0")}:${String(Math.abs(o)%60).padStart(2,"0")}`; })(),
+            end_time: (() => { const dt = new Date(`${newDate}T${newEndTime}:00`); const o = -dt.getTimezoneOffset(); const s = o >= 0 ? "+" : "-"; return `${newDate}T${newEndTime}:00${s}${String(Math.floor(Math.abs(o)/60)).padStart(2,"0")}:${String(Math.abs(o)%60).padStart(2,"0")}`; })(),
             slot_type: slot.slot_type,
             capacity: slot.capacity,
             notes: `Přeloženo z ${format(startDate, "d.M. H:mm", { locale: cs })}`,

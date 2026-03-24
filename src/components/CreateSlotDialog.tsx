@@ -43,6 +43,16 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Build a proper local ISO string with timezone offset
+  const toLocalISO = (dateStr: string, timeStr: string) => {
+    const dt = new Date(`${dateStr}T${timeStr}:00`);
+    const offset = -dt.getTimezoneOffset();
+    const sign = offset >= 0 ? "+" : "-";
+    const hh = String(Math.floor(Math.abs(offset) / 60)).padStart(2, "0");
+    const mm = String(Math.abs(offset) % 60).padStart(2, "0");
+    return `${dateStr}T${timeStr}:00${sign}${hh}:${mm}`;
+  };
+
   const handleSave = async () => {
     if (!date || !startTime || !endTime) {
       toast.error("Vyplňte datum a čas.");
@@ -74,8 +84,8 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
       if (recurrence === "none") {
         slots.push({
           coach_id: user.id,
-          start_time: `${date}T${startTime}:00`,
-          end_time: `${date}T${endTime}:00`,
+          start_time: toLocalISO(date, startTime),
+          end_time: toLocalISO(date, endTime),
           slot_type: slotType,
           capacity: cap,
           notes,
@@ -91,8 +101,8 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
           const dateStr = format(currentDate, "yyyy-MM-dd");
           slots.push({
             coach_id: user.id,
-            start_time: `${dateStr}T${startTime}:00`,
-            end_time: `${dateStr}T${endTime}:00`,
+            start_time: toLocalISO(dateStr, startTime),
+            end_time: toLocalISO(dateStr, endTime),
             slot_type: slotType,
             capacity: cap,
             notes,
