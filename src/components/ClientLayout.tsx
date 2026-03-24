@@ -15,6 +15,7 @@ import {
   MapPin,
   Trophy,
   MoreHorizontal,
+  Timer,
 } from "lucide-react";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
