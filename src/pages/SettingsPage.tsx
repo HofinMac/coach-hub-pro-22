@@ -176,7 +176,7 @@ export default function SettingsPage() {
     localStorage.setItem("trenernik-theme", theme);
   }, [theme]);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (url: string | null) => void) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: "profile" | "cover") => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -188,8 +188,27 @@ export default function SettingsPage() {
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => setter(reader.result as string);
+    reader.onload = () => {
+      setCropType(type);
+      setCropImage(reader.result as string);
+    };
     reader.readAsDataURL(file);
+    // Reset input so the same file can be re-selected
+    e.target.value = "";
+  };
+
+  const openCropForDefault = (src: string, type: "profile" | "cover") => {
+    setCropType(type);
+    setCropImage(src);
+  };
+
+  const handleCropComplete = (croppedDataUrl: string) => {
+    if (cropType === "profile") {
+      setProfilePhoto(croppedDataUrl);
+    } else {
+      setCoverPhoto(croppedDataUrl);
+    }
+    setCropImage(null);
   };
 
   const toggleChannel = (event: keyof NotificationSettings, channel: keyof NotificationChannel) => {
