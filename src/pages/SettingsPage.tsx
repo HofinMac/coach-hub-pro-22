@@ -7,9 +7,37 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bell, Mail, Phone, Smartphone, Calendar, MessageSquare, CreditCard, Dumbbell, Star, Sun, Moon, Monitor, Upload, X, Image, Palette, Loader2, CalendarClock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Bell, Mail, Phone, Smartphone, Calendar, MessageSquare, CreditCard, Dumbbell, Star, Sun, Moon, Monitor, Upload, X, Image, Palette, Loader2, CalendarClock, Camera, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+
+import avatarMale1 from "@/assets/avatars/avatar-male-1.png";
+import avatarFemale1 from "@/assets/avatars/avatar-female-1.png";
+import avatarMale2 from "@/assets/avatars/avatar-male-2.png";
+import avatarFemale2 from "@/assets/avatars/avatar-female-2.png";
+import avatarMale3 from "@/assets/avatars/avatar-male-3.png";
+import avatarFemale3 from "@/assets/avatars/avatar-female-3.png";
+import cover1 from "@/assets/covers/vault-1.jpg";
+import cover2 from "@/assets/covers/vault-2.jpg";
+import cover3 from "@/assets/covers/vault-3.jpg";
+import cover4 from "@/assets/covers/vault-4.jpg";
+
+const defaultAvatars = [
+  { src: avatarMale1, label: "Trenér 1" },
+  { src: avatarFemale1, label: "Trenérka 1" },
+  { src: avatarMale2, label: "Trenér 2" },
+  { src: avatarFemale2, label: "Trenérka 2" },
+  { src: avatarMale3, label: "Trenér 3" },
+  { src: avatarFemale3, label: "Trenérka 3" },
+];
+
+const defaultCovers = [
+  { src: cover1, label: "Vault Gym 1" },
+  { src: cover2, label: "RPG Gym" },
+  { src: cover3, label: "Vault Gym 2" },
+  { src: cover4, label: "Vault Gym 3" },
+];
 
 interface NotificationChannel {
   email: boolean;
