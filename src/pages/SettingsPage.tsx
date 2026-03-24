@@ -282,7 +282,7 @@ export default function SettingsPage() {
           {/* Background presets */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Pozadí přehledu</Label>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
               {backgroundPresets.map((preset) => (
                 <button
                   key={preset.value}
