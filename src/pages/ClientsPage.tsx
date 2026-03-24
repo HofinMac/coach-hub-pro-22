@@ -23,7 +23,7 @@ const filterLabels: Record<string, string> = {
 };
 
 export default function ClientsPage() {
-  const allClients = getClientsByCoach(COACH_ID);
+  const allClients: { id: string; name: string; email: string; avatar: string; status: ClientStatus; goals: string; packageCredits: number; lastActivity: string }[] = [];
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ClientStatus | 'all'>('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
