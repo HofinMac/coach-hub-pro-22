@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { User, Target, Activity, CheckCircle2, ArrowRight, ArrowLeft } from "lucide-react";
+import { User, Target, Activity, CheckCircle2, ArrowRight, ArrowLeft, Upload, X, Image } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { AvatarPicker } from "@/components/AvatarPicker";
 
 const STEPS = [
   { icon: User, label: "O tobě" },
@@ -37,12 +39,16 @@ const experienceOptions = [
 export default function ClientOnboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // Step 1 – about you
   const [fullName, setFullName] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [phone, setPhone] = useState("");
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const profileInputRef = useRef<HTMLInputElement>(null);
 
   // Step 2 – current state
   const [weight, setWeight] = useState("");
@@ -58,6 +64,17 @@ export default function ClientOnboarding() {
   const [preferredDays, setPreferredDays] = useState("");
   const [preferredTime, setPreferredTime] = useState("");
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) {
+        navigate("/login");
+        return;
+      }
+      setUserId(data.user.id);
+      setFullName(prev => prev || data.user.user_metadata?.full_name || "");
+    });
+  }, [navigate]);
+
   const toggleInjury = (i: string) => {
     if (i === "Žádná zranění") {
       setInjuries(prev => prev.includes(i) ? [] : [i]);
@@ -72,6 +89,33 @@ export default function ClientOnboarding() {
   const toggleGoal = (g: string) =>
     setGoals(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]);
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Nahrajte prosím obrázek"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Max 5 MB"); return; }
+    const reader = new FileReader();
+    reader.onload = () => setProfilePhoto(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const uploadPhotoToStorage = async (dataUrl: string): Promise<string> => {
+    if (!userId) return "";
+    const base64 = dataUrl.split(",")[1];
+    const mimeMatch = dataUrl.match(/data:(.*?);/);
+    const mime = mimeMatch?.[1] || "image/jpeg";
+    const ext = mime.split("/")[1] || "jpg";
+    const byteChars = atob(base64);
+    const byteArray = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([byteArray], { type: mime });
+    const path = `${userId}/profile.${ext}`;
+    const { error } = await supabase.storage.from("profile-assets").upload(path, blob, { upsert: true });
+    if (error) { console.error(error); return ""; }
+    const { data } = supabase.storage.from("profile-assets").getPublicUrl(path);
+    return data.publicUrl;
+  };
+
   const canProceed = () => {
     if (step === 0) return fullName.trim().length > 0;
     if (step === 1) return experience !== "";
@@ -79,9 +123,26 @@ export default function ClientOnboarding() {
     return true;
   };
 
-  const handleFinish = () => {
-    localStorage.setItem("client_onboarding_done", "true");
-    toast.success("Profil vytvořen! Vítej v Trenérníku.");
+  const handleFinish = async () => {
+    if (!userId) return;
+    setSaving(true);
+    let profilePhotoUrl = "";
+    if (profilePhoto) profilePhotoUrl = await uploadPhotoToStorage(profilePhoto);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: fullName,
+        profile_photo_url: profilePhotoUrl,
+        onboarding_done: true,
+      })
+      .eq("id", userId);
+    setSaving(false);
+
+    if (error) {
+      toast.error("Chyba: " + error.message);
+      return;
+    }
+    toast.success("Profil vytvořen! Vítej v Coach Hub.");
     navigate("/klient");
   };
 
@@ -117,6 +178,36 @@ export default function ClientOnboarding() {
                 <Label>Celé jméno *</Label>
                 <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Jana Nová" maxLength={100} />
               </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm">Profilová fotka</Label>
+                <div className="flex items-center gap-3">
+                  <div className="relative h-16 w-16 shrink-0 rounded-full border-2 border-dashed border-border bg-muted flex items-center justify-center overflow-hidden">
+                    {profilePhoto ? (
+                      <>
+                        <img src={profilePhoto} alt="Profil" className="h-full w-full object-cover" />
+                        <button onClick={() => setProfilePhoto(null)} className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </>
+                    ) : (
+                      <Image className="h-6 w-6 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div>
+                    <Button variant="outline" size="sm" type="button" onClick={() => profileInputRef.current?.click()}>
+                      <Upload className="h-3.5 w-3.5 mr-1.5" />Nahrát
+                    </Button>
+                    <input ref={profileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                    <p className="text-[11px] text-muted-foreground mt-1">Max 5 MB</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1.5">Nebo vyber ilustrovaný avatar jako profilovou fotku:</p>
+                  <AvatarPicker onSelect={setProfilePhoto} />
+                </div>
+              </div>
+
               <div className="grid grid-cols-3 gap-3">
                 <div className="grid gap-1.5">
                   <Label>Věk</Label>
@@ -278,6 +369,9 @@ export default function ClientOnboarding() {
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">Zkontroluj si údaje. Vše můžeš později změnit v Nastavení.</p>
               <div className="rounded-lg bg-subtle p-4 space-y-3 text-sm">
+                {profilePhoto && (
+                  <img src={profilePhoto} alt="Profil" className="h-12 w-12 rounded-full object-cover border border-border" />
+                )}
                 <div><span className="font-medium text-foreground">Jméno:</span> <span className="text-muted-foreground">{fullName}</span></div>
                 {age && <div><span className="font-medium text-foreground">Věk:</span> <span className="text-muted-foreground">{age} let</span></div>}
                 {weight && <div><span className="font-medium text-foreground">Váha:</span> <span className="text-muted-foreground">{weight} kg</span></div>}
@@ -304,8 +398,8 @@ export default function ClientOnboarding() {
                 Další <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             ) : (
-              <Button onClick={handleFinish} className="gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5" /> Dokončit a začít
+              <Button onClick={handleFinish} disabled={saving} className="gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5" /> {saving ? "Ukládám..." : "Dokončit a začít"}
               </Button>
             )}
           </div>

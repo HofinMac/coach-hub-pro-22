@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { GraduationCap, User, DollarSign, CheckCircle2, ArrowRight, ArrowLeft, Palette, Upload, X, Image, AlertTriangle } from "lucide-react";
 import TrainingLocationSelect from "@/components/TrainingLocationSelect";
+import { AvatarPicker } from "@/components/AvatarPicker";
 
 const STEPS = [
   { icon: User, label: "Základní údaje" },
@@ -189,7 +190,7 @@ export default function CoachOnboarding() {
       }).eq("id", userId);
 
       if (error) throw error;
-      toast.success("Profil trenéra vytvořen! Vítej v Trenérníku.");
+      toast.success("Profil trenéra vytvořen! Vítej v Coach Hub.");
       navigate("/dashboard");
     } catch (err: any) {
       toast.error("Chyba při ukládání: " + err.message);
@@ -432,6 +433,11 @@ export default function CoachOnboarding() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">Nebo vyber ilustrovaný avatar jako profilovou fotku:</p>
+                <AvatarPicker onSelect={setProfilePhoto} />
               </div>
 
               {/* Cover photo */}

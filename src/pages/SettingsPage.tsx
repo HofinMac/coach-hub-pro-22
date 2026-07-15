@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Bell, Mail, Phone, Smartphone, Calendar, MessageSquare, CreditCard, Dumbbell, Star, Sun, Moon, Monitor, Upload, X, Image, Palette, Loader2, CalendarClock, Camera, ImageIcon } from "lucide-react";
+import { Bell, Mail, Phone, Smartphone, Calendar, MessageSquare, CreditCard, Dumbbell, Star, Sun, Moon, Monitor, Upload, X, Image, Palette, Loader2, CalendarClock, Camera, ImageIcon, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { AvatarPicker } from "@/components/AvatarPicker";
 
 import avatarMale1 from "@/assets/avatars/avatar-male-1.png";
 import avatarFemale1 from "@/assets/avatars/avatar-female-1.png";
@@ -99,7 +100,7 @@ export default function SettingsPage() {
 
   // Appearance
   const [theme, setTheme] = useState<ThemeMode>(() => {
-    const stored = localStorage.getItem("trenernik-theme");
+    const stored = localStorage.getItem("coach-hub-theme");
     return (stored as ThemeMode) || "light";
   });
   const [bgPreset, setBgPreset] = useState("none");
@@ -110,6 +111,7 @@ export default function SettingsPage() {
   const cameraProfileRef = useRef<HTMLInputElement>(null);
   const cameraCoverRef = useRef<HTMLInputElement>(null);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [showIllustratedAvatarPicker, setShowIllustratedAvatarPicker] = useState(false);
   const [showCoverPicker, setShowCoverPicker] = useState(false);
   const [cropImage, setCropImage] = useState<string | null>(null);
   const [cropType, setCropType] = useState<"profile" | "cover">("profile");
@@ -173,7 +175,7 @@ export default function SettingsPage() {
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       root.classList.toggle("dark", prefersDark);
     }
-    localStorage.setItem("trenernik-theme", theme);
+    localStorage.setItem("coach-hub-theme", theme);
   }, [theme]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: "profile" | "cover") => {
@@ -450,6 +452,9 @@ export default function SettingsPage() {
                       <Button variant="outline" size="sm" onClick={() => setShowAvatarPicker(true)}>
                         <ImageIcon className="h-3.5 w-3.5 mr-1" /> Avatar
                       </Button>
+                      <Button variant="outline" size="sm" onClick={() => setShowIllustratedAvatarPicker(true)}>
+                        <Sparkles className="h-3.5 w-3.5 mr-1" /> Ilustrovaný avatar
+                      </Button>
                     </div>
                     <input ref={profileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "profile")} />
                     <input ref={cameraProfileRef} type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => handleFileUpload(e, "profile")} />
@@ -514,6 +519,18 @@ export default function SettingsPage() {
                   </button>
                 ))}
               </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Illustrated avatar picker dialog */}
+          <Dialog open={showIllustratedAvatarPicker} onOpenChange={setShowIllustratedAvatarPicker}>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>Vyberte ilustrovaný avatar</DialogTitle>
+              </DialogHeader>
+              <AvatarPicker
+                onSelect={(dataUrl) => { setProfilePhoto(dataUrl); setShowIllustratedAvatarPicker(false); }}
+              />
             </DialogContent>
           </Dialog>
 
