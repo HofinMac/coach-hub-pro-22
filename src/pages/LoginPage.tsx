@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import logoHorizontal from "@/assets/logo-trenernik-horizontal.png";
+import logoHorizontal from "@/assets/logo-coachhub-horizontal.png";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,9 +68,9 @@ export default function LoginPage() {
     }
 
     if (!rememberMe) {
-      sessionStorage.setItem("trenernik_temp_session", "true");
+      sessionStorage.setItem("coach_hub_temp_session", "true");
     } else {
-      sessionStorage.removeItem("trenernik_temp_session");
+      sessionStorage.removeItem("coach_hub_temp_session");
     }
 
     await routeAuthenticatedUser(data.user.id);
@@ -94,7 +94,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-subtle flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-12">
-          <Link to="/"><img src={logoHorizontal} alt="Trenérník" className="h-24 mx-auto" /></Link>
+          <Link to="/"><img src={logoHorizontal} alt="Coach Hub" className="h-24 mx-auto" /></Link>
           <p className="text-sm text-muted-foreground mt-2">Přihlaste se ke svému účtu</p>
           <Link to="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mt-3 transition-colors">
             ← Zpět na hlavní stránku

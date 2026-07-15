@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Download, Smartphone, Share, PlusSquare, Check, ArrowRight } from "lucide-react";
-import logoSquare from "@/assets/logo-trenernik-square.png";
-import logoHorizontal from "@/assets/logo-trenernik-horizontal.png";
+import logoSquare from "@/assets/logo-coachhub-square.png";
+import logoHorizontal from "@/assets/logo-coachhub-horizontal.png";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -43,10 +43,10 @@ export default function InstallPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="w-full max-w-md text-center">
         <div className="mb-10">
-          <img src={logoSquare} alt="Trenérník" className="h-24 w-24 rounded-2xl mx-auto mb-6" />
-          <img src={logoHorizontal} alt="Trenérník" className="h-16 mx-auto mb-3" />
+          <img src={logoSquare} alt="Coach Hub" className="h-24 w-24 rounded-2xl mx-auto mb-6" />
+          <img src={logoHorizontal} alt="Coach Hub" className="h-16 mx-auto mb-3" />
           <p className="text-muted-foreground mt-2 text-sm max-w-xs mx-auto">
-            Přidejte si Trenérník na domovskou obrazovku a používejte ho jako běžnou aplikaci.
+            Přidejte si Coach Hub na domovskou obrazovku a používejte ho jako běžnou aplikaci.
           </p>
         </div>
 
@@ -55,7 +55,7 @@ export default function InstallPage() {
             <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
               <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-lg font-semibold text-foreground">Trenérník je nainstalován!</h2>
+            <h2 className="text-lg font-semibold text-foreground">Coach Hub je nainstalován!</h2>
             <p className="text-sm text-muted-foreground mt-2">
               Aplikaci najdete na domovské obrazovce svého zařízení.
             </p>
@@ -98,7 +98,7 @@ export default function InstallPage() {
                 <div>
                   <p className="text-sm font-medium text-foreground">Potvrďte „Přidat"</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Trenérník se objeví na vaší ploše jako aplikace
+                    Coach Hub se objeví na vaší ploše jako aplikace
                   </p>
                 </div>
               </div>
@@ -112,7 +112,7 @@ export default function InstallPage() {
         ) : deferredPrompt ? (
           <div className="rounded-xl bg-card shadow-card p-8">
             <Button onClick={handleInstall} size="lg" className="gap-2">
-              <Download className="h-5 w-5" /> Nainstalovat Trenérník
+              <Download className="h-5 w-5" /> Nainstalovat Coach Hub
             </Button>
           </div>
         ) : (

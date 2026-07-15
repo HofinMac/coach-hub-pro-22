@@ -1,5 +1,5 @@
 import { useState } from "react";
-import logoHorizontal from "@/assets/logo-trenernik-horizontal.png";
+import logoHorizontal from "@/assets/logo-coachhub-horizontal.png";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-12">
           <Link to="/">
-            <img src={logoHorizontal} alt="Trenérník" className="h-24 mx-auto" />
+            <img src={logoHorizontal} alt="Coach Hub" className="h-24 mx-auto" />
           </Link>
           <p className="text-sm text-muted-foreground mt-2">Obnovení hesla</p>
           <Link

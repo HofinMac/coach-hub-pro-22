@@ -87,7 +87,7 @@ export const coaches: Coach[] = [
   {
     id: 'c1',
     name: 'Alex Rivera',
-    email: 'alex@trenernik.cz',
+    email: 'alex@coachhub.cz',
     avatar: 'AR',
     specialties: ['Strength & Conditioning', 'Pro Athletes'],
     bio: 'CSCS-certified coach with 10+ years training professional athletes.',
@@ -98,7 +98,7 @@ export const coaches: Coach[] = [
   {
     id: 'c2',
     name: 'Sarah Chen',
-    email: 'sarah@trenernik.cz',
+    email: 'sarah@coachhub.cz',
     avatar: 'SC',
     specialties: ['Post-Op Rehab', 'Physiotherapy'],
     bio: 'DPT with a focus on return-to-sport rehabilitation.',
@@ -109,7 +109,7 @@ export const coaches: Coach[] = [
   {
     id: 'c3',
     name: 'Mike Johnson',
-    email: 'mike@trenernik.cz',
+    email: 'mike@coachhub.cz',
     avatar: 'MJ',
     specialties: ['Bodybuilding', 'Contest Prep'],
     bio: 'IFBB Pro coach. Specializing in natural bodybuilding and contest prep.',

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, Dumbbell, Calendar, BarChart3, Shield, Zap, Smartphone } from "lucide-react";
-import logoHorizontal from "@/assets/logo-trenernik-horizontal.png";
+import logoHorizontal from "@/assets/logo-coachhub-horizontal.png";
 
 const features = [
   { icon: Users, title: "Správa klientů", desc: "Kompletní CRM se sledováním stavu, poznámkami, zraněními a historií pokroku." },
@@ -17,7 +17,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-subtle/50 backdrop-blur-sm sticky top-0 z-50 safe-top">
         <div className="max-w-6xl mx-auto flex items-center justify-between h-24 px-6">
-          <Link to="/"><img src={logoHorizontal} alt="Trenérník" className="h-20" /></Link>
+          <Link to="/"><img src={logoHorizontal} alt="Coach Hub" className="h-20" /></Link>
           <div className="flex items-center gap-4">
             <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Ceník
@@ -38,7 +38,7 @@ export default function LandingPage() {
             Klienti pod kontrolou.
           </h1>
           <p className="mt-5 text-lg text-muted-foreground leading-relaxed max-w-lg">
-            Trenérník spojuje správu klientů, tréninkové plány, rezervace a sledování pokroku do jedné platformy vytvořené pro profesionální trenéry.
+            Coach Hub spojuje správu klientů, tréninkové plány, rezervace a sledování pokroku do jedné platformy vytvořené pro profesionální trenéry.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <Link to="/register">
@@ -73,9 +73,9 @@ export default function LandingPage() {
             <Smartphone className="h-8 w-8 text-primary" />
           </div>
           <div className="flex-1 text-center sm:text-left">
-            <h3 className="text-lg font-semibold text-background">Trenérník v kapse</h3>
+            <h3 className="text-lg font-semibold text-background">Coach Hub v kapse</h3>
             <p className="text-sm text-background/60 mt-1.5 max-w-md">
-              Nainstalujte si Trenérník na mobil jako aplikaci — přímo z prohlížeče, bez App Store. Funguje offline i na iPhonu.
+              Nainstalujte si Coach Hub na mobil jako aplikaci — přímo z prohlížeče, bez App Store. Funguje offline i na iPhonu.
             </p>
           </div>
           <Link to="/install">
@@ -104,7 +104,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-border">
         <div className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">© 2026 Trenérník. Všechna práva vyhrazena.</span>
+          <span className="text-sm text-muted-foreground">© 2026 Coach Hub. Všechna práva vyhrazena.</span>
           <div className="flex gap-6">
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Ochrana soukromí</a>
             <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Podmínky</a>

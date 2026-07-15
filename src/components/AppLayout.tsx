@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
-import logoHorizontal from "@/assets/logo-trenernik-horizontal.png";
-import logoIcon from "@/assets/logo-trenernik-icon.png";
+import logoHorizontal from "@/assets/logo-coachhub-horizontal.png";
+import logoIcon from "@/assets/logo-coachhub-icon.png";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Dumbbell, Calendar, MessageSquare, CreditCard,
@@ -176,9 +176,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       >
         <div className="flex h-24 items-center justify-between px-5 border-b border-border">
           {!collapsed ? (
-            <img src={logoHorizontal} alt="Trenérník" className="h-20" />
+            <img src={logoHorizontal} alt="Coach Hub" className="h-20" />
           ) : (
-            <img src={logoIcon} alt="Trenérník" className="h-14 w-14" />
+            <img src={logoIcon} alt="Coach Hub" className="h-14 w-14" />
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}

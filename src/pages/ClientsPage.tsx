@@ -1,83 +1,122 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { AvatarCircle } from "@/components/AvatarCircle";
-import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { UserPlus, Search, Camera } from "lucide-react";
-import type { ClientStatus } from "@/lib/demo-data";
+import { UserPlus, Search, Copy, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { format, parseISO } from "date-fns";
+import { cs } from "date-fns/locale";
 
+interface ClientRow {
+  id: string;
+  full_name: string;
+  email: string;
+  created_at: string;
+}
 
-const filterOptions: (ClientStatus | 'all')[] = ['all', 'active', 'at_risk', 'inactive', 'lead'];
-const filterLabels: Record<string, string> = {
-  all: 'Všichni',
-  active: 'Aktivní',
-  at_risk: 'V ohrožení',
-  inactive: 'Neaktivní',
-  lead: 'Potenciální',
-};
+interface InviteRow {
+  id: string;
+  email: string;
+  token: string;
+  created_at: string;
+}
+
+const initialsOf = (name: string) =>
+  name.trim().split(/\s+/).slice(0, 2).map(p => p[0]?.toUpperCase() ?? "").join("") || "?";
 
 export default function ClientsPage() {
-  const allClients: { id: string; name: string; email: string; avatar: string; status: ClientStatus; goals: string; packageCredits: number; lastActivity: string }[] = [];
+  const [clients, setClients] = useState<ClientRow[]>([]);
+  const [invites, setInvites] = useState<InviteRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ClientStatus | 'all'>('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
-
-  // Add client form
-  const [newName, setNewName] = useState("");
-  const [newNickname, setNewNickname] = useState("");
   const [newEmail, setNewEmail] = useState("");
-  const [newPhone, setNewPhone] = useState("");
-  const [newGoal, setNewGoal] = useState("");
-  const [newInjuries, setNewInjuries] = useState("");
-  const [newPhoto, setNewPhoto] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [createdLink, setCreatedLink] = useState<string | null>(null);
 
-  const filtered = allClients
-    .filter(c => statusFilter === 'all' || c.status === statusFilter)
-    .filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase()));
+  const fetchData = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const [{ data: clientsData, error: clientsError }, { data: invitesData, error: invitesError }] = await Promise.all([
+        supabase.from("profiles" as any).select("id, full_name, email, created_at").eq("assigned_coach_id", user.id),
+        supabase.from("client_invites" as any).select("id, email, token, created_at").eq("coach_id", user.id).eq("status", "pending"),
+      ]);
+
+      if (clientsError) throw clientsError;
+      if (invitesError) throw invitesError;
+
+      setClients((clientsData as any) || []);
+      setInvites((invitesData as any) || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const filtered = clients.filter(c =>
+    c.full_name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase())
+  );
 
   const resetForm = () => {
-    setNewName(""); setNewNickname(""); setNewEmail(""); setNewPhone("");
-    setNewGoal(""); setNewInjuries(""); setNewPhoto(null); setPhotoPreview(null);
-  };
-
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setNewPhoto(file);
-      setPhotoPreview(URL.createObjectURL(file));
-    }
+    setNewEmail("");
+    setCreatedLink(null);
   };
 
   const handleAddClient = async () => {
-    if (!newEmail.trim() && !newPhone.trim()) {
-      toast.error("Vyplňte e-mail nebo telefon");
-      return;
-    }
-    if (newEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) {
-      toast.error("Neplatný formát e-mailu");
+    if (!newEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) {
+      toast.error("Vyplňte platný e-mail");
       return;
     }
     setSaving(true);
-    // TODO: integrate with backend — send invite to client
-    await new Promise(r => setTimeout(r, 600));
-    setSaving(false);
-    toast.success("Pozvánka odeslána klientovi");
-    resetForm();
-    setShowAddDialog(false);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("client_invites" as any)
+        .insert({ coach_id: user.id, email: newEmail.trim() } as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const link = `${window.location.origin}/register?invite=${(data as any).token}`;
+      setCreatedLink(link);
+      toast.success("Pozvánka vytvořena");
+      fetchData();
+    } catch (err: any) {
+      toast.error("Chyba: " + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCopyLink = async (link: string) => {
+    await navigator.clipboard.writeText(link);
+    toast.success("Odkaz zkopírován");
+  };
+
+  const handleRevokeInvite = async (id: string) => {
+    const { error } = await supabase.from("client_invites" as any).update({ status: "revoked" } as any).eq("id", id);
+    if (error) { toast.error("Chyba: " + error.message); return; }
+    toast.success("Pozvánka zrušena");
+    fetchData();
   };
 
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto animate-fade-in">
-      <PageHeader title="Klienti" description={`Celkem ${allClients.length} klientů`}>
-        <Button size="sm" className="gap-1.5" onClick={() => setShowAddDialog(true)}>
+      <PageHeader title="Klienti" description={`Celkem ${clients.length} klientů`}>
+        <Button size="sm" className="gap-1.5" onClick={() => { resetForm(); setShowAddDialog(true); }}>
           <UserPlus className="h-3.5 w-3.5" /> Přidat klienta
         </Button>
       </PageHeader>
@@ -92,32 +131,48 @@ export default function ClientsPage() {
             className="pl-9"
           />
         </div>
-        <div className="flex gap-1.5 overflow-x-auto">
-          {filterOptions.map(f => (
-            <button
-              key={f}
-              onClick={() => setStatusFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
-                statusFilter === f
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-accent'
-              }`}
-            >
-              {filterLabels[f]}
-            </button>
-          ))}
-        </div>
       </div>
+
+      {invites.length > 0 && (
+        <div className="rounded-xl bg-card shadow-card overflow-hidden mb-4">
+          <div className="px-4 py-3 border-b border-border bg-subtle">
+            <p className="text-xs font-semibold text-muted-foreground uppercase">Čekající pozvánky ({invites.length})</p>
+          </div>
+          <div className="divide-y divide-border">
+            {invites.map(inv => (
+              <div key={inv.id} className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">{inv.email}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Odesláno {format(parseISO(inv.created_at), "d. MMMM yyyy", { locale: cs })}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    size="sm" variant="outline" className="h-7 gap-1"
+                    onClick={() => handleCopyLink(`${window.location.origin}/register?invite=${inv.token}`)}
+                  >
+                    <Copy className="h-3 w-3" /> Kopírovat odkaz
+                  </Button>
+                  <Button
+                    size="sm" variant="outline" className="h-7 gap-1 text-destructive"
+                    onClick={() => handleRevokeInvite(inv.id)}
+                  >
+                    <X className="h-3 w-3" /> Zrušit
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="rounded-xl bg-card shadow-card overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-subtle">
               <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3">Klient</th>
-              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 hidden sm:table-cell">Stav</th>
-              <th className="text-left text-xs font-medium text-muted-foreground px-4 py-3 hidden md:table-cell">Cíle</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">Kredity</th>
-              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3 hidden lg:table-cell">Poslední aktivita</th>
+              <th className="text-right text-xs font-medium text-muted-foreground px-4 py-3 hidden sm:table-cell">Klientem od</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -125,103 +180,71 @@ export default function ClientsPage() {
               <tr key={client.id} className="hover:bg-subtle transition-colors group">
                 <td className="px-4 py-3">
                   <Link to={`/clients/${client.id}`} className="flex items-center gap-3">
-                    <AvatarCircle initials={client.avatar} size="sm" />
+                    <AvatarCircle initials={initialsOf(client.full_name)} size="sm" />
                     <div>
-                      <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{client.name}</p>
+                      <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{client.full_name}</p>
                       <p className="text-xs text-muted-foreground">{client.email}</p>
                     </div>
                   </Link>
                 </td>
-                <td className="px-4 py-3 hidden sm:table-cell">
-                  <StatusBadge status={client.status} />
-                </td>
-                <td className="px-4 py-3 hidden md:table-cell">
-                  <p className="text-sm text-muted-foreground truncate max-w-[200px]">{client.goals}</p>
-                </td>
-                <td className="px-4 py-3 text-right hidden lg:table-cell">
-                  <span className="text-sm font-mono tabular-nums text-foreground">{client.packageCredits}</span>
-                </td>
-                <td className="px-4 py-3 text-right hidden lg:table-cell">
-                  <span className="text-sm text-muted-foreground">{client.lastActivity}</span>
+                <td className="px-4 py-3 text-right hidden sm:table-cell">
+                  <span className="text-sm text-muted-foreground">
+                    {format(parseISO(client.created_at), "d. MMMM yyyy", { locale: cs })}
+                  </span>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {filtered.length === 0 && (
+        {!loading && filtered.length === 0 && (
           <p className="p-8 text-center text-sm text-muted-foreground">Žádní klienti nenalezeni.</p>
+        )}
+        {loading && (
+          <p className="p-8 text-center text-sm text-muted-foreground">Načítám...</p>
         )}
       </div>
 
       {/* Add Client Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Přidat klienta</DialogTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Zadejte základní údaje. Klient si zbytek nastaví sám po přihlášení.
+              Zadejte e-mail klienta. Vygeneruje se pozvánkový odkaz, který mu pošlete — po registraci bude automaticky přiřazen k vám.
             </p>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            {/* Photo */}
-            <div className="flex justify-center">
-              <label className="relative cursor-pointer group">
-                <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-dashed border-border group-hover:border-primary transition-colors">
-                  {photoPreview ? (
-                    <img src={photoPreview} alt="Náhled" className="h-full w-full object-cover" />
-                  ) : (
-                    <Camera className="h-6 w-6 text-muted-foreground" />
-                  )}
-                </div>
-                <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
-                <span className="block text-[10px] text-muted-foreground text-center mt-1">Fotka</span>
-              </label>
-            </div>
-
-            {/* Name + Nickname */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="client-name">Jméno</Label>
-                <Input id="client-name" placeholder="Jan Novák" value={newName} onChange={e => setNewName(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="client-nickname">Přezdívka</Label>
-                <Input id="client-nickname" placeholder="Honza" value={newNickname} onChange={e => setNewNickname(e.target.value)} />
-              </div>
-            </div>
-
-            {/* Contact */}
-            <div className="grid grid-cols-2 gap-3">
+          {!createdLink ? (
+            <div className="space-y-4 py-2">
               <div className="space-y-1.5">
                 <Label htmlFor="client-email">E-mail</Label>
                 <Input id="client-email" type="email" placeholder="klient@email.cz" value={newEmail} onChange={e => setNewEmail(e.target.value)} />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="client-phone">Telefon</Label>
-                <Input id="client-phone" type="tel" placeholder="+420 ..." value={newPhone} onChange={e => setNewPhone(e.target.value)} />
+            </div>
+          ) : (
+            <div className="space-y-3 py-2">
+              <p className="text-sm text-muted-foreground">Pozvánka vytvořena. Pošlete klientovi tento odkaz:</p>
+              <div className="flex items-center gap-2">
+                <Input readOnly value={createdLink} className="text-xs" />
+                <Button size="sm" variant="outline" onClick={() => handleCopyLink(createdLink)} className="shrink-0 gap-1.5">
+                  <Copy className="h-3.5 w-3.5" /> Kopírovat
+                </Button>
               </div>
             </div>
-
-            {/* Goal */}
-            <div className="space-y-1.5">
-              <Label htmlFor="client-goal">Cíl klienta</Label>
-              <Textarea id="client-goal" placeholder="Např. zhubnutí, nabírání svalů, rehabilitace..." value={newGoal} onChange={e => setNewGoal(e.target.value)} rows={2} />
-            </div>
-
-            {/* Injuries */}
-            <div className="space-y-1.5">
-              <Label htmlFor="client-injuries">Zranění / omezení</Label>
-              <Textarea id="client-injuries" placeholder="Např. bolest kolen, hernie L4/L5, omezená rotace ramene..." value={newInjuries} onChange={e => setNewInjuries(e.target.value)} rows={2} />
-            </div>
-          </div>
+          )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => { resetForm(); setShowAddDialog(false); }}>
-              Zrušit
-            </Button>
-            <Button onClick={handleAddClient} disabled={saving} className="gap-1.5">
-              <UserPlus className="h-4 w-4" />
-              {saving ? "Odesílám..." : "Pozvat klienta"}
-            </Button>
+            {!createdLink ? (
+              <>
+                <Button variant="outline" onClick={() => { resetForm(); setShowAddDialog(false); }}>
+                  Zrušit
+                </Button>
+                <Button onClick={handleAddClient} disabled={saving} className="gap-1.5">
+                  <UserPlus className="h-4 w-4" />
+                  {saving ? "Vytvářím..." : "Vytvořit pozvánku"}
+                </Button>
+              </>
+            ) : (
+              <Button onClick={() => { resetForm(); setShowAddDialog(false); }}>Hotovo</Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

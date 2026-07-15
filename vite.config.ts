@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
-        name: "Trenérník — Platforma pro trenéry",
-        short_name: "Trenérník",
+        name: "Coach Hub — Platforma pro trenéry",
+        short_name: "Coach Hub",
         description: "Správa klientů, tréninkové plány, rezervace a sledování pokroku pro profesionální trenéry.",
         theme_color: "#1B3A5C",
         background_color: "#1B3A5C",
