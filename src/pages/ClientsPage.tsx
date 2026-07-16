@@ -24,6 +24,7 @@ interface InviteRow {
   email: string;
   token: string;
   created_at: string;
+  email_sent_at: string | null;
 }
 
 const initialsOf = (name: string) =>
@@ -46,7 +47,7 @@ export default function ClientsPage() {
 
       const [{ data: clientsData, error: clientsError }, { data: invitesData, error: invitesError }] = await Promise.all([
         supabase.from("profiles" as any).select("id, full_name, email, created_at").eq("assigned_coach_id", user.id),
-        supabase.from("client_invites" as any).select("id, email, token, created_at").eq("coach_id", user.id).eq("status", "pending"),
+        supabase.from("client_invites" as any).select("id, email, token, created_at, email_sent_at").eq("coach_id", user.id).eq("status", "pending"),
       ]);
 
       if (clientsError) throw clientsError;
@@ -92,7 +93,16 @@ export default function ClientsPage() {
 
       const link = `${window.location.origin}/register?invite=${(data as any).token}`;
       setCreatedLink(link);
-      toast.success("Pozvánka vytvořena");
+
+      const { error: sendError } = await supabase.functions.invoke("send-invite", {
+        body: { inviteId: (data as any).id },
+      });
+
+      if (sendError) {
+        toast.error("Pozvánka vytvořena, e-mail se nepodařilo odeslat — pošlete odkaz ručně.");
+      } else {
+        toast.success("Pozvánka vytvořena a e-mail odeslán");
+      }
       fetchData();
     } catch (err: any) {
       toast.error("Chyba: " + err.message);
@@ -144,7 +154,9 @@ export default function ClientsPage() {
                 <div>
                   <p className="text-sm font-medium text-foreground">{inv.email}</p>
                   <p className="text-xs text-muted-foreground">
-                    Odesláno {format(parseISO(inv.created_at), "d. MMMM yyyy", { locale: cs })}
+                    {inv.email_sent_at
+                      ? `E-mail odeslán ${format(parseISO(inv.email_sent_at), "d. MMMM yyyy", { locale: cs })}`
+                      : `Vytvořeno ${format(parseISO(inv.created_at), "d. MMMM yyyy", { locale: cs })}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5">
