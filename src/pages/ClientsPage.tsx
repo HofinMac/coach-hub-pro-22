@@ -5,7 +5,7 @@ import { AvatarCircle } from "@/components/AvatarCircle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Search, Copy, X } from "lucide-react";
+import { UserPlus, Search, Copy, X, Send } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +39,7 @@ export default function ClientsPage() {
   const [newEmail, setNewEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [createdLink, setCreatedLink] = useState<string | null>(null);
+  const [resendingId, setResendingId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -117,10 +118,34 @@ export default function ClientsPage() {
   };
 
   const handleRevokeInvite = async (id: string) => {
-    const { error } = await supabase.from("client_invites" as any).update({ status: "revoked" } as any).eq("id", id);
+    const { data, error } = await supabase
+      .from("client_invites" as any)
+      .update({ status: "revoked" } as any)
+      .eq("id", id)
+      .select();
     if (error) { toast.error("Chyba: " + error.message); return; }
+    if (!data || (data as any[]).length === 0) {
+      toast.error("Pozvánku se nepodařilo zrušit — zkuste obnovit stránku a zkusit to znovu.");
+      fetchData();
+      return;
+    }
     toast.success("Pozvánka zrušena");
     fetchData();
+  };
+
+  const handleResendInvite = async (id: string) => {
+    setResendingId(id);
+    try {
+      const { error } = await supabase.functions.invoke("send-invite", { body: { inviteId: id } });
+      if (error) {
+        toast.error("E-mail se nepodařilo odeslat. Zkuste to znovu nebo pošlete odkaz ručně.");
+      } else {
+        toast.success("E-mail odeslán");
+      }
+      fetchData();
+    } finally {
+      setResendingId(null);
+    }
   };
 
   return (
@@ -159,13 +184,22 @@ export default function ClientsPage() {
                       : `Vytvořeno ${format(parseISO(inv.created_at), "d. MMMM yyyy", { locale: cs })}`}
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap justify-end">
                   <Button
                     size="sm" variant="outline" className="h-7 gap-1"
                     onClick={() => handleCopyLink(`${window.location.origin}/register?invite=${inv.token}`)}
                   >
                     <Copy className="h-3 w-3" /> Kopírovat odkaz
                   </Button>
+                  {!inv.email_sent_at && (
+                    <Button
+                      size="sm" variant="outline" className="h-7 gap-1"
+                      disabled={resendingId === inv.id}
+                      onClick={() => handleResendInvite(inv.id)}
+                    >
+                      <Send className="h-3 w-3" /> {resendingId === inv.id ? "Odesílám..." : "Odeslat znovu"}
+                    </Button>
+                  )}
                   <Button
                     size="sm" variant="outline" className="h-7 gap-1 text-destructive"
                     onClick={() => handleRevokeInvite(inv.id)}
