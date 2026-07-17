@@ -99,6 +99,39 @@ export type Database = {
           },
         ]
       }
+      client_invites: {
+        Row: {
+          accepted_at: string | null
+          client_id: string | null
+          coach_id: string
+          created_at: string
+          email: string
+          id: string
+          status: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          client_id?: string | null
+          coach_id: string
+          created_at?: string
+          email: string
+          id?: string
+          status?: string
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          client_id?: string | null
+          coach_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          status?: string
+          token?: string
+        }
+        Relationships: []
+      }
       coach_benefits: {
         Row: {
           approved_at: string | null
@@ -371,6 +404,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          assigned_coach_id: string | null
           bg_preset: string | null
           bio: string | null
           brand_name: string | null
@@ -398,6 +432,7 @@ export type Database = {
           years_experience: string | null
         }
         Insert: {
+          assigned_coach_id?: string | null
           bg_preset?: string | null
           bio?: string | null
           brand_name?: string | null
@@ -425,6 +460,7 @@ export type Database = {
           years_experience?: string | null
         }
         Update: {
+          assigned_coach_id?: string | null
           bg_preset?: string | null
           bio?: string | null
           brand_name?: string | null
@@ -766,6 +802,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      book_coach_slot: {
+        Args: { _slot_id: string }
+        Returns: {
+          client_id: string
+          created_at: string
+          id: string
+          slot_id: string
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "slot_bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      cancel_client_booking: {
+        Args: { _booking_id: string }
+        Returns: undefined
+      }
+      get_assigned_coach_id: { Args: { _user_id: string }; Returns: string }
+      get_invite_coach_name: { Args: { _token: string }; Returns: string }
       get_user_role: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {
