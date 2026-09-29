@@ -199,8 +199,8 @@ export default function CalendarPage() {
     const { error } = await supabase.from("slot_bookings").update({ status: "rejected" } as any).eq("id", bookingId);
     if (error) { toast.error("Chyba"); return; }
     await supabase.from("coach_slots").update({ 
-      booked_count: Math.max(0, slot.booked_count - 1), 
-      status: "available" 
+      booked_count: Math.max(0, slot.booked_count - 1),
+      status: slot.booked_count - 1 > 0 ? "partially_booked" : "available",
     } as any).eq("id", slot.id);
     toast.success("Rezervace zamítnuta");
     fetchSlots();

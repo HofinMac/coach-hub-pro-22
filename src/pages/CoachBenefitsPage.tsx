@@ -68,9 +68,9 @@ export default function CoachBenefitsPage() {
     const path = `${userId}/${Date.now()}_${file.name}`;
     const { error: upErr } = await supabase.storage.from("certificates").upload(path, file);
     if (upErr) { toast.error("Chyba při nahrávání"); setUploading(false); return; }
-    const { data: urlData } = supabase.storage.from("certificates").getPublicUrl(path);
+    // Private bucket: store the object path; admins open it via a signed URL.
     const { error } = await supabase.from("coach_certificates").insert({
-      coach_id: userId, certificate_url: urlData.publicUrl
+      coach_id: userId, certificate_url: path
     });
     if (error) toast.error("Chyba při ukládání"); else toast.success("Certifikát nahrán a čeká na schválení");
     setUploading(false);

@@ -95,6 +95,7 @@ export default function ClientCalendarPage() {
         const { data: slotsData } = await supabase
           .from("coach_slots")
           .select("*")
+          .eq("coach_id", assignedCoachId)
           .in("status", ["available", "partially_booked"])
           .gte("start_time", new Date().toISOString())
           .order("start_time", { ascending: true });

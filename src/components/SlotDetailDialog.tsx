@@ -114,7 +114,7 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
       // Decrement booked_count
       await supabase
         .from("coach_slots")
-        .update({ booked_count: Math.max(0, slot.booked_count - 1), status: "available" } as any)
+        .update({ booked_count: Math.max(0, slot.booked_count - 1), status: slot.booked_count - 1 > 0 ? "partially_booked" : "available" } as any)
         .eq("id", slot.id);
 
       toast.success("Rezervace zamítnuta");

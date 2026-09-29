@@ -9,6 +9,21 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
 
+// Older rows stored a (non-working) public URL of the private bucket; newer rows store the object path.
+const certificatePath = (value: string) => value.split("/storage/v1/object/public/certificates/").pop() ?? value;
+
+async function openCertificate(value: string) {
+  const win = window.open("", "_blank");
+  const { data, error } = await supabase.storage.from("certificates").createSignedUrl(certificatePath(value), 300);
+  if (error || !data) {
+    win?.close();
+    toast.error("Certifikát se nepodařilo otevřít");
+    return;
+  }
+  if (win) win.location.href = data.signedUrl;
+  else window.location.href = data.signedUrl;
+}
+
 interface Certificate {
   id: string; coach_id: string; certificate_url: string; status: string;
   notes: string | null; created_at: string;
@@ -135,9 +150,9 @@ export default function ApprovalsPage() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <a href={c.certificate_url} target="_blank" rel="noopener noreferrer">
-                            <Button variant="ghost" size="icon" className="h-8 w-8"><ExternalLink className="h-3.5 w-3.5" /></Button>
-                          </a>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openCertificate(c.certificate_url)}>
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </Button>
                           {c.status === "pending" && (
                             <>
                               <Button variant="outline" size="sm" className="gap-1 text-green-600" onClick={() => handleCertAction(c.id, "approved")}>
