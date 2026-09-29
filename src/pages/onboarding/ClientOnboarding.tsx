@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,6 +39,7 @@ const experienceOptions = [
 
 export default function ClientOnboarding() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -143,6 +145,7 @@ export default function ClientOnboarding() {
       return;
     }
     toast.success("Profil vytvořen! Vítej v Coach Hub.");
+    await queryClient.invalidateQueries({ queryKey: ["current-profile"] });
     navigate("/klient");
   };
 

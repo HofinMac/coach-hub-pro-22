@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import AppLayout from "@/components/AppLayout";
 import ClientLayout from "@/components/ClientLayout";
 import AdminGuard from "@/components/AdminGuard";
+import RoleGuard from "@/components/RoleGuard";
 
 import LandingPage from "@/pages/LandingPage";
 import PricingPage from "@/pages/PricingPage";
@@ -45,11 +46,11 @@ import TimerPage from "@/pages/TimerPage";
 const queryClient = new QueryClient();
 
 function CoachShell({ children }: { children: React.ReactNode }) {
-  return <AppLayout>{children}</AppLayout>;
+  return <RoleGuard allow={["coach", "admin"]}><AppLayout>{children}</AppLayout></RoleGuard>;
 }
 
 function ClientShell({ children }: { children: React.ReactNode }) {
-  return <ClientLayout>{children}</ClientLayout>;
+  return <RoleGuard allow={["client", "admin"]}><ClientLayout>{children}</ClientLayout></RoleGuard>;
 }
 
 const App = () => (
