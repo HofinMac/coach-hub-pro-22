@@ -46,14 +46,14 @@ export default function LandingPage() {
                 Vyzkoušet zdarma <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/dashboard">
-              <Button variant="outline" size="lg">Zobrazit demo</Button>
-            </Link>
+            <a href="#funkce">
+              <Button variant="outline" size="lg">Co Coach Hub umí</Button>
+            </a>
           </div>
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 pb-24">
+      <section id="funkce" className="max-w-6xl mx-auto px-6 pb-24 scroll-mt-28">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((f) => (
             <div key={f.title} className="rounded-xl p-6 bg-card shadow-card group hover:shadow-elevated transition-shadow">
