@@ -6,6 +6,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { from } from "@/lib/db";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -66,40 +67,64 @@ type RuleEvaluator = (
   rule: CampaignRule
 ) => Promise<number>;
 
-/**
- * Count completed sessions/bookings. Currently uses a simple count.
- * When bookings table exists, this will query actual attendance.
- */
-const evaluateAttendance: RuleEvaluator = async (_userId, _rule) => {
-  // TODO: Query actual bookings table when available
-  // For now return 0 - admin can manually update progress
-  return 0;
-};
-
-/**
- * Count sessions in current month
- */
-const evaluateSessionsMonth: RuleEvaluator = async (_userId, _rule) => {
-  // TODO: Query bookings for current month
+const monthRange = () => {
   const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
-  // Placeholder - will query real data when bookings table exists
-  return 0;
+  return {
+    start: new Date(now.getFullYear(), now.getMonth(), 1).toISOString(),
+    end: new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString(),
+  };
 };
 
 /**
- * Check if user completed a training plan
+ * Count the user's completed bookings (attended sessions).
  */
-const evaluatePlanCompletion: RuleEvaluator = async (_userId, _rule) => {
-  // TODO: Check workout_plans completion status
-  return 0;
+const evaluateAttendance: RuleEvaluator = async (userId) => {
+  const { count } = await supabase
+    .from("slot_bookings")
+    .select("id", { count: "exact", head: true })
+    .eq("client_id", userId)
+    .eq("status", "completed");
+  return count || 0;
+};
+
+/**
+ * Sessions in the current month: completed bookings whose slot starts this
+ * month plus workouts the user logged this month.
+ */
+const evaluateSessionsMonth: RuleEvaluator = async (userId) => {
+  const { start, end } = monthRange();
+  const [bookings, logs] = await Promise.all([
+    supabase
+      .from("slot_bookings")
+      .select("id, coach_slots!inner(start_time)")
+      .eq("client_id", userId)
+      .eq("status", "completed")
+      .gte("coach_slots.start_time", start)
+      .lt("coach_slots.start_time", end),
+    from("workout_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("client_id", userId)
+      .gte("performed_at", start)
+      .lt("performed_at", end),
+  ]);
+  return (bookings.data?.length || 0) + ((logs.count as number | null) || 0);
+};
+
+/**
+ * Number of the user's training plans marked as completed.
+ */
+const evaluatePlanCompletion: RuleEvaluator = async (userId) => {
+  const { count } = await from("workout_plans")
+    .select("id", { count: "exact", head: true })
+    .eq("client_id", userId)
+    .eq("status", "completed");
+  return (count as number | null) || 0;
 };
 
 /**
  * Check if coach has an approved certificate
  */
-const evaluateCourseCompletion: RuleEvaluator = async (userId, _rule) => {
+const evaluateCourseCompletion: RuleEvaluator = async (userId) => {
   const { count } = await supabase
     .from("coach_certificates")
     .select("*", { count: "exact", head: true })
@@ -121,18 +146,36 @@ const evaluateManualApproval: RuleEvaluator = async (userId, rule) => {
   return count || 0;
 };
 
+const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+
 /**
- * Check streak of consecutive days with activity
+ * Current streak of consecutive calendar days (local time) with at least one
+ * workout log, ending today or yesterday.
  */
-const evaluateStreakDays: RuleEvaluator = async (_userId, _rule) => {
-  // TODO: Calculate streak from activity data
-  return 0;
+const evaluateStreakDays: RuleEvaluator = async (userId) => {
+  const since = new Date();
+  since.setDate(since.getDate() - 400);
+  const { data } = await from("workout_logs")
+    .select("performed_at")
+    .eq("client_id", userId)
+    .gte("performed_at", since.toISOString())
+    .order("performed_at", { ascending: false });
+  const days = new Set(((data ?? []) as { performed_at: string }[]).map(l => dayKey(new Date(l.performed_at))));
+
+  const cursor = new Date();
+  if (!days.has(dayKey(cursor))) cursor.setDate(cursor.getDate() - 1);
+  let streak = 0;
+  while (days.has(dayKey(cursor))) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
 };
 
 /**
  * Custom metric - looks up from a generic metric store
  */
-const evaluateCustomMetric: RuleEvaluator = async (_userId, _rule) => {
+const evaluateCustomMetric: RuleEvaluator = async () => {
   // Extensible: can read from any custom metric source
   return 0;
 };
@@ -204,14 +247,19 @@ export async function evaluateEligibility(
   const eligible = results.every((r) => r.passed);
   const evaluated_at = new Date().toISOString();
 
-  // Persist eligibility result
-  await supabase.from("eligibility").upsert([{
-    user_id: userId,
-    campaign_id: campaignId,
-    eligible,
-    evaluated_at,
-    rule_results: JSON.parse(JSON.stringify(results)),
-  }], { onConflict: "user_id,campaign_id" });
+  // Persist eligibility result. Writes are admin-only (RLS), so for other
+  // users this fails silently and the result is only returned.
+  try {
+    await supabase.from("eligibility").upsert([{
+      user_id: userId,
+      campaign_id: campaignId,
+      eligible,
+      evaluated_at,
+      rule_results: JSON.parse(JSON.stringify(results)),
+    }], { onConflict: "user_id,campaign_id" });
+  } catch {
+    // ignore
+  }
 
   return { eligible, results, evaluated_at };
 }

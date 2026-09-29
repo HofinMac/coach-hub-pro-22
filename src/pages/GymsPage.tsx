@@ -1,15 +1,17 @@
 import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { gyms as initialGyms, getReviewsForTarget, type Gym } from "@/lib/gym-data";
-import { Plus, MapPin, Clock, Star, Pencil, Trash2, Dumbbell } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { from, requireUserId, type GymRow, type GymReviewRow } from "@/lib/db";
+import { Plus, MapPin, Clock, Star, Pencil, Trash2, Dumbbell, Search, Link2 } from "lucide-react";
 import { toast } from "sonner";
 
-const COACH_ID = "c1";
+type ReviewWithAuthor = GymReviewRow & { authorName: string };
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -25,11 +27,46 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
+async function fetchCoachGyms() {
+  const userId = await requireUserId();
+  const { data: links, error } = await from("coach_gyms").select("gym_id, gyms(*)").eq("coach_id", userId);
+  if (error) throw error;
+  const gyms = ((links ?? []) as { gyms: GymRow | null }[])
+    .map(l => l.gyms)
+    .filter((g): g is GymRow => !!g)
+    .sort((a, b) => a.name.localeCompare(b.name, "cs"));
+
+  let reviews: ReviewWithAuthor[] = [];
+  if (gyms.length > 0) {
+    const { data, error: revErr } = await from("gym_reviews")
+      .select("*")
+      .in("gym_id", gyms.map(g => g.id))
+      .order("created_at", { ascending: false });
+    if (revErr) throw revErr;
+    const rows = (data ?? []) as GymReviewRow[];
+    const authorIds = [...new Set(rows.map(r => r.author_id))];
+    const names = new Map<string, string>();
+    if (authorIds.length > 0) {
+      // RLS only returns profiles the coach may see (own clients); others stay anonymous.
+      const { data: profiles } = await supabase.from("profiles").select("id, full_name").in("id", authorIds);
+      (profiles ?? []).forEach(p => names.set(p.id, p.full_name));
+    }
+    reviews = rows.map(r => ({ ...r, authorName: names.get(r.author_id) || "Klient" }));
+  }
+  return { userId, gyms, reviews };
+}
+
 export default function GymsPage() {
-  const [gymList, setGymList] = useState<Gym[]>(initialGyms.filter(g => g.coachIds.includes(COACH_ID)));
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useQuery({ queryKey: ["coach-gyms"], queryFn: fetchCoachGyms });
+  const gymList = data?.gyms ?? [];
+  const reviews = data?.reviews ?? [];
+
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingGym, setEditingGym] = useState<Gym | null>(null);
+  const [editingGym, setEditingGym] = useState<GymRow | null>(null);
   const [expandedGym, setExpandedGym] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState("");
 
   // Form state
   const [name, setName] = useState("");
@@ -39,49 +76,103 @@ export default function GymsPage() {
   const [amenities, setAmenities] = useState("");
   const [openingHours, setOpeningHours] = useState("");
 
+  const { data: allGyms = [] } = useQuery({
+    queryKey: ["all-gyms"],
+    enabled: dialogOpen && !editingGym,
+    queryFn: async () => {
+      const { data, error } = await from("gyms").select("*").order("name");
+      if (error) throw error;
+      return (data ?? []) as GymRow[];
+    },
+  });
+
+  const linkedIds = new Set(gymList.map(g => g.id));
+  const q = search.trim().toLowerCase();
+  const searchResults = q
+    ? allGyms.filter(g => !linkedIds.has(g.id) && `${g.name} ${g.city} ${g.address}`.toLowerCase().includes(q)).slice(0, 5)
+    : [];
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["coach-gyms"] });
+
   const openCreate = () => {
     setEditingGym(null);
+    setSearch("");
     setName(""); setAddress(""); setCity(""); setDescription(""); setAmenities(""); setOpeningHours("");
     setDialogOpen(true);
   };
 
-  const openEdit = (gym: Gym) => {
+  const openEdit = (gym: GymRow) => {
     setEditingGym(gym);
     setName(gym.name); setAddress(gym.address); setCity(gym.city);
-    setDescription(gym.description); setAmenities(gym.amenities.join(", "));
-    setOpeningHours(gym.openingHours);
+    setDescription(gym.description ?? ""); setAmenities((gym.equipment ?? []).join(", "));
+    setOpeningHours(gym.opening_hours ?? "");
     setDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const linkGym = async (gymId: string) => {
+    setSaving(true);
+    try {
+      const userId = await requireUserId();
+      const { error } = await from("coach_gyms").insert({ coach_id: userId, gym_id: gymId });
+      if (error) throw error;
+      toast.success("Pobočka přidána!");
+      setDialogOpen(false);
+      await refresh();
+    } catch {
+      toast.error("Pobočku se nepodařilo přidat.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSave = async () => {
     if (!name.trim() || !address.trim() || !city.trim()) {
       toast.error("Vyplň název, adresu a město.");
       return;
     }
-    const amenitiesList = amenities.split(",").map(a => a.trim()).filter(Boolean);
+    const fields = {
+      name: name.trim(),
+      address: address.trim(),
+      city: city.trim(),
+      description: description.trim(),
+      equipment: amenities.split(",").map(a => a.trim()).filter(Boolean),
+      opening_hours: openingHours.trim(),
+    };
 
-    if (editingGym) {
-      setGymList(prev => prev.map(g =>
-        g.id === editingGym.id
-          ? { ...g, name: name.trim(), address: address.trim(), city: city.trim(), description: description.trim(), amenities: amenitiesList, openingHours: openingHours.trim() }
-          : g
-      ));
-      toast.success("Pobočka aktualizována!");
-    } else {
-      const newGym: Gym = {
-        id: `g_new_${Date.now()}`, name: name.trim(), address: address.trim(), city: city.trim(),
-        description: description.trim(), amenities: amenitiesList, openingHours: openingHours.trim(),
-        coachIds: [COACH_ID], rating: 0, reviewCount: 0,
-      };
-      setGymList(prev => [...prev, newGym]);
-      toast.success("Pobočka přidána!");
+    setSaving(true);
+    try {
+      const userId = await requireUserId();
+      if (editingGym) {
+        const { error } = await from("gyms").update(fields).eq("id", editingGym.id);
+        if (error) throw error;
+        toast.success("Pobočka aktualizována!");
+      } else {
+        const { data: gym, error } = await from("gyms").insert({ ...fields, created_by: userId }).select("id").single();
+        if (error) throw error;
+        const { error: linkErr } = await from("coach_gyms").insert({ coach_id: userId, gym_id: gym.id });
+        if (linkErr) throw linkErr;
+        toast.success("Pobočka přidána!");
+        queryClient.invalidateQueries({ queryKey: ["all-gyms"] });
+      }
+      setDialogOpen(false);
+      await refresh();
+    } catch {
+      toast.error("Pobočku se nepodařilo uložit.");
+    } finally {
+      setSaving(false);
     }
-    setDialogOpen(false);
   };
 
-  const handleDelete = (id: string) => {
-    setGymList(prev => prev.filter(g => g.id !== id));
-    toast.success("Pobočka odstraněna.");
+  const handleDelete = async (id: string) => {
+    try {
+      const userId = await requireUserId();
+      const { error } = await from("coach_gyms").delete().eq("coach_id", userId).eq("gym_id", id);
+      if (error) throw error;
+      toast.success("Pobočka odebrána.");
+      await refresh();
+    } catch {
+      toast.error("Pobočku se nepodařilo odebrat.");
+    }
   };
 
   return (
@@ -92,7 +183,9 @@ export default function GymsPage() {
         </Button>
       </PageHeader>
 
-      {gymList.length === 0 ? (
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground py-12 text-center">Načítám posilovny…</p>
+      ) : gymList.length === 0 ? (
         <div className="rounded-xl bg-card shadow-card p-12 text-center">
           <Dumbbell className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">Zatím nemáš přidanou žádnou posilovnu.</p>
@@ -103,8 +196,10 @@ export default function GymsPage() {
       ) : (
         <div className="space-y-4">
           {gymList.map(gym => {
-            const gymReviews = getReviewsForTarget("gym", gym.id);
+            const gymReviews = reviews.filter(r => r.gym_id === gym.id);
+            const rating = gymReviews.length ? gymReviews.reduce((s, r) => s + r.rating, 0) / gymReviews.length : 0;
             const isExpanded = expandedGym === gym.id;
+            const canEdit = gym.created_by === data?.userId;
             return (
               <div key={gym.id} className="rounded-xl bg-card shadow-card overflow-hidden">
                 <div className="p-5">
@@ -113,24 +208,28 @@ export default function GymsPage() {
                       <h3 className="text-base font-semibold text-foreground">{gym.name}</h3>
                       <div className="flex items-center gap-3 mt-1 flex-wrap">
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <MapPin className="h-3 w-3" /> {gym.address}
+                          <MapPin className="h-3 w-3" /> {[gym.address, gym.city].filter(Boolean).join(", ")}
                         </span>
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" /> {gym.openingHours}
-                        </span>
+                        {gym.opening_hours && (
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" /> {gym.opening_hours}
+                          </span>
+                        )}
                       </div>
-                      {gym.rating > 0 && (
+                      {rating > 0 && (
                         <div className="mt-2">
-                          <StarRating rating={gym.rating} />
-                          <span className="text-xs text-muted-foreground ml-1">({gym.reviewCount} hodnocení)</span>
+                          <StarRating rating={rating} />
+                          <span className="text-xs text-muted-foreground ml-1">({gymReviews.length} hodnocení)</span>
                         </div>
                       )}
                     </div>
                     <div className="flex items-center gap-1 ml-3">
-                      <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => openEdit(gym)}>
-                        <Pencil className="h-3 w-3" /> Upravit
-                      </Button>
-                      <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(gym.id)}>
+                      {canEdit && (
+                        <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => openEdit(gym)}>
+                          <Pencil className="h-3 w-3" /> Upravit
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(gym.id)} aria-label="Odebrat pobočku">
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
@@ -140,9 +239,9 @@ export default function GymsPage() {
                     <p className="text-sm text-muted-foreground mt-3">{gym.description}</p>
                   )}
 
-                  {gym.amenities.length > 0 && (
+                  {gym.equipment?.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-3">
-                      {gym.amenities.map(a => (
+                      {gym.equipment.map(a => (
                         <span key={a} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">{a}</span>
                       ))}
                     </div>
@@ -163,15 +262,15 @@ export default function GymsPage() {
                         {gymReviews.map(r => (
                           <div key={r.id} className="rounded-lg bg-subtle p-3">
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-sm font-medium text-foreground">{r.clientName}</span>
+                              <span className="text-sm font-medium text-foreground">{r.authorName}</span>
                               <div className="flex items-center gap-0.5">
                                 {[1, 2, 3, 4, 5].map(i => (
                                   <Star key={i} className={`h-3 w-3 ${i <= r.rating ? "fill-warning text-warning" : "text-border"}`} />
                                 ))}
                               </div>
                             </div>
-                            <p className="text-xs text-muted-foreground">{r.comment}</p>
-                            <p className="text-xs text-muted-foreground/60 mt-1">{r.createdAt}</p>
+                            {r.comment && <p className="text-xs text-muted-foreground">{r.comment}</p>}
+                            <p className="text-xs text-muted-foreground/60 mt-1">{new Date(r.created_at).toLocaleDateString("cs-CZ")}</p>
                           </div>
                         ))}
                       </div>
@@ -186,10 +285,39 @@ export default function GymsPage() {
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingGym ? "Upravit pobočku" : "Přidat novou pobočku"}</DialogTitle>
           </DialogHeader>
+          {!editingGym && (
+            <div className="grid gap-2 pt-2">
+              <Label>Najít existující posilovnu</Label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Název nebo město…" className="pl-8" maxLength={100} />
+              </div>
+              {q && (
+                searchResults.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Nic nenalezeno – vytvoř novou pobočku níže.</p>
+                ) : (
+                  <div className="rounded-lg border border-border divide-y divide-border">
+                    {searchResults.map(g => (
+                      <div key={g.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{g.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{[g.address, g.city].filter(Boolean).join(", ")}</p>
+                        </div>
+                        <Button size="sm" variant="outline" className="gap-1 text-xs shrink-0" disabled={saving} onClick={() => linkGym(g.id)}>
+                          <Link2 className="h-3 w-3" /> Přidat
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
+              <p className="text-xs font-medium text-muted-foreground pt-3 mt-1 border-t border-border">Nebo vytvoř novou</p>
+            </div>
+          )}
           <div className="grid gap-4 py-2">
             <div className="grid gap-1.5">
               <Label>Název posilovny *</Label>
@@ -220,7 +348,7 @@ export default function GymsPage() {
           </div>
           <DialogFooter>
             <DialogClose asChild><Button variant="outline">Zrušit</Button></DialogClose>
-            <Button onClick={handleSave}>{editingGym ? "Uložit změny" : "Přidat pobočku"}</Button>
+            <Button onClick={handleSave} disabled={saving}>{editingGym ? "Uložit změny" : "Přidat pobočku"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
