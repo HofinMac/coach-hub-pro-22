@@ -1,4 +1,4 @@
-import type { PlanExercise } from "./demo-data";
+import type { PlanExercise } from "./domain";
 
 export interface PlanTemplate {
   id: string;

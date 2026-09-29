@@ -22,7 +22,10 @@ export function useSession() {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, next) => {
       setSession(next);
-      if (event === "SIGNED_OUT" || event === "SIGNED_IN" || event === "USER_UPDATED") {
+      if (event === "SIGNED_OUT") {
+        // Page queries are keyed without the user id; never show the previous user's data.
+        queryClient.clear();
+      } else if (event === "SIGNED_IN" || event === "USER_UPDATED") {
         queryClient.invalidateQueries({ queryKey: ["current-profile"] });
       }
     });

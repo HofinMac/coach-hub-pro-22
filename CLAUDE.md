@@ -38,7 +38,7 @@ Package manager: `npm` (package-lock.json is authoritative), though `bun.lock`/`
 The app serves two audiences from one codebase, each with its own layout, nav, and route prefix:
 - **Coach** ("trenér") routes are unprefixed (`/dashboard`, `/clients`, `/training`, `/calendar`, `/gyms`, `/messages`, `/payments`, `/benefits`, `/admin/*`, `/settings`) and wrapped in `AppLayout`.
 - **Client** ("klient") routes live under `/klient/*` (Czech path segments, e.g. `/klient/treninky`, `/klient/kalendar`, `/klient/platby`) and are wrapped in `ClientLayout`.
-- `RoleSwitcher` is a floating UI control that just navigates between `/dashboard` and `/klient` — it does not change auth/role state, so don't treat it as an auth mechanism.
+- `CoachShell` / `ClientShell` in `App.tsx` wrap pages in `RoleGuard`, which requires a session, finished onboarding and an allowed role (coach+admin, or client+admin); the signed-in profile comes from `useCurrentProfile` (`src/hooks/use-current-profile.ts`). `RoleSwitcher` is an unused floating UI control that only navigates.
 - `TimerPage` is shared between both shells (mounted at both `/timer` and `/klient/casovac`).
 
 ### Auth & authorization
@@ -47,9 +47,17 @@ The app serves two audiences from one codebase, each with its own layout, nav, a
 - Custom OAuth/session bridging goes through `src/integrations/lovable/index.ts` (`lovable.auth.signInWithOAuth`), which calls Lovable's cloud-auth SDK and then hands the resulting tokens to `supabase.auth.setSession`.
 
 ### Domain model
-Core Supabase tables (see `supabase/migrations/`): `profiles`, `user_settings`, `gyms`, `coach_slots`, `slot_bookings`, `slot_share_log`, `coach_benefits`, `coach_certificates`, `client_challenges`, `promo_campaigns`, `campaign_rules`, `promo_codes`, `partners`, `partner_audit_log`, `redemptions`, `reward_history`, `eligibility`.
+Supabase tables (see `supabase/migrations/`):
+- Accounts & access: `profiles` (`role` coach/client/admin, `assigned_coach_id` for clients — both protected by a trigger, only admins or trusted contexts may change them), `user_settings`, `client_invites`.
+- Coaching: `client_intake` (client's onboarding answers), `coach_client_records` (coach-private status/tags/notes), `workout_plans` (exercises as jsonb `PlanExercise[]`), `coach_exercises`, `workout_logs`, `progress_entries`, `messages` (one conversation per coach↔client pair, realtime; mark read via RPC `mark_conversation_read`).
+- Scheduling: `coach_slots`, `slot_bookings` (clients book/cancel only via RPCs `book_coach_slot` / `cancel_client_booking`), `slot_share_log`.
+- Business: `client_packages` (session credits; a trigger consumes one when a booking becomes `completed`), `payments`.
+- Places: `gyms`, `coach_gyms`, `gym_reviews`.
+- Partner program: `promo_campaigns`, `campaign_rules`, `promo_codes`, `partners`, `partner_audit_log`, `redemptions`, `reward_history`, `eligibility`, `coach_benefits`, `coach_certificates`, `client_challenges`.
 
-`src/lib/demo-data.ts` defines the client-side TypeScript domain types (`Coach`, `Client`, `Exercise`, `WorkoutPlan`, `PlanExercise`, `Booking`, `ProgressEntry`, and status/enum unions like `ClientStatus`, `BookingStatus`, `PlanStatus`, `ExerciseCategory`) used across coach-facing features (clients, training plans, bookings, progress tracking).
+Tables added after the last Lovable type generation are queried through `from()` / `rpc()` in `src/lib/db.ts`, which also holds their row interfaces. `src/lib/domain.ts` holds client-side domain types (`PlanExercise`, `PlanStatus`, `ClientStatus`, `ExerciseCategory`, …), the built-in exercise library and status colors; `src/lib/plan-templates.ts` holds plan templates.
+
+RLS policies are covered by offline tests in `supabase/tests/rls.test.ts` (PGlite applies every migration with a stubbed `auth` schema) — add a case there when changing policies.
 
 ### Partner/rewards rule engine
 `src/lib/partner-engine.ts` implements a small rule engine for campaign eligibility and challenge completion: `RuleType` (`min_attendance`, `min_sessions_month`, `plan_completion`, `course_completion`, `manual_approval`, `streak_days`, `weight_goal`, `custom_metric`) combined with an `Operator` (`eq`/`gt`/`gte`/`lt`/`lte`) against a numeric threshold, producing `RuleResult`/`EligibilityResult`. Extend by adding new `RuleType` values and evaluators here, keeping it in sync with `campaign_rules`/`eligibility` tables.
@@ -59,6 +67,7 @@ Core Supabase tables (see `supabase/migrations/`): `profiles`, `user_settings`, 
 
 ## Testing
 - Unit/component tests: Vitest + Testing Library + jsdom, files matched by `src/**/*.{test,spec}.{ts,tsx}`, setup in `src/test/setup.ts`.
+- RLS: `supabase/tests/*.test.ts` run in Node with PGlite (included in `npm run test`).
 - E2E: Playwright, configured via the shared `lovable-agent-playwright-config` package (`playwright.config.ts`); a fixture helper lives in `playwright-fixture.ts`.
 
 ## Environment

@@ -4,7 +4,7 @@
  * Once Lovable regenerates the types, callers can switch back to `supabase.from(...)`.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { PlanExercise, PlanStatus, ClientStatus } from "@/lib/demo-data";
+import type { PlanExercise, PlanStatus, ClientStatus, ExerciseCategory } from "@/lib/domain";
 
 type UntypedTable =
   | "client_intake"
@@ -17,6 +17,7 @@ type UntypedTable =
   | "payments"
   | "coach_gyms"
   | "gym_reviews"
+  | "coach_exercises"
   | "client_invites"
   | "gyms";
 
@@ -150,6 +151,15 @@ export interface GymRow {
   opening_hours: string;
   created_by: string | null;
   created_at: string;
+}
+
+export interface CoachExerciseRow {
+  id: string;
+  coach_id: string;
+  name: string;
+  category: ExerciseCategory;
+  default_notes: string;
+  video_url: string | null;
 }
 
 export interface GymReviewRow {

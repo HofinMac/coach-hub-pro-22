@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { statusColors } from "@/lib/demo-data";
+import { statusColors } from "@/lib/domain";
 
 interface StatusBadgeProps {
   status: string;
