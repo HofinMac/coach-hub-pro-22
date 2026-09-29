@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, UserPlus, Calendar, Dumbbell, Users, AlertTriangle, ClipboardList, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { InstallAppBanner } from "@/components/InstallAppBanner";
 
 export default function CoachDashboard() {
   const [profile, setProfile] = useState<{
@@ -47,6 +48,8 @@ export default function CoachDashboard() {
 
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto animate-fade-in" style={bgPresetStyle}>
+      <InstallAppBanner />
+
       {/* Mobile quick actions */}
       <div className="flex gap-2 mb-4 md:hidden">
         <Link to="/clients" className="flex-1">

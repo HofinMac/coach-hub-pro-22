@@ -1,43 +1,12 @@
-import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Download, Smartphone, Share, PlusSquare, Check, ArrowRight } from "lucide-react";
 import logoSquare from "@/assets/logo-coachhub-square.png";
 import logoHorizontal from "@/assets/logo-coachhub-horizontal.png";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
+import { usePwaInstall } from "@/hooks/use-pwa-install";
 
 export default function InstallPage() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    setIsIOS(/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream);
-
-    if (window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone) {
-      setIsInstalled(true);
-    }
-
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
-
-  const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") setIsInstalled(true);
-    setDeferredPrompt(null);
-  };
+  const { canInstall, isInstalled, isIOS, promptInstall } = usePwaInstall();
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
@@ -109,9 +78,9 @@ export default function InstallPage() {
               </p>
             </div>
           </div>
-        ) : deferredPrompt ? (
+        ) : canInstall ? (
           <div className="rounded-xl bg-card shadow-card p-8">
-            <Button onClick={handleInstall} size="lg" className="gap-2">
+            <Button onClick={promptInstall} size="lg" className="gap-2">
               <Download className="h-5 w-5" /> Nainstalovat Coach Hub
             </Button>
           </div>

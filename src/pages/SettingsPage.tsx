@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Bell, Mail, Phone, Smartphone, Calendar, MessageSquare, CreditCard, Dumbbell, Star, Sun, Moon, Monitor, Upload, X, Image, Palette, Loader2, CalendarClock, Camera, ImageIcon, Sparkles } from "lucide-react";
+import { Bell, Mail, Phone, Smartphone, Calendar, MessageSquare, CreditCard, Dumbbell, Star, Sun, Moon, Monitor, Upload, X, Image, Palette, Loader2, CalendarClock, Camera, ImageIcon, Sparkles, Download, Check, Share, PlusSquare } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPicker } from "@/components/AvatarPicker";
+import { usePwaInstall } from "@/hooks/use-pwa-install";
 
 import avatarMale1 from "@/assets/avatars/avatar-male-1.png";
 import avatarFemale1 from "@/assets/avatars/avatar-female-1.png";
@@ -91,6 +92,7 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const isClient = location.pathname.startsWith("/klient");
+  const { canInstall, isInstalled, isIOS, promptInstall } = usePwaInstall();
   const [settings, setSettings] = useState<NotificationSettings>(defaultNotifications);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -351,6 +353,46 @@ export default function SettingsPage() {
         <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Nastavení</h1>
         <p className="text-sm text-muted-foreground mt-1">Správa vzhledu, notifikací a kontaktních údajů</p>
       </div>
+
+      {/* Install app */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Download className="h-5 w-5" />
+            Instalace aplikace
+          </CardTitle>
+          <CardDescription>Přidejte si Coach Hub na plochu a používejte ho jako běžnou aplikaci</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isInstalled ? (
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <Check className="h-4 w-4 text-green-600 dark:text-green-400" /> Aplikace je na tomto zařízení už nainstalována.
+            </p>
+          ) : isIOS ? (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Klepněte na ikonu Sdílet <Share className="h-3.5 w-3.5 inline mx-0.5" /> ve spodní liště Safari a vyberte „Přidat na plochu" <PlusSquare className="h-3.5 w-3.5 inline mx-0.5" />.
+              </p>
+              <Link to="/install" className="text-sm font-medium text-primary hover:underline inline-block">
+                Zobrazit podrobný návod
+              </Link>
+            </div>
+          ) : canInstall ? (
+            <Button onClick={promptInstall} className="gap-2">
+              <Download className="h-4 w-4" /> Nainstalovat aplikaci
+            </Button>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Otevřete menu prohlížeče (tři tečky) a vyberte „Nainstalovat aplikaci" nebo „Přidat na plochu".
+              </p>
+              <Link to="/install" className="text-sm font-medium text-primary hover:underline inline-block">
+                Zobrazit podrobný návod
+              </Link>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Appearance */}
       <Card>

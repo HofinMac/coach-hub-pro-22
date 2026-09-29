@@ -2,10 +2,12 @@ import { MetricCard } from "@/components/MetricCard";
 import { PageHeader } from "@/components/PageHeader";
 import { Calendar, Dumbbell, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
+import { InstallAppBanner } from "@/components/InstallAppBanner";
 
 export default function ClientDashboard() {
   return (
     <div className="p-6 max-w-5xl mx-auto animate-fade-in">
+      <InstallAppBanner />
       <PageHeader title="Ahoj!" description="Tady je tvůj přehled." />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
