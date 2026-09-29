@@ -165,4 +165,11 @@ describe("core domain", () => {
     await expect(asUser(COACH2, `INSERT INTO progress_entries (client_id, weight) VALUES ('${CLIENT}', 80)`))
       .rejects.toThrow(/row-level security/);
   });
+  it("custom exercises are private to their coach", async () => {
+    await asUser(COACH, "INSERT INTO coach_exercises (name, category) VALUES ('Můj cvik', 'push')");
+    expect(await count(COACH, "SELECT 1 FROM coach_exercises")).toBe(1);
+    expect(await count(COACH2, "SELECT 1 FROM coach_exercises")).toBe(0);
+    await expect(asUser(COACH2, `INSERT INTO coach_exercises (coach_id, name, category) VALUES ('${COACH}', 'x', 'push')`))
+      .rejects.toThrow(/row-level security/);
+  });
 });

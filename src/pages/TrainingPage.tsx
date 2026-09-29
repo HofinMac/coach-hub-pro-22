@@ -1,12 +1,23 @@
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Copy, Trash2, Video, ExternalLink, Search, Camera, Upload, X } from "lucide-react";
-import { workoutPlans, exercises as defaultExercises, clients, type Exercise, type ExerciseCategory, type PlanExercise, type PlanStatus } from "@/lib/demo-data";
+import { Plus, Pencil, Copy, Trash2, Video, ExternalLink, Search, Camera, Upload, X, MoreHorizontal, ClipboardList } from "lucide-react";
+import { exercises as defaultExercises, type Exercise, type ExerciseCategory, type PlanExercise, type PlanStatus } from "@/lib/domain";
 import { planTemplates } from "@/lib/plan-templates";
 import { StatusBadge } from "@/components/StatusBadge";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import PlanEditorDialog from "@/components/PlanEditorDialog";
+import PlanEditorDialog, { type PlanEditorData } from "@/components/PlanEditorDialog";
+import { from, requireUserId, fetchCoachClients, type WorkoutPlanRow, type CoachExerciseRow } from "@/lib/db";
+import { supabase } from "@/integrations/supabase/client";
+import { format, parseISO } from "date-fns";
+import { cs } from "date-fns/locale";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -28,27 +39,50 @@ const categoryLabels: Record<ExerciseCategory, string> = {
 
 const tabLabels = { plans: 'Plány', exercises: 'Cviky' };
 
-interface LocalPlan {
-  id: string;
-  coachId: string;
-  clientId: string;
-  clientName: string;
+const planStatusLabels: Record<PlanStatus, string> = {
+  draft: "Koncept",
+  active: "Aktivní",
+  completed: "Dokončený",
+};
+
+const rowToExercise = (r: CoachExerciseRow): Exercise => ({
+  id: r.id,
+  name: r.name,
+  category: r.category,
+  defaultNotes: r.default_notes,
+  videoUrl: r.video_url ?? undefined,
+});
+
+const PLAN_COLUMNS = "id, coach_id, client_id, title, description, status, exercises, completed_at, created_at, updated_at";
+
+/** Plan being edited/created in the editor dialog. */
+interface PlanDraft {
+  id: string | null;
   title: string;
+  description: string;
+  clientId: string | null;
   status: PlanStatus;
   exercises: PlanExercise[];
-  createdAt: string;
 }
 
 export default function TrainingPage() {
   const [tab, setTab] = useState<'plans' | 'exercises'>('plans');
-  const [plans, setPlans] = useState<LocalPlan[]>([...workoutPlans]);
-  const [exerciseList, setExerciseList] = useState<Exercise[]>([...defaultExercises]);
+  const [plans, setPlans] = useState<WorkoutPlanRow[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [coachId, setCoachId] = useState<string | null>(null);
+  const [clientList, setClientList] = useState<{ id: string; name: string }[]>([]);
+  const [deletingPlan, setDeletingPlan] = useState<WorkoutPlanRow | null>(null);
+  const [customExercises, setCustomExercises] = useState<Exercise[]>([]);
+  const exerciseList = [...defaultExercises, ...customExercises];
+  const customExerciseIds = new Set(customExercises.map(e => e.id));
+  const [savingExercise, setSavingExercise] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Plan editor state
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorMode, setEditorMode] = useState<"create" | "edit">("create");
-  const [editingPlan, setEditingPlan] = useState<LocalPlan | null>(null);
+  const [editingPlan, setEditingPlan] = useState<PlanDraft | null>(null);
+  const [editorKey, setEditorKey] = useState(0);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
 
   // Exercise editor state
@@ -59,7 +93,8 @@ export default function TrainingPage() {
   const [exCategory, setExCategory] = useState<ExerciseCategory>("knee_dominant");
   const [exNotes, setExNotes] = useState("");
   const [exVideoUrl, setExVideoUrl] = useState("");
-  const [exVideoFile, setExVideoFile] = useState<string | null>(null); // base64 data URL for recorded/uploaded video
+  const [exVideoFile, setExVideoFile] = useState<string | null>(null); // object URL preview of recorded/uploaded video
+  const [exVideoBlob, setExVideoBlob] = useState<File | null>(null);
   const [videoInputMode, setVideoInputMode] = useState<"url" | "upload">("url");
   const videoFileRef = useRef<HTMLInputElement>(null);
   const videoCaptureRef = useRef<HTMLInputElement>(null);
@@ -69,56 +104,133 @@ export default function TrainingPage() {
   const [videoPreviewUrl, setVideoPreviewUrl] = useState("");
   const [videoPreviewName, setVideoPreviewName] = useState("");
 
+  // --- Plan data ---
+  const loadPlans = useCallback(async () => {
+    try {
+      const uid = await requireUserId();
+      setCoachId(uid);
+      const [plansRes, clients, exercisesRes] = await Promise.all([
+        from("workout_plans").select(PLAN_COLUMNS).eq("coach_id", uid).order("created_at", { ascending: false }),
+        fetchCoachClients(uid),
+        from("coach_exercises").select("id, coach_id, name, category, default_notes, video_url").eq("coach_id", uid).order("name"),
+      ]);
+      if (plansRes.error) throw plansRes.error;
+      if (exercisesRes.error) console.error(exercisesRes.error);
+      setCustomExercises(((exercisesRes.data ?? []) as CoachExerciseRow[]).map(rowToExercise));
+      setPlans((plansRes.data ?? []) as WorkoutPlanRow[]);
+      setClientList(clients.map(c => ({ id: c.id, name: c.full_name || c.email })));
+    } catch (err) {
+      console.error(err);
+      toast.error("Plány se nepodařilo načíst.");
+    } finally {
+      setPlansLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadPlans(); }, [loadPlans]);
+
+  const clientNameOf = (id: string | null) =>
+    id ? clientList.find(c => c.id === id)?.name ?? "Neznámý klient" : null;
+
+  const completedAtFor = (status: PlanStatus, prev?: string | null) =>
+    status === "completed" ? prev ?? new Date().toISOString() : null;
+
   // --- Plan handlers ---
+  const openEditor = (mode: "create" | "edit", draft: PlanDraft) => {
+    setEditorMode(mode);
+    setEditingPlan(draft);
+    setEditorKey(k => k + 1);
+    setEditorOpen(true);
+  };
+
   const handleNewPlan = () => setTemplatePickerOpen(true);
 
-  const handleSelectTemplate = (templateExercises: PlanExercise[], templateName?: string) => {
+  const handleSelectTemplate = (templateExercises: PlanExercise[], templateName = "", templateDescription = "") => {
     setTemplatePickerOpen(false);
-    setEditorMode("create");
-    setEditingPlan({
-      id: '', coachId: 'c1', clientId: '', clientName: '',
-      title: templateName || '', status: 'draft',
-      exercises: [...templateExercises],
-      createdAt: new Date().toISOString().split('T')[0],
+    openEditor("create", {
+      id: null, title: templateName, description: templateDescription, clientId: null,
+      status: "draft", exercises: templateExercises.map(e => ({ ...e })),
     });
-    setEditorOpen(true);
   };
 
-  const handleStartBlank = () => {
-    setTemplatePickerOpen(false);
-    setEditorMode("create");
-    setEditingPlan({
-      id: '', coachId: 'c1', clientId: '', clientName: '',
-      title: '', status: 'draft', exercises: [],
-      createdAt: new Date().toISOString().split('T')[0],
+  const handleStartBlank = () => handleSelectTemplate([]);
+
+  const handleEditPlan = (plan: WorkoutPlanRow) => {
+    openEditor("edit", {
+      id: plan.id, title: plan.title, description: plan.description, clientId: plan.client_id,
+      status: plan.status, exercises: plan.exercises ?? [],
     });
-    setEditorOpen(true);
   };
 
-  const handleEditPlan = (plan: LocalPlan) => {
-    setEditorMode("edit");
-    setEditingPlan(plan);
-    setEditorOpen(true);
-  };
-
-  const handleSave = (data: { title: string; clientId: string; status: PlanStatus; exercises: PlanExercise[] }) => {
-    const clientName = clients.find(c => c.id === data.clientId)?.name || "";
-    if (editorMode === "create") {
-      const newPlan: LocalPlan = {
-        id: `wp_new_${Date.now()}`, coachId: 'c1', clientId: data.clientId, clientName,
-        title: data.title, status: data.status, exercises: data.exercises,
-        createdAt: new Date().toISOString().split('T')[0],
-      };
-      setPlans(prev => [newPlan, ...prev]);
+  const handleSave = async (data: PlanEditorData): Promise<boolean> => {
+    if (!coachId) return false;
+    const fields = {
+      title: data.title,
+      description: data.description,
+      client_id: data.clientId,
+      status: data.status,
+      exercises: data.exercises,
+    };
+    if (editorMode === "create" || !editingPlan?.id) {
+      const { data: row, error } = await from("workout_plans")
+        .insert({ ...fields, coach_id: coachId, completed_at: completedAtFor(data.status) })
+        .select(PLAN_COLUMNS)
+        .single();
+      if (error) { console.error(error); toast.error("Plán se nepodařilo vytvořit."); return false; }
+      setPlans(prev => [row as WorkoutPlanRow, ...prev]);
       toast.success("Plán vytvořen!");
-    } else if (editingPlan) {
-      setPlans(prev => prev.map(p =>
-        p.id === editingPlan.id
-          ? { ...p, title: data.title, clientId: data.clientId, clientName, status: data.status, exercises: data.exercises }
-          : p
-      ));
+    } else {
+      const prevPlan = plans.find(p => p.id === editingPlan.id);
+      const { data: row, error } = await from("workout_plans")
+        .update({ ...fields, completed_at: completedAtFor(data.status, prevPlan?.completed_at) })
+        .eq("id", editingPlan.id)
+        .select(PLAN_COLUMNS)
+        .single();
+      if (error) { console.error(error); toast.error("Změny se nepodařilo uložit."); return false; }
+      setPlans(prev => prev.map(p => (p.id === editingPlan.id ? (row as WorkoutPlanRow) : p)));
       toast.success("Plán aktualizován!");
     }
+    return true;
+  };
+
+  const handleDuplicatePlan = async (plan: WorkoutPlanRow) => {
+    if (!coachId) return;
+    const { data: row, error } = await from("workout_plans")
+      .insert({
+        coach_id: coachId,
+        client_id: plan.client_id,
+        title: `${plan.title} (kopie)`,
+        description: plan.description,
+        status: "draft",
+        exercises: plan.exercises ?? [],
+      })
+      .select(PLAN_COLUMNS)
+      .single();
+    if (error) { console.error(error); toast.error("Plán se nepodařilo zkopírovat."); return; }
+    setPlans(prev => [row as WorkoutPlanRow, ...prev]);
+    toast.success("Kopie plánu vytvořena jako koncept.");
+  };
+
+  const handleStatusChange = async (plan: WorkoutPlanRow, status: PlanStatus) => {
+    if (plan.status === status) return;
+    const { data: row, error } = await from("workout_plans")
+      .update({ status, completed_at: completedAtFor(status, plan.completed_at) })
+      .eq("id", plan.id)
+      .select(PLAN_COLUMNS)
+      .single();
+    if (error) { console.error(error); toast.error("Stav se nepodařilo změnit."); return; }
+    setPlans(prev => prev.map(p => (p.id === plan.id ? (row as WorkoutPlanRow) : p)));
+    toast.success(`Stav změněn: ${planStatusLabels[status]}`);
+  };
+
+  const handleDeletePlan = async () => {
+    const plan = deletingPlan;
+    if (!plan) return;
+    setDeletingPlan(null);
+    const { error } = await from("workout_plans").delete().eq("id", plan.id);
+    if (error) { console.error(error); toast.error("Plán se nepodařilo smazat."); return; }
+    setPlans(prev => prev.filter(p => p.id !== plan.id));
+    toast.success("Plán smazán");
   };
 
   // --- Exercise handlers ---
@@ -129,7 +241,7 @@ export default function TrainingPage() {
     setExCategory("knee_dominant");
     setExNotes("");
     setExVideoUrl("");
-    setExVideoFile(null);
+    setExVideoFile(null); setExVideoBlob(null);
     setVideoInputMode("url");
     setExerciseEditorOpen(true);
   };
@@ -141,7 +253,7 @@ export default function TrainingPage() {
     setExCategory(ex.category);
     setExNotes(ex.defaultNotes);
     setExVideoUrl(ex.videoUrl || "");
-    setExVideoFile(null);
+    setExVideoFile(null); setExVideoBlob(null);
     setVideoInputMode(ex.videoUrl ? "url" : "url");
     setExerciseEditorOpen(true);
   };
@@ -153,54 +265,58 @@ export default function TrainingPage() {
       toast.error("Nahrajte prosím video soubor");
       return;
     }
-    if (file.size > 100 * 1024 * 1024) {
-      toast.error("Maximální velikost videa je 100 MB");
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("Maximální velikost videa je 50 MB");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setExVideoFile(reader.result as string);
-      setExVideoUrl("");
-    };
-    reader.readAsDataURL(file);
-    toast.success(`Video "${file.name}" nahráno`);
+    setExVideoBlob(file);
+    setExVideoFile(URL.createObjectURL(file));
+    setExVideoUrl("");
   };
 
-  const getEffectiveVideoUrl = (): string | undefined => {
-    if (exVideoFile) return exVideoFile;
-    if (exVideoUrl.trim()) return exVideoUrl.trim();
-    return undefined;
+  const uploadExerciseVideo = async (file: File): Promise<string> => {
+    const uid = coachId ?? await requireUserId();
+    const ext = file.name.split(".").pop()?.toLowerCase() || "mp4";
+    const path = `${uid}/exercise-videos/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("profile-assets").upload(path, file, { contentType: file.type });
+    if (error) throw error;
+    return supabase.storage.from("profile-assets").getPublicUrl(path).data.publicUrl;
   };
 
-  const handleSaveExercise = () => {
+  const handleSaveExercise = async () => {
     if (!exName.trim()) {
       toast.error("Zadejte název cviku");
       return;
     }
-    const videoUrl = getEffectiveVideoUrl();
-    if (exerciseEditorMode === "create") {
-      const newEx: Exercise = {
-        id: `ex_${Date.now()}`,
-        name: exName.trim(),
-        category: exCategory,
-        defaultNotes: exNotes.trim(),
-        videoUrl,
-      };
-      setExerciseList(prev => [...prev, newEx]);
-      toast.success("Cvik přidán!");
-    } else if (editingExercise) {
-      setExerciseList(prev => prev.map(e =>
-        e.id === editingExercise.id
-          ? { ...e, name: exName.trim(), category: exCategory, defaultNotes: exNotes.trim(), videoUrl }
-          : e
-      ));
-      toast.success("Cvik upraven!");
+    setSavingExercise(true);
+    try {
+      const videoUrl = exVideoBlob ? await uploadExerciseVideo(exVideoBlob) : exVideoUrl.trim() || null;
+      const values = { name: exName.trim(), category: exCategory, default_notes: exNotes.trim(), video_url: videoUrl };
+      const isCustom = editingExercise && customExerciseIds.has(editingExercise.id);
+      const query = exerciseEditorMode === "edit" && isCustom
+        ? from("coach_exercises").update(values).eq("id", editingExercise.id)
+        : from("coach_exercises").insert(values);
+      const { data, error } = await query.select("id, coach_id, name, category, default_notes, video_url").single();
+      if (error) throw error;
+      const saved = rowToExercise(data as CoachExerciseRow);
+      setCustomExercises(prev => isCustom ? prev.map(e => e.id === saved.id ? saved : e) : [...prev, saved]);
+      toast.success(isCustom ? "Cvik upraven!" : "Cvik přidán!");
+      setExerciseEditorOpen(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("Cvik se nepodařilo uložit.");
+    } finally {
+      setSavingExercise(false);
     }
-    setExerciseEditorOpen(false);
   };
 
-  const handleDeleteExercise = (id: string) => {
-    setExerciseList(prev => prev.filter(e => e.id !== id));
+  const handleDeleteExercise = async (id: string) => {
+    const { error } = await from("coach_exercises").delete().eq("id", id);
+    if (error) {
+      toast.error("Cvik se nepodařilo smazat.");
+      return;
+    }
+    setCustomExercises(prev => prev.filter(e => e.id !== id));
     toast.success("Cvik smazán");
   };
 
@@ -259,26 +375,71 @@ export default function TrainingPage() {
 
       {tab === 'plans' && (
         <div className="space-y-3">
-          {plans.map(plan => (
+          {plansLoading && (
+            <p className="p-8 text-center text-sm text-muted-foreground">Načítám plány…</p>
+          )}
+          {!plansLoading && plans.length === 0 && (
+            <div className="rounded-xl bg-card shadow-card p-8 text-center">
+              <ClipboardList className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm font-medium text-foreground">Zatím nemáš žádný tréninkový plán</p>
+              <p className="text-xs text-muted-foreground mt-1 mb-4">Vytvoř plán od nuly nebo ze šablony a přiřaď ho klientovi.</p>
+              <Button size="sm" className="gap-1.5" onClick={handleNewPlan}>
+                <Plus className="h-3.5 w-3.5" /> Nový plán
+              </Button>
+            </div>
+          )}
+          {plans.map(plan => {
+            const clientName = clientNameOf(plan.client_id);
+            const planExercises = plan.exercises ?? [];
+            return (
             <div key={plan.id} className="rounded-xl bg-card shadow-card p-5 hover:shadow-elevated transition-shadow">
-              <div className="flex items-center justify-between mb-3">
-                <div>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="min-w-0">
                   <h3 className="text-sm font-semibold text-foreground">{plan.title}</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    <Link to={`/clients/${plan.clientId}`} className="hover:text-primary transition-colors">
-                      {plan.clientName}
-                    </Link>
-                    {' '}· {plan.createdAt}
+                    {plan.client_id ? (
+                      <Link to={`/clients/${plan.client_id}`} className="hover:text-primary transition-colors">
+                        {clientName}
+                      </Link>
+                    ) : (
+                      <span className="italic">Bez klienta</span>
+                    )}
+                    {' '}· {format(parseISO(plan.created_at), "d. M. yyyy", { locale: cs })}
                   </p>
+                  {plan.description && (
+                    <p className="text-xs text-muted-foreground mt-1">{plan.description}</p>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
+                  <StatusBadge status={plan.status} />
                   <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleEditPlan(plan)}>
                     <Pencil className="h-3 w-3" /> Upravit
                   </Button>
-                  <StatusBadge status={plan.status as any} />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Další akce">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">Změnit stav</DropdownMenuLabel>
+                      {(Object.keys(planStatusLabels) as PlanStatus[]).map(st => (
+                        <DropdownMenuItem key={st} disabled={plan.status === st} onClick={() => handleStatusChange(plan, st)}>
+                          {planStatusLabels[st]}
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleDuplicatePlan(plan)}>
+                        <Copy className="h-3.5 w-3.5 mr-2" /> Duplikovat
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeletingPlan(plan)}>
+                        <Trash2 className="h-3.5 w-3.5 mr-2" /> Smazat
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
-              <div className="rounded-lg bg-subtle overflow-hidden">
+              <div className="rounded-lg bg-subtle overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
@@ -290,7 +451,7 @@ export default function TrainingPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {plan.exercises.map((ex, i) => (
+                    {planExercises.map((ex, i) => (
                       <tr key={i}>
                         <td className="px-3 py-2 text-sm font-medium text-foreground">{ex.exerciseName}</td>
                         <td className="px-3 py-2 text-sm text-center font-mono tabular-nums text-foreground">{ex.sets}</td>
@@ -299,11 +460,15 @@ export default function TrainingPage() {
                         <td className="px-3 py-2 text-sm text-right font-mono tabular-nums text-muted-foreground">{ex.rest}s</td>
                       </tr>
                     ))}
+                    {planExercises.length === 0 && (
+                      <tr><td colSpan={5} className="px-3 py-3 text-xs text-center text-muted-foreground">Plán zatím nemá žádné cviky.</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -350,9 +515,11 @@ export default function TrainingPage() {
                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => openEditExercise(ex)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => handleDeleteExercise(ex.id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        {customExerciseIds.has(ex.id) && (
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => handleDeleteExercise(ex.id)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -388,7 +555,7 @@ export default function TrainingPage() {
                 {planTemplates.filter(t => t.category === cat).map(tpl => (
                   <button
                     key={tpl.id}
-                    onClick={() => handleSelectTemplate(tpl.exercises, tpl.name)}
+                    onClick={() => handleSelectTemplate(tpl.exercises, tpl.name, tpl.description)}
                     className="w-full rounded-lg border border-border p-3 text-left hover:border-primary/40 hover:bg-primary/5 transition-colors"
                   >
                     <div className="flex items-center gap-3">
@@ -410,16 +577,42 @@ export default function TrainingPage() {
       {/* Plan Editor Dialog */}
       {editingPlan && (
         <PlanEditorDialog
+          key={editorKey}
           open={editorOpen}
           onOpenChange={setEditorOpen}
           mode={editorMode}
+          clients={clientList}
+          exercises={exerciseList}
           initialTitle={editingPlan.title}
+          initialDescription={editingPlan.description}
           initialClientId={editingPlan.clientId}
           initialStatus={editingPlan.status}
           initialExercises={editingPlan.exercises}
           onSave={handleSave}
         />
       )}
+
+      {/* Delete plan confirmation */}
+      <AlertDialog open={!!deletingPlan} onOpenChange={(o) => !o && setDeletingPlan(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Smazat plán?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Plán „{deletingPlan?.title}" bude trvale odstraněn{deletingPlan?.client_id ? " a klient ho přestane vidět" : ""}.
+              Záznamy odcvičených tréninků zůstanou zachovány.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Zrušit</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDeletePlan}
+            >
+              Smazat
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Exercise Editor Dialog */}
       <Dialog open={exerciseEditorOpen} onOpenChange={setExerciseEditorOpen}>
@@ -450,7 +643,7 @@ export default function TrainingPage() {
             <div className="space-y-3">
               <Label className="flex items-center gap-2">
                 <Video className="h-4 w-4 text-muted-foreground" />
-                Demo video
+                Video s ukázkou <span className="text-xs font-normal text-muted-foreground">(nepovinné)</span>
               </Label>
 
               {/* Mode tabs */}
@@ -477,7 +670,7 @@ export default function TrainingPage() {
                 <div className="space-y-2">
                   <Input
                     value={exVideoUrl}
-                    onChange={(e) => { setExVideoUrl(e.target.value); setExVideoFile(null); }}
+                    onChange={(e) => { setExVideoUrl(e.target.value); setExVideoFile(null); setExVideoBlob(null); }}
                     placeholder="https://youtube.com/watch?v=..."
                   />
                   <p className="text-[11px] text-muted-foreground">YouTube, Vimeo nebo přímý odkaz na video.</p>
@@ -502,7 +695,7 @@ export default function TrainingPage() {
                       <div className="relative rounded-lg overflow-hidden border border-border">
                         <video src={exVideoFile} controls className="w-full aspect-video bg-black" />
                         <button
-                          onClick={() => setExVideoFile(null)}
+                          onClick={() => { setExVideoFile(null); setExVideoBlob(null); }}
                           className="absolute top-2 right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
                         >
                           <X className="h-3.5 w-3.5" />
@@ -554,7 +747,7 @@ export default function TrainingPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setExerciseEditorOpen(false)}>Zrušit</Button>
-            <Button onClick={handleSaveExercise}>
+            <Button onClick={handleSaveExercise} disabled={savingExercise}>
               {exerciseEditorMode === "create" ? "Přidat cvik" : "Uložit změny"}
             </Button>
           </DialogFooter>

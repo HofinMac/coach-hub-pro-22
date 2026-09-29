@@ -400,3 +400,24 @@ AS $$
 $$;
 
 GRANT EXECUTE ON FUNCTION public.get_client_last_activity(uuid) TO authenticated;
+
+-- ─── Coach's own exercises (on top of the built-in library in src/lib/domain.ts) ─
+
+CREATE TABLE public.coach_exercises (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  coach_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE DEFAULT auth.uid(),
+  name text NOT NULL CHECK (length(btrim(name)) > 0),
+  category text NOT NULL CHECK (category IN ('knee_dominant', 'hip_dominant', 'push', 'pull', 'core', 'conditioning', 'mobility')),
+  default_notes text NOT NULL DEFAULT '',
+  video_url text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX coach_exercises_coach_idx ON public.coach_exercises (coach_id);
+
+ALTER TABLE public.coach_exercises ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Coaches manage own exercises" ON public.coach_exercises
+  FOR ALL TO authenticated
+  USING (coach_id = auth.uid())
+  WITH CHECK (coach_id = auth.uid());

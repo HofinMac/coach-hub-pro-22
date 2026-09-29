@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { exercises as allExercises, clients, type PlanExercise, type ExerciseCategory, type PlanStatus } from "@/lib/demo-data";
-import { Plus, Trash2, GripVertical, Search } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { exercises as builtInExercises, type Exercise, type PlanExercise, type ExerciseCategory, type PlanStatus } from "@/lib/domain";
+import { Plus, Trash2, Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -21,46 +22,47 @@ const categoryLabels: Record<ExerciseCategory, string> = {
   mobility: "Mobilita",
 };
 
+const NO_CLIENT = "__none__";
+
+export interface PlanEditorData {
+  title: string;
+  description: string;
+  clientId: string | null;
+  status: PlanStatus;
+  exercises: PlanExercise[];
+}
+
 interface PlanEditorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: "create" | "edit";
+  /** Clients the plan can be assigned to (the coach's assigned clients). */
+  clients: { id: string; name: string }[];
+  /** Exercise library to pick from (built-in + coach's own). */
+  exercises?: Exercise[];
   initialTitle?: string;
-  initialClientId?: string;
+  initialDescription?: string;
+  initialClientId?: string | null;
   initialStatus?: PlanStatus;
   initialExercises?: PlanExercise[];
-  onSave: (data: {
-    title: string;
-    clientId: string;
-    status: PlanStatus;
-    exercises: PlanExercise[];
-  }) => void;
+  /** Return false to keep the dialog open (e.g. when saving failed). */
+  onSave: (data: PlanEditorData) => Promise<boolean> | boolean;
 }
 
+/** Mount with a fresh `key` per opening so the form starts from the initial values. */
 export default function PlanEditorDialog({
-  open, onOpenChange, mode, initialTitle = "", initialClientId = "",
+  open, onOpenChange, mode, clients, exercises: allExercises = builtInExercises, initialTitle = "", initialDescription = "", initialClientId = null,
   initialStatus = "draft", initialExercises = [], onSave,
 }: PlanEditorDialogProps) {
   const [title, setTitle] = useState(initialTitle);
-  const [clientId, setClientId] = useState(initialClientId);
+  const [description, setDescription] = useState(initialDescription);
+  const [clientId, setClientId] = useState<string>(initialClientId ?? NO_CLIENT);
   const [status, setStatus] = useState<PlanStatus>(initialStatus);
-  const [planExercises, setPlanExercises] = useState<PlanExercise[]>(initialExercises);
+  const [planExercises, setPlanExercises] = useState<PlanExercise[]>(() => [...initialExercises]);
   const [showExercisePicker, setShowExercisePicker] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ExerciseCategory | "all">("all");
-
-  // Reset state when dialog opens
-  const handleOpenChange = (isOpen: boolean) => {
-    if (isOpen) {
-      setTitle(initialTitle);
-      setClientId(initialClientId);
-      setStatus(initialStatus);
-      setPlanExercises([...initialExercises]);
-      setShowExercisePicker(false);
-      setSearchQuery("");
-    }
-    onOpenChange(isOpen);
-  };
+  const [saving, setSaving] = useState(false);
 
   const addExercise = (exerciseId: string, exerciseName: string) => {
     setPlanExercises(prev => [
@@ -87,13 +89,28 @@ export default function PlanEditorDialog({
     setPlanExercises(arr);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) { toast.error("Zadej název plánu."); return; }
-    if (!clientId) { toast.error("Vyber klienta."); return; }
     if (planExercises.length === 0) { toast.error("Přidej alespoň jeden cvik."); return; }
-    onSave({ title: title.trim(), clientId, status, exercises: planExercises });
-    onOpenChange(false);
+    setSaving(true);
+    try {
+      const ok = await onSave({
+        title: title.trim(),
+        description: description.trim(),
+        clientId: clientId === NO_CLIENT ? null : clientId,
+        status,
+        exercises: planExercises,
+      });
+      if (ok !== false) onOpenChange(false);
+    } finally {
+      setSaving(false);
+    }
   };
+
+  // Keep a stale client (e.g. no longer assigned) selectable so editing doesn't silently drop it.
+  const clientOptions = clientId !== NO_CLIENT && !clients.some(c => c.id === clientId)
+    ? [...clients, { id: clientId, name: "Neznámý klient" }]
+    : clients;
 
   const filteredExercises = allExercises.filter(ex => {
     const matchesSearch = ex.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -102,7 +119,7 @@ export default function PlanEditorDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => !saving && onOpenChange(o)}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
@@ -112,7 +129,7 @@ export default function PlanEditorDialog({
 
         <div className="grid gap-4 py-2">
           {/* Plan metadata */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label className="text-xs">Název plánu</Label>
               <Input
@@ -126,12 +143,23 @@ export default function PlanEditorDialog({
               <Select value={clientId} onValueChange={setClientId}>
                 <SelectTrigger><SelectValue placeholder="Vyber klienta" /></SelectTrigger>
                 <SelectContent>
-                  {clients.map(c => (
+                  <SelectItem value={NO_CLIENT}>Bez klienta (šablona)</SelectItem>
+                  {clientOptions.map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label className="text-xs">Popis (nepovinné)</Label>
+            <Textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Cíl plánu, frekvence, poznámky pro klienta…"
+              rows={2}
+            />
           </div>
 
           <div className="grid gap-1.5 max-w-[200px]">
@@ -188,11 +216,13 @@ export default function PlanEditorDialog({
                         <td className="px-1">
                           <div className="flex flex-col items-center">
                             <button
+                              type="button"
                               onClick={() => moveExercise(i, -1)}
                               disabled={i === 0}
                               className="text-muted-foreground hover:text-foreground disabled:opacity-20 text-xs"
                             >▲</button>
                             <button
+                              type="button"
                               onClick={() => moveExercise(i, 1)}
                               disabled={i === planExercises.length - 1}
                               className="text-muted-foreground hover:text-foreground disabled:opacity-20 text-xs"
@@ -230,6 +260,7 @@ export default function PlanEditorDialog({
                         </td>
                         <td className="px-1">
                           <button
+                            type="button"
                             onClick={() => removeExercise(i)}
                             className="text-muted-foreground hover:text-destructive transition-colors p-1"
                           >
@@ -306,9 +337,10 @@ export default function PlanEditorDialog({
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Zrušit</Button>
+            <Button variant="outline" disabled={saving}>Zrušit</Button>
           </DialogClose>
-          <Button onClick={handleSave}>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {mode === "create" ? "Vytvořit plán" : "Uložit změny"}
           </Button>
         </DialogFooter>
