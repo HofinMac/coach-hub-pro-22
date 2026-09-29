@@ -8,9 +8,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
+import { format } from "date-fns";
 import { User, Target, Activity, CheckCircle2, ArrowRight, ArrowLeft, Upload, X, Image } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPicker } from "@/components/AvatarPicker";
+import { from } from "@/lib/db";
+
+/** Parses "75", "75,5" or "75.5"; returns null for empty / invalid input. */
+const parseNumber = (value: string): number | null => {
+  const n = Number(value.trim().replace(",", "."));
+  return value.trim() !== "" && Number.isFinite(n) ? n : null;
+};
 
 const STEPS = [
   { icon: User, label: "O tobě" },
@@ -135,15 +143,54 @@ export default function ClientOnboarding() {
       .update({
         full_name: fullName,
         profile_photo_url: profilePhotoUrl,
+        phone: phone.trim() || null,
         onboarding_done: true,
       })
       .eq("id", userId);
-    setSaving(false);
 
     if (error) {
+      setSaving(false);
       toast.error("Chyba: " + error.message);
       return;
     }
+
+    // Intake + first measurement are non-fatal: the profile is already saved.
+    const ageNum = parseNumber(age);
+    const heightNum = parseNumber(height);
+    const weightNum = parseNumber(weight);
+    const { error: intakeError } = await from("client_intake").upsert(
+      {
+        client_id: userId,
+        age: ageNum !== null && ageNum > 0 && ageNum < 150 ? Math.round(ageNum) : null,
+        gender,
+        height_cm: heightNum !== null && heightNum > 0 ? heightNum : null,
+        experience,
+        injuries,
+        injury_detail: injuryDetail.trim(),
+        current_activity: currentActivity,
+        goals,
+        goal_detail: goalDetail.trim(),
+        preferred_days: preferredDays,
+        preferred_time: preferredTime,
+      },
+      { onConflict: "client_id" },
+    );
+    let progressError: unknown = null;
+    if (weightNum !== null && weightNum > 0) {
+      ({ error: progressError } = await from("progress_entries").insert({
+        client_id: userId,
+        // Local date; the column default (current_date) is the server's UTC date.
+        logged_at: format(new Date(), "yyyy-MM-dd"),
+        weight: weightNum,
+        notes: "Vstupní měření",
+      }));
+    }
+    setSaving(false);
+    if (intakeError || progressError) {
+      console.error(intakeError ?? progressError);
+      toast.warning("Profil je uložený, ale některé údaje z dotazníku se nepodařilo uložit.");
+    }
+
     toast.success("Profil vytvořen! Vítej v Coach Hub.");
     await queryClient.invalidateQueries({ queryKey: ["current-profile"] });
     navigate("/klient");

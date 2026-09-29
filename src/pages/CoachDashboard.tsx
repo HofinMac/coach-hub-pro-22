@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { format, formatDistanceToNowStrict, startOfDay, endOfDay, subDays, isToday } from "date-fns";
+import { cs } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { MetricCard } from "@/components/MetricCard";
 import { Button } from "@/components/ui/button";
@@ -6,6 +9,140 @@ import { Plus, UserPlus, Calendar, Dumbbell, Users, AlertTriangle, ClipboardList
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { InstallAppBanner } from "@/components/InstallAppBanner";
+import { AvatarCircle } from "@/components/AvatarCircle";
+import { from, rpc, requireUserId, fetchCoachClients, initialsOf, type ProfileRow } from "@/lib/db";
+
+const INACTIVITY_DAYS = 14;
+
+interface SlotRow {
+  id: string;
+  start_time: string;
+  end_time: string;
+  slot_type: string;
+  status: string;
+}
+
+interface UpcomingSlot extends SlotRow {
+  clientNames: string[];
+}
+
+interface AtRiskClient {
+  client: ProfileRow;
+  reason: string;
+}
+
+interface ActivePlan {
+  id: string;
+  title: string;
+  exerciseCount: number;
+  clientName: string;
+}
+
+const slotTypeLabels: Record<string, string> = {
+  individual: "Individuální",
+  online: "Online",
+  group: "Skupinová",
+};
+
+async function loadDashboard() {
+  const coachId = await requireUserId();
+  const now = new Date();
+
+  const slotCols = "id, start_time, end_time, slot_type, status";
+  const [clients, recordsRes, activityRes, plansRes, todayRes, upcomingRes] = await Promise.all([
+    fetchCoachClients(coachId),
+    from("coach_client_records").select("client_id, status").eq("coach_id", coachId),
+    rpc("get_client_last_activity", { _coach_id: coachId }),
+    from("workout_plans")
+      .select("id, title, client_id, exercises")
+      .eq("coach_id", coachId)
+      .eq("status", "active")
+      .order("updated_at", { ascending: false }),
+    supabase
+      .from("coach_slots")
+      .select(slotCols)
+      .eq("coach_id", coachId)
+      .neq("status", "cancelled")
+      .gte("start_time", startOfDay(now).toISOString())
+      .lte("start_time", endOfDay(now).toISOString())
+      .order("start_time"),
+    supabase
+      .from("coach_slots")
+      .select(slotCols)
+      .eq("coach_id", coachId)
+      .neq("status", "cancelled")
+      .gte("start_time", now.toISOString())
+      .order("start_time")
+      .limit(5),
+  ]);
+  for (const res of [recordsRes, activityRes, plansRes, todayRes, upcomingRes]) {
+    if (res.error) throw res.error;
+  }
+
+  const statusById = new Map<string, string>(
+    ((recordsRes.data ?? []) as { client_id: string; status: string }[]).map(r => [r.client_id, r.status]),
+  );
+  const lastActivityById = new Map<string, string | null>(
+    ((activityRes.data ?? []) as { client_id: string; last_activity: string | null }[]).map(r => [r.client_id, r.last_activity]),
+  );
+  const nameById = new Map(clients.map(c => [c.id, c.full_name]));
+
+  const activeClients = clients.filter(c => statusById.get(c.id) !== "inactive");
+
+  const threshold = subDays(now, INACTIVITY_DAYS);
+  const atRisk: AtRiskClient[] = [];
+  for (const client of activeClients) {
+    const status = statusById.get(client.id);
+    const last = lastActivityById.get(client.id);
+    if (status === "at_risk") {
+      atRisk.push({ client, reason: "Označen jako v ohrožení" });
+    } else if (status === "lead") {
+      continue;
+    } else if (last && new Date(last) < threshold) {
+      atRisk.push({ client, reason: `Naposledy aktivní ${formatDistanceToNowStrict(new Date(last), { addSuffix: true, locale: cs })}` });
+    } else if (!last && new Date(client.created_at) < threshold) {
+      atRisk.push({ client, reason: "Od registrace bez aktivity" });
+    }
+  }
+
+  const plans: ActivePlan[] = ((plansRes.data ?? []) as { id: string; title: string; client_id: string | null; exercises: unknown[] }[]).map(p => ({
+    id: p.id,
+    title: p.title,
+    exerciseCount: Array.isArray(p.exercises) ? p.exercises.length : 0,
+    clientName: p.client_id ? nameById.get(p.client_id) ?? "Klient" : "Bez klienta",
+  }));
+
+  const upcomingSlots = (upcomingRes.data ?? []) as SlotRow[];
+  const clientNamesBySlot = new Map<string, string[]>();
+  if (upcomingSlots.length > 0) {
+    const { data: bookings, error } = await supabase
+      .from("slot_bookings")
+      .select("slot_id, client_id, status")
+      .in("slot_id", upcomingSlots.map(s => s.id))
+      .in("status", ["confirmed", "pending", "completed"]);
+    if (error) throw error;
+    const missing = [...new Set((bookings ?? []).map(b => b.client_id))].filter(cid => !nameById.has(cid));
+    if (missing.length > 0) {
+      const { data: extra } = await supabase.from("profiles").select("id, full_name").in("id", missing);
+      extra?.forEach(p => nameById.set(p.id, p.full_name));
+    }
+    for (const b of bookings ?? []) {
+      const list = clientNamesBySlot.get(b.slot_id) ?? [];
+      list.push(nameById.get(b.client_id) || "Klient");
+      clientNamesBySlot.set(b.slot_id, list);
+    }
+  }
+
+  const todaySlots = (todayRes.data ?? []) as SlotRow[];
+  return {
+    activeClientCount: activeClients.length,
+    todayCount: todaySlots.length,
+    nextToday: todaySlots.find(s => new Date(s.start_time) >= now) ?? null,
+    atRisk,
+    plans,
+    upcoming: upcomingSlots.map<UpcomingSlot>(s => ({ ...s, clientNames: clientNamesBySlot.get(s.id) ?? [] })),
+  };
+}
 
 export default function CoachDashboard() {
   const [profile, setProfile] = useState<{
@@ -28,6 +165,26 @@ export default function CoachDashboard() {
     };
     loadProfile();
   }, []);
+
+  const { data: stats, isLoading, isError } = useQuery({
+    queryKey: ["coach-dashboard"],
+    queryFn: loadDashboard,
+  });
+
+  const metric = (value: number | undefined) => (isLoading ? "–" : value ?? 0);
+  const todayChange = !stats || isLoading
+    ? undefined
+    : stats.todayCount === 0
+      ? "žádná lekce"
+      : stats.nextToday
+        ? `příští v ${format(new Date(stats.nextToday.start_time), "H:mm")}`
+        : "vše odučeno";
+
+  const panelMessage = (empty: string) => (
+    <p className="p-4 text-sm text-muted-foreground">
+      {isLoading ? "Načítám…" : isError ? "Data se nepodařilo načíst." : empty}
+    </p>
+  );
 
   const firstName = profile?.full_name?.split(" ")[0] || "trenére";
 
@@ -104,10 +261,16 @@ export default function CoachDashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <MetricCard label="Aktivní klienti" value={0} icon={Users} to="/clients" />
-        <MetricCard label="Dnešní lekce" value={0} change="žádná lekce" icon={Clock} to="/calendar" />
-        <MetricCard label="V ohrožení" value={0} icon={AlertTriangle} to="/clients" />
-        <MetricCard label="Aktivní plány" value={0} icon={ClipboardList} to="/training" />
+        <MetricCard label="Aktivní klienti" value={metric(stats?.activeClientCount)} icon={Users} to="/clients" />
+        <MetricCard label="Dnešní lekce" value={metric(stats?.todayCount)} change={todayChange} icon={Clock} to="/calendar" />
+        <MetricCard
+          label="V ohrožení"
+          value={metric(stats?.atRisk.length)}
+          changeType={stats?.atRisk.length ? "negative" : "neutral"}
+          icon={AlertTriangle}
+          to="/clients"
+        />
+        <MetricCard label="Aktivní plány" value={metric(stats?.plans.length)} icon={ClipboardList} to="/training" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -120,7 +283,33 @@ export default function CoachDashboard() {
               Zobrazit vše
             </Link>
           </div>
-          <p className="p-4 text-sm text-muted-foreground">Zatím nemáte žádné naplánované lekce.</p>
+          {stats?.upcoming.length ? (
+            <div className="divide-y divide-border">
+              {stats.upcoming.map(slot => {
+                const start = new Date(slot.start_time);
+                return (
+                  <Link key={slot.id} to="/calendar" className="flex items-center justify-between gap-3 p-4 hover:bg-subtle transition-colors">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {slot.clientNames.length > 0 ? slot.clientNames.join(", ") : "Volný termín"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {slotTypeLabels[slot.slot_type] || slot.slot_type}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-mono tabular-nums text-foreground">
+                        {format(start, "H:mm")}–{format(new Date(slot.end_time), "H:mm")}
+                      </p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {isToday(start) ? "Dnes" : format(start, "EEEE d. M.", { locale: cs })}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : panelMessage("Zatím nemáte žádné naplánované lekce.")}
         </div>
 
         <div className="rounded-xl bg-card shadow-card">
@@ -130,7 +319,19 @@ export default function CoachDashboard() {
               Zobrazit vše
             </Link>
           </div>
-          <p className="p-4 text-sm text-muted-foreground">Žádní klienti v ohrožení. Dobrá práce.</p>
+          {stats?.atRisk.length ? (
+            <div className="divide-y divide-border">
+              {stats.atRisk.slice(0, 5).map(({ client, reason }) => (
+                <Link key={client.id} to={`/clients/${client.id}`} className="flex items-center gap-3 p-4 hover:bg-subtle transition-colors">
+                  <AvatarCircle initials={initialsOf(client.full_name)} size="sm" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{client.full_name || client.email}</p>
+                    <p className="text-xs text-destructive mt-0.5">{reason}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : panelMessage("Žádní klienti v ohrožení. Dobrá práce.")}
 
           <div className="border-t border-border">
             <div className="p-4 border-b border-border">
@@ -138,7 +339,19 @@ export default function CoachDashboard() {
                 <Dumbbell className="h-4 w-4 text-muted-foreground" /> Aktivní plány
               </h2>
             </div>
-            <p className="p-4 text-sm text-muted-foreground">Zatím nemáte žádné aktivní plány.</p>
+            {stats?.plans.length ? (
+              <div className="divide-y divide-border">
+                {stats.plans.slice(0, 5).map(plan => (
+                  <Link key={plan.id} to="/training" className="flex items-center justify-between gap-3 p-4 hover:bg-subtle transition-colors">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{plan.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{plan.clientName}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">{plan.exerciseCount} cviků</span>
+                  </Link>
+                ))}
+              </div>
+            ) : panelMessage("Zatím nemáte žádné aktivní plány.")}
           </div>
         </div>
       </div>
