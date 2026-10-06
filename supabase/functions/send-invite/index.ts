@@ -84,7 +84,8 @@ Deno.serve(async (req: Request) => {
       .single();
 
     const coachName = coachProfile?.full_name?.trim() || "Váš trenér";
-    const appUrl = req.headers.get("origin") ?? "https://coach-hub.eu";
+    // Always the public app address: the caller may be on a (login-protected) preview deployment.
+    const appUrl = Deno.env.get("APP_URL") ?? "https://coach-hub-pro-22.vercel.app";
     const inviteLink = `${appUrl}/register?invite=${invite.token}`;
 
     const resendResp = await fetch("https://api.resend.com/emails", {

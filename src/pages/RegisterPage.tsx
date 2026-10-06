@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { publicAppUrl } from "@/lib/app-url";
 import logoHorizontal from "@/assets/logo-coachhub-horizontal.png";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -57,7 +58,7 @@ export default function RegisterPage() {
       password,
       options: {
         data: inviteToken ? { full_name: name, invite_token: inviteToken } : { full_name: name },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: publicAppUrl(),
       },
     });
     setLoading(false);

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { publicAppUrl } from "@/lib/app-url";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { AvatarCircle } from "@/components/AvatarCircle";
@@ -92,7 +93,7 @@ export default function ClientsPage() {
 
       if (error) throw error;
 
-      const link = `${window.location.origin}/register?invite=${(data as any).token}`;
+      const link = `${publicAppUrl()}/register?invite=${(data as any).token}`;
       setCreatedLink(link);
 
       const { error: sendError } = await supabase.functions.invoke("send-invite", {
@@ -187,7 +188,7 @@ export default function ClientsPage() {
                 <div className="flex items-center gap-1.5 flex-wrap justify-end">
                   <Button
                     size="sm" variant="outline" className="h-7 gap-1"
-                    onClick={() => handleCopyLink(`${window.location.origin}/register?invite=${inv.token}`)}
+                    onClick={() => handleCopyLink(`${publicAppUrl()}/register?invite=${inv.token}`)}
                   >
                     <Copy className="h-3 w-3" /> Kopírovat odkaz
                   </Button>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { publicAppUrl } from "@/lib/app-url";
 import logoHorizontal from "@/assets/logo-coachhub-horizontal.png";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ export default function ForgotPasswordPage() {
     }
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${publicAppUrl()}/reset-password`,
     });
     setLoading(false);
     if (error) {
