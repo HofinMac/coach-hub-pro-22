@@ -828,6 +828,7 @@ export type Database = {
       get_assigned_coach_id: { Args: { _user_id: string }; Returns: string }
       get_invite_coach_name: { Args: { _token: string }; Returns: string }
       get_user_role: { Args: { _user_id: string }; Returns: string }
+      is_slot_owner: { Args: { _slot_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
