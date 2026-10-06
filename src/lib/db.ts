@@ -18,6 +18,7 @@ type UntypedTable =
   | "coach_gyms"
   | "gym_reviews"
   | "coach_exercises"
+  | "push_subscriptions"
   | "client_invites"
   | "gyms";
 

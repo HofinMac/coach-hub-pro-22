@@ -37,6 +37,8 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Push + notification click handlers (public/push-sw.js)
+        importScripts: ["/push-sw.js"],
         navigateFallbackDenylist: [/^\/~oauth/],
         runtimeCaching: [
           {

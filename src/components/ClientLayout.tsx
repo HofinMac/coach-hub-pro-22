@@ -11,6 +11,7 @@ import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTabOrder } from "@/hooks/use-tab-order";
 import { supabase } from "@/integrations/supabase/client";
+import { detachPushBeforeSignOut } from "@/lib/push";
 import { toast } from "@/hooks/use-toast";
 import WorkoutSessionPrompt from "./WorkoutSessionPrompt";
 import TabOrderDialog from "@/components/TabOrderDialog";
@@ -47,6 +48,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   ];
 
   const handleLogout = async () => {
+    await detachPushBeforeSignOut();
     const { error } = await supabase.auth.signOut();
     if (error) {
       toast({ title: "Chyba při odhlašování", description: error.message, variant: "destructive" });

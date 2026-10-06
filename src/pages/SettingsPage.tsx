@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AvatarPicker } from "@/components/AvatarPicker";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
+import { PushNotificationsCard } from "@/components/PushNotificationsCard";
 
 import avatarMale1 from "@/assets/avatars/avatar-male-1.png";
 import avatarFemale1 from "@/assets/avatars/avatar-female-1.png";
@@ -609,6 +610,8 @@ export default function SettingsPage() {
           />
         </CardContent>
       </Card>
+
+      <PushNotificationsCard />
 
       {/* Contact info */}
       <Card>
