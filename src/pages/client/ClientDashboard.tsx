@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { format, parseISO, startOfMonth } from "date-fns";
 import { cs } from "date-fns/locale";
 import { InstallAppBanner } from "@/components/InstallAppBanner";
+import { EnablePushBanner } from "@/components/EnablePushBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { from, type ProgressEntryRow, type WorkoutPlanRow } from "@/lib/db";
 
@@ -102,6 +103,7 @@ export default function ClientDashboard() {
   return (
     <div className="p-6 max-w-5xl mx-auto animate-fade-in">
       <InstallAppBanner />
+      <EnablePushBanner />
       <PageHeader title={data?.firstName ? `Ahoj, ${data.firstName}!` : "Ahoj!"} description="Tady je tvůj přehled." />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

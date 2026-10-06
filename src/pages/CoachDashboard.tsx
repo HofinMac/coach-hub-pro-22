@@ -9,6 +9,7 @@ import { Plus, UserPlus, Calendar, Dumbbell, Users, AlertTriangle, ClipboardList
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { InstallAppBanner } from "@/components/InstallAppBanner";
+import { EnablePushBanner } from "@/components/EnablePushBanner";
 import { AvatarCircle } from "@/components/AvatarCircle";
 import { from, rpc, requireUserId, fetchCoachClients, initialsOf, type ProfileRow } from "@/lib/db";
 
@@ -206,6 +207,7 @@ export default function CoachDashboard() {
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto animate-fade-in" style={bgPresetStyle}>
       <InstallAppBanner />
+      <EnablePushBanner />
 
       {/* Mobile quick actions */}
       <div className="flex gap-2 mb-4 md:hidden">

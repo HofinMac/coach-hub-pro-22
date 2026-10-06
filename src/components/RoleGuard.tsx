@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useCurrentProfile, homePathForRole, type UserRole } from "@/hooks/use-current-profile";
+import { usePushSync } from "@/hooks/use-push-notifications";
 
 /**
  * Route guard: requires a signed-in user with one of `allow` roles and finished onboarding.
@@ -9,6 +10,7 @@ import { useCurrentProfile, homePathForRole, type UserRole } from "@/hooks/use-c
 export default function RoleGuard({ allow, children }: { allow: UserRole[]; children: React.ReactNode }) {
   const { session, profile, isLoading } = useCurrentProfile();
   const location = useLocation();
+  usePushSync(profile?.id);
 
   if (isLoading) {
     return (
