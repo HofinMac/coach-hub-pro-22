@@ -402,6 +402,7 @@ export type Database = {
           notes: string | null
           recurrence_parent_id: string | null
           recurrence_rule: Json | null
+          reminder_sent_at: string | null
           slot_type: string
           start_time: string
           status: string
@@ -416,6 +417,7 @@ export type Database = {
           notes?: string | null
           recurrence_parent_id?: string | null
           recurrence_rule?: Json | null
+          reminder_sent_at?: string | null
           slot_type?: string
           start_time: string
           status?: string
@@ -430,6 +432,7 @@ export type Database = {
           notes?: string | null
           recurrence_parent_id?: string | null
           recurrence_rule?: Json | null
+          reminder_sent_at?: string | null
           slot_type?: string
           start_time?: string
           status?: string
@@ -586,6 +589,54 @@ export type Database = {
           id?: string
           read_at?: string | null
           sender_id?: string
+        }
+        Relationships: []
+      }
+      notification_events: {
+        Row: {
+          attempts: number
+          body: string
+          category: string
+          claimed_at: string | null
+          created_at: string
+          error: string | null
+          id: string
+          processed_at: string | null
+          status: string
+          tag: string | null
+          title: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          body?: string
+          category: string
+          claimed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          processed_at?: string | null
+          status?: string
+          tag?: string | null
+          title: string
+          url?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          body?: string
+          category?: string
+          claimed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          processed_at?: string | null
+          status?: string
+          tag?: string | null
+          title?: string
+          url?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -934,6 +985,39 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_seen_at: string
+          p256dh: string
+          user_agent: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_seen_at?: string
+          p256dh: string
+          user_agent?: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_seen_at?: string
+          p256dh?: string
+          user_agent?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       redemptions: {
         Row: {
           campaign_id: string
@@ -1028,6 +1112,7 @@ export type Database = {
           client_id: string
           created_at: string
           id: string
+          reminder_sent_at: string | null
           slot_id: string
           status: string
         }
@@ -1035,6 +1120,7 @@ export type Database = {
           client_id: string
           created_at?: string
           id?: string
+          reminder_sent_at?: string | null
           slot_id: string
           status?: string
         }
@@ -1042,6 +1128,7 @@ export type Database = {
           client_id?: string
           created_at?: string
           id?: string
+          reminder_sent_at?: string | null
           slot_id?: string
           status?: string
         }
@@ -1221,6 +1308,7 @@ export type Database = {
           client_id: string
           created_at: string
           id: string
+          reminder_sent_at: string | null
           slot_id: string
           status: string
         }
@@ -1233,6 +1321,42 @@ export type Database = {
       }
       cancel_client_booking: {
         Args: { _booking_id: string }
+        Returns: undefined
+      }
+      claim_notification_events: {
+        Args: { _limit?: number }
+        Returns: {
+          attempts: number
+          body: string
+          category: string
+          claimed_at: string | null
+          created_at: string
+          error: string | null
+          id: string
+          processed_at: string | null
+          status: string
+          tag: string | null
+          title: string
+          url: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "notification_events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      enqueue_due_reminders: { Args: never; Returns: number }
+      enqueue_notification: {
+        Args: {
+          _body: string
+          _category: string
+          _tag?: string
+          _title: string
+          _url: string
+          _user_id: string
+        }
         Returns: undefined
       }
       get_assigned_coach_id: { Args: { _user_id: string }; Returns: string }
@@ -1251,6 +1375,16 @@ export type Database = {
         Args: { _client_id: string; _coach_id: string }
         Returns: undefined
       }
+      register_push_subscription: {
+        Args: {
+          _auth: string
+          _endpoint: string
+          _p256dh: string
+          _user_agent?: string
+        }
+        Returns: undefined
+      }
+      send_test_notification: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
