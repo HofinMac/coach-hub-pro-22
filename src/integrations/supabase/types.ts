@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -99,6 +99,57 @@ export type Database = {
           },
         ]
       }
+      client_intake: {
+        Row: {
+          age: number | null
+          client_id: string
+          created_at: string
+          current_activity: string
+          experience: string
+          gender: string
+          goal_detail: string
+          goals: string[]
+          height_cm: number | null
+          injuries: string[]
+          injury_detail: string
+          preferred_days: string
+          preferred_time: string
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          client_id: string
+          created_at?: string
+          current_activity?: string
+          experience?: string
+          gender?: string
+          goal_detail?: string
+          goals?: string[]
+          height_cm?: number | null
+          injuries?: string[]
+          injury_detail?: string
+          preferred_days?: string
+          preferred_time?: string
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          client_id?: string
+          created_at?: string
+          current_activity?: string
+          experience?: string
+          gender?: string
+          goal_detail?: string
+          goals?: string[]
+          height_cm?: number | null
+          injuries?: string[]
+          injury_detail?: string
+          preferred_days?: string
+          preferred_time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_invites: {
         Row: {
           accepted_at: string | null
@@ -106,6 +157,7 @@ export type Database = {
           coach_id: string
           created_at: string
           email: string
+          email_sent_at: string | null
           id: string
           status: string
           token: string
@@ -116,6 +168,7 @@ export type Database = {
           coach_id: string
           created_at?: string
           email: string
+          email_sent_at?: string | null
           id?: string
           status?: string
           token?: string
@@ -126,9 +179,52 @@ export type Database = {
           coach_id?: string
           created_at?: string
           email?: string
+          email_sent_at?: string | null
           id?: string
           status?: string
           token?: string
+        }
+        Relationships: []
+      }
+      client_packages: {
+        Row: {
+          client_id: string
+          coach_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          name: string
+          price_czk: number
+          remaining_credits: number
+          status: string
+          total_credits: number
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          coach_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          name: string
+          price_czk?: number
+          remaining_credits: number
+          status?: string
+          total_credits: number
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          coach_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          name?: string
+          price_czk?: number
+          remaining_credits?: number
+          status?: string
+          total_credits?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -208,6 +304,92 @@ export type Database = {
           status?: string
         }
         Relationships: []
+      }
+      coach_client_records: {
+        Row: {
+          client_id: string
+          coach_id: string
+          created_at: string
+          notes: string
+          status: string
+          tags: string[]
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          coach_id: string
+          created_at?: string
+          notes?: string
+          status?: string
+          tags?: string[]
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          coach_id?: string
+          created_at?: string
+          notes?: string
+          status?: string
+          tags?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      coach_exercises: {
+        Row: {
+          category: string
+          coach_id: string
+          created_at: string
+          default_notes: string
+          id: string
+          name: string
+          video_url: string | null
+        }
+        Insert: {
+          category: string
+          coach_id?: string
+          created_at?: string
+          default_notes?: string
+          id?: string
+          name: string
+          video_url?: string | null
+        }
+        Update: {
+          category?: string
+          coach_id?: string
+          created_at?: string
+          default_notes?: string
+          id?: string
+          name?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      coach_gyms: {
+        Row: {
+          coach_id: string
+          created_at: string
+          gym_id: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          gym_id: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          gym_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_gyms_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       coach_slots: {
         Row: {
@@ -303,15 +485,52 @@ export type Database = {
           },
         ]
       }
+      gym_reviews: {
+        Row: {
+          author_id: string
+          comment: string
+          created_at: string
+          gym_id: string
+          id: string
+          rating: number
+        }
+        Insert: {
+          author_id?: string
+          comment?: string
+          created_at?: string
+          gym_id: string
+          id?: string
+          rating: number
+        }
+        Update: {
+          author_id?: string
+          comment?: string
+          created_at?: string
+          gym_id?: string
+          id?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gym_reviews_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gyms: {
         Row: {
           address: string
           city: string
           created_at: string
           created_by: string | null
+          description: string
           equipment: string[]
           id: string
           name: string
+          opening_hours: string
           website: string | null
         }
         Insert: {
@@ -319,9 +538,11 @@ export type Database = {
           city?: string
           created_at?: string
           created_by?: string | null
+          description?: string
           equipment?: string[]
           id?: string
           name: string
+          opening_hours?: string
           website?: string | null
         }
         Update: {
@@ -329,10 +550,42 @@ export type Database = {
           city?: string
           created_at?: string
           created_by?: string | null
+          description?: string
           equipment?: string[]
           id?: string
           name?: string
+          opening_hours?: string
           website?: string | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          body: string
+          client_id: string
+          coach_id: string
+          created_at: string
+          id: string
+          read_at: string | null
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          client_id: string
+          coach_id: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          client_id?: string
+          coach_id?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_id?: string
         }
         Relationships: []
       }
@@ -401,6 +654,53 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      payments: {
+        Row: {
+          amount_czk: number
+          client_id: string
+          coach_id: string
+          created_at: string
+          description: string
+          due_date: string | null
+          id: string
+          package_id: string | null
+          paid_at: string | null
+          status: string
+        }
+        Insert: {
+          amount_czk: number
+          client_id: string
+          coach_id: string
+          created_at?: string
+          description: string
+          due_date?: string | null
+          id?: string
+          package_id?: string | null
+          paid_at?: string | null
+          status?: string
+        }
+        Update: {
+          amount_czk?: number
+          client_id?: string
+          coach_id?: string
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          package_id?: string | null
+          paid_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "client_packages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -486,6 +786,39 @@ export type Database = {
           training_location?: string | null
           updated_at?: string
           years_experience?: string | null
+        }
+        Relationships: []
+      }
+      progress_entries: {
+        Row: {
+          body_fat: number | null
+          client_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          logged_at: string
+          notes: string
+          weight: number | null
+        }
+        Insert: {
+          body_fat?: number | null
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          logged_at?: string
+          notes?: string
+          weight?: number | null
+        }
+        Update: {
+          body_fat?: number | null
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          logged_at?: string
+          notes?: string
+          weight?: number | null
         }
         Relationships: []
       }
@@ -797,6 +1130,86 @@ export type Database = {
         }
         Relationships: []
       }
+      workout_logs: {
+        Row: {
+          client_id: string
+          created_at: string
+          duration_min: number | null
+          id: string
+          notes: string
+          performed_at: string
+          plan_id: string | null
+          rpe: number | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          duration_min?: number | null
+          id?: string
+          notes?: string
+          performed_at?: string
+          plan_id?: string | null
+          rpe?: number | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          duration_min?: number | null
+          id?: string
+          notes?: string
+          performed_at?: string
+          plan_id?: string | null
+          rpe?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_logs_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "workout_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_plans: {
+        Row: {
+          client_id: string | null
+          coach_id: string
+          completed_at: string | null
+          created_at: string
+          description: string
+          exercises: Json
+          id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          coach_id: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          exercises?: Json
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          coach_id?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          exercises?: Json
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -823,8 +1236,21 @@ export type Database = {
         Returns: undefined
       }
       get_assigned_coach_id: { Args: { _user_id: string }; Returns: string }
+      get_client_last_activity: {
+        Args: { _coach_id: string }
+        Returns: {
+          client_id: string
+          last_activity: string
+        }[]
+      }
       get_invite_coach_name: { Args: { _token: string }; Returns: string }
       get_user_role: { Args: { _user_id: string }; Returns: string }
+      is_my_client: { Args: { _client_id: string }; Returns: boolean }
+      is_slot_owner: { Args: { _slot_id: string }; Returns: boolean }
+      mark_conversation_read: {
+        Args: { _client_id: string; _coach_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
@@ -843,12 +1269,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -872,11 +1298,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -897,11 +1323,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -922,11 +1348,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -939,11 +1365,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
