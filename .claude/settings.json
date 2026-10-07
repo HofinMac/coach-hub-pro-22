@@ -1,0 +1,66 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npx eslint *)",
+      "Bash(npx vitest *)",
+      "Bash(npx vite build*)",
+      "Bash(npx vite preview *)",
+      "Bash(npm run *)",
+      "Bash(npm test*)",
+      "Bash(npx playwright *)",
+      "Bash(git status*)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git show *)",
+      "Bash(git fetch *)",
+      "Bash(git branch *)",
+      "Bash(gh api repos/HofinMac/coach-hub-pro-22/*)",
+      "Bash(gh run *)",
+      "Bash(curl -s https://coach-hub-pro-22.vercel.app*)",
+      "Bash(curl -s -o /dev/null -w * https://coach-hub-pro-22.vercel.app*)"
+    ],
+    "deny": [
+      "Read(./vapid-keys.local)",
+      "Read(./**/*.local)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-files.sh",
+            "timeout": 20,
+            "statusMessage": "Kontrola chráněných souborů"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/migration-gate.sh",
+            "timeout": 30,
+            "statusMessage": "Kontrola pořadí migrace a frontendu"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/verify-on-stop.sh",
+            "timeout": 180,
+            "statusMessage": "Kontrola typů a testů databáze"
+          }
+        ]
+      }
+    ]
+  }
+}

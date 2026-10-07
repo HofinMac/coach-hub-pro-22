@@ -1,0 +1,31 @@
+name: CI
+
+# Runs on every push (including Lovable's commits to main) and on pull requests:
+# typecheck, unit + database (RLS / notification) tests, production build.
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # `npm install` rather than `npm ci`: Lovable sometimes adds dependencies
+      # without updating package-lock.json.
+      - run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npx tsc --noEmit -p tsconfig.app.json
+      - name: Tests (unit + database policies)
+        run: npm test
+      - name: Build
+        run: npm run build

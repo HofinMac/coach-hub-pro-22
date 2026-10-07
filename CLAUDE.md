@@ -68,6 +68,12 @@ Web push (PWA). Domain triggers (`private.notify_*` in `supabase/migrations/2026
 ### Navigation customization
 `src/hooks/use-tab-order.ts` backs `TabOrderDialog.tsx` and lets users (per role, "coach" vs. client) reorder/pin bottom-nav tabs, splitting `navItems` into `mainItems` (visible) and `overflowItems` (behind a "More" menu) — both `AppLayout` and `ClientLayout` use this pattern for their mobile nav.
 
+## Claude Code automation (`.claude/`)
+- Hooks (`.claude/settings.json` → `.claude/hooks/`): `protect-files.sh` blocks edits to Lovable-generated files (`src/integrations/**`, `drizzle/**`), env/secret files and migrations already on `origin/main`; `migration-gate.sh` asks before pushing a new migration together with `src/` changes to `main`; `verify-on-stop.sh` runs `tsc` (and `vitest run supabase` when migrations/tests changed) before Claude finishes.
+- Skills: `/lovable-handoff` (prompts for Lovable: run migration, deploy function, secrets + verification), `/new-migration`, `/verify-prod`.
+- Agent: `rls-reviewer` — run on new migrations before handing them to Lovable.
+- CI: `.github/workflows/ci.yml` — typecheck, tests, build on every push and PR.
+
 ## Testing
 - Unit/component tests: Vitest + Testing Library + jsdom, files matched by `src/**/*.{test,spec}.{ts,tsx}`, setup in `src/test/setup.ts`.
 - RLS: `supabase/tests/*.test.ts` run in Node with PGlite (included in `npm run test`).
