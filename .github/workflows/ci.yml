@@ -10,6 +10,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -29,3 +33,19 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+      # Lovable's commits trigger runs as its bot, so GitHub would not notify the
+      # owner about a failure — open (or comment on) an issue instead.
+      - name: Report failure on main
+        if: failure() && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          body="CI selhalo na main u commitu ${GITHUB_SHA::7} (autor: ${{ github.actor }}). Log: $url"
+          existing=$(gh issue list --state open --label ci-failure --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh label create ci-failure --color B60205 --description "Failing CI on main" 2>/dev/null || true
+            gh issue create --title "CI na main selhává" --label ci-failure --body "$body"
+          fi
