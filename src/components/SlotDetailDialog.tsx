@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
-import { Check, X, Clock, CalendarX, CalendarClock, UserX } from "lucide-react";
+import { Check, X, Clock, CalendarX, CalendarClock, UserX, UserPlus, UserMinus } from "lucide-react";
 
 interface SlotWithBookings {
   id: string;
@@ -22,6 +22,7 @@ interface SlotWithBookings {
   booked_count: number;
   status: string;
   notes: string | null;
+  manual_client_name?: string | null;
   bookings: Array<{
     id: string;
     client_id: string;
@@ -62,7 +63,8 @@ const statusVariants: Record<string, "default" | "secondary" | "destructive" | "
 };
 
 export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }: SlotDetailDialogProps) {
-  const [action, setAction] = useState<"none" | "cancel" | "reschedule" | "complete" | "no_show">("none");
+  const [action, setAction] = useState<"none" | "cancel" | "reschedule" | "complete" | "no_show" | "occupy">("none");
+  const [manualName, setManualName] = useState("");
   const [reason, setReason] = useState("");
   const [newDate, setNewDate] = useState("");
   const [newStartTime, setNewStartTime] = useState("");
@@ -74,7 +76,9 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
   const startDate = new Date(slot.start_time);
   const endDate = new Date(slot.end_time);
   const isPast = startDate < new Date();
-  const hasBookings = slot.bookings.length > 0;
+  const manualClient = slot.manual_client_name?.trim() || "";
+  const activeBookings = slot.bookings.filter(b => b.status !== "cancelled" && b.status !== "rejected");
+  const hasBookings = slot.bookings.length > 0 || !!manualClient;
   const confirmedBookings = slot.bookings.filter(b => b.status === "confirmed" || b.status === "pending");
 
   const resetAction = () => {
@@ -83,6 +87,27 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
     setNewDate("");
     setNewStartTime("");
     setNewEndTime("");
+    setManualName("");
+  };
+
+  // Occupy the slot for a client outside the app, or free it again.
+  const setManualClient = async (name: string | null) => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("coach_slots")
+        .update({ manual_client_name: name, status: name ? "booked" : "available" } as any)
+        .eq("id", slot.id);
+      if (error) throw error;
+      toast.success(name ? "Termín obsazen" : "Termín uvolněn");
+      resetAction();
+      onOpenChange(false);
+      onUpdated();
+    } catch (err: any) {
+      toast.error("Chyba: " + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleApproveBooking = async (bookingId: string) => {
@@ -127,6 +152,14 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
   };
 
   const handleAction = async () => {
+    if (action === "occupy") {
+      if (!manualName.trim()) {
+        toast.error("Doplňte, kdo termín obsadil");
+        return;
+      }
+      await setManualClient(manualName.trim());
+      return;
+    }
     if (action === "cancel" && !reason.trim()) {
       toast.error("Uveďte důvod zrušení");
       return;
@@ -173,6 +206,7 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
             slot_type: slot.slot_type,
             capacity: slot.capacity,
             notes: `Přeloženo z ${format(startDate, "d.M. H:mm", { locale: cs })}`,
+            ...(manualClient ? { manual_client_name: manualClient, status: "booked" } : {}),
           } as any).select().single();
 
           // Re-book confirmed clients to new slot
@@ -186,7 +220,7 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
             }
             await supabase.from("coach_slots").update({
               booked_count: confirmedBookings.length,
-              status: confirmedBookings.length >= slot.capacity ? "booked" : confirmedBookings.length > 0 ? "partially_booked" : "available",
+              status: manualClient || confirmedBookings.length >= slot.capacity ? "booked" : confirmedBookings.length > 0 ? "partially_booked" : "available",
             } as any).eq("id", (newSlot as any).id);
           }
         }
@@ -228,6 +262,21 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
 
           {slot.notes && (
             <p className="text-xs text-muted-foreground bg-muted rounded-lg p-2">{slot.notes}</p>
+          )}
+
+          {manualClient && (
+            <div className="flex items-center justify-between rounded-lg border border-border p-3 text-sm">
+              <div>
+                <p className="font-medium text-foreground">{manualClient}</p>
+                <p className="text-xs text-muted-foreground">Obsazeno ručně (klient mimo aplikaci)</p>
+              </div>
+              {slot.status === "booked" && (
+                <Button size="sm" variant="ghost" className="h-7 gap-1 text-muted-foreground" disabled={saving}
+                  onClick={() => setManualClient(null)}>
+                  <UserMinus className="h-3 w-3" /> Uvolnit
+                </Button>
+              )}
+            </div>
           )}
 
           {/* Bookings list */}
@@ -279,6 +328,11 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
                   <UserX className="h-3.5 w-3.5" /> Nepřišel
                 </Button>
               )}
+              {!manualClient && activeBookings.length === 0 && slot.status === "available" && (
+                <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAction("occupy")}>
+                  <UserPlus className="h-3.5 w-3.5" /> Obsadit ručně
+                </Button>
+              )}
               <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAction("reschedule")}>
                 <CalendarClock className="h-3.5 w-3.5" /> Přeložit
               </Button>
@@ -326,6 +380,15 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
               <p className="text-sm font-semibold text-warning">Označit jako neúčast</p>
               <Label>Poznámka (volitelné)</Label>
               <Textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Poznámka k neúčasti..." rows={2} />
+            </div>
+          )}
+
+          {action === "occupy" && (
+            <div className="space-y-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <p className="text-sm font-semibold text-primary">Obsadit klientem mimo aplikaci</p>
+              <Label>Kdo přijde *</Label>
+              <Input value={manualName} onChange={e => setManualName(e.target.value)} placeholder="Jméno klienta, např. Pavel Novák" maxLength={120} autoFocus />
+              <p className="text-xs text-muted-foreground">Termín se klientům v aplikaci přestane nabízet.</p>
             </div>
           )}
 

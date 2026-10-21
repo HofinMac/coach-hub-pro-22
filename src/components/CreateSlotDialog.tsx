@@ -39,6 +39,8 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
   const [slotType, setSlotType] = useState("individual");
   const [capacity, setCapacity] = useState("1");
   const [notes, setNotes] = useState("");
+  const [occupied, setOccupied] = useState(false);
+  const [manualClientName, setManualClientName] = useState("");
   const [recurrence, setRecurrence] = useState("none");
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [saving, setSaving] = useState(false);
@@ -62,6 +64,10 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
       toast.error("Čas konce musí být po čase začátku.");
       return;
     }
+    if (occupied && !manualClientName.trim()) {
+      toast.error("Doplňte, kdo termín obsadil.");
+      return;
+    }
 
     setSaving(true);
     try {
@@ -76,7 +82,11 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
         capacity: number;
         notes: string;
         recurrence_rule: any;
+        status?: string;
+        manual_client_name?: string;
       }> = [];
+      // Occupied by a client outside the app: hidden from app clients, shows the name in the calendar.
+      const occupancy = occupied ? { status: "booked", manual_client_name: manualClientName.trim() } : {};
 
       const cap = slotType === "group" ? parseInt(capacity) || 1 : 1;
       const recRule = recurrence !== "none" ? { frequency: recurrence, endDate: recurrenceEndDate || null } : null;
@@ -90,6 +100,7 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
           capacity: cap,
           notes,
           recurrence_rule: recRule,
+          ...occupancy,
         });
       } else {
         // Generate recurring slots
@@ -107,6 +118,7 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
             capacity: cap,
             notes,
             recurrence_rule: recRule,
+            ...occupancy,
           });
           currentDate = addDays(currentDate, increment);
         }
@@ -119,6 +131,8 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
       if (error) throw error;
 
       toast.success(`Vytvořeno ${slots.length} ${slots.length === 1 ? "slot" : "slotů"}`);
+      setOccupied(false);
+      setManualClientName("");
       onOpenChange(false);
       onCreated?.();
     } catch (err: any) {
@@ -133,7 +147,7 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nový volný termín</DialogTitle>
+          <DialogTitle>{occupied ? "Nový obsazený termín" : "Nový volný termín"}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-2">
           <div className="grid gap-2">
@@ -149,6 +163,24 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
               <Label>Do</Label>
               <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
             </div>
+          </div>
+          <div className="rounded-lg border border-border p-3 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <Label htmlFor="occupied">Obsazeno klientem mimo aplikaci</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">Termín se klientům v aplikaci nenabídne, v kalendáři uvidíte jméno.</p>
+              </div>
+              <Switch id="occupied" checked={occupied} onCheckedChange={setOccupied} />
+            </div>
+            {occupied && (
+              <Input
+                value={manualClientName}
+                onChange={e => setManualClientName(e.target.value)}
+                placeholder="Jméno klienta, např. Pavel Novák"
+                maxLength={120}
+                autoFocus
+              />
+            )}
           </div>
           <div className="grid gap-2">
             <Label>Typ lekce</Label>
