@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,6 +67,26 @@ export default function PlanEditorDialog({
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ExerciseCategory | "all">("all");
   const [saving, setSaving] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+
+  // Unsaved-changes guard: compare against the values the dialog opened with.
+  const snapshot = () => JSON.stringify({ title, description, clientId, status, planExercises });
+  const [initialSnapshot] = useState(snapshot);
+  const dirty = snapshot() !== initialSnapshot;
+
+  const requestClose = () => {
+    if (saving) return;
+    if (dirty) setConfirmDiscard(true);
+    else onOpenChange(false);
+  };
+
+  // Closing the tab / reloading with an unsaved plan asks the browser to confirm.
+  useEffect(() => {
+    if (!open || !dirty) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [open, dirty]);
 
   const addExercise = (exerciseId: string, exerciseName: string) => {
     setPlanExercises(prev => [
@@ -119,8 +143,13 @@ export default function PlanEditorDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !saving && onOpenChange(o)}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+    <>
+    <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : requestClose())}>
+      <DialogContent
+        className="sm:max-w-2xl max-h-[90vh] overflow-y-auto"
+        // A stray click outside must not throw away a half-built plan.
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>
             {mode === "create" ? "Nový tréninkový plán" : "Upravit plán"}
@@ -336,9 +365,7 @@ export default function PlanEditorDialog({
         </div>
 
         <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline" disabled={saving}>Zrušit</Button>
-          </DialogClose>
+          <Button variant="outline" disabled={saving} onClick={requestClose}>Zrušit</Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {mode === "create" ? "Vytvořit plán" : "Uložit změny"}
@@ -346,5 +373,26 @@ export default function PlanEditorDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Zahodit rozpracovaný trénink?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Máte neuložené změny. Pokud okno zavřete, ztratí se.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Pokračovat v úpravách</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => { setConfirmDiscard(false); onOpenChange(false); }}
+          >
+            Zahodit změny
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
