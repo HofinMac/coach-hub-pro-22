@@ -34,6 +34,8 @@ interface SlotRow {
   booked_count: number;
   status: string;
   notes: string | null;
+  /** Client outside the app, entered by the coach ("obsazeno ručně"). */
+  manual_client_name?: string | null;
 }
 
 interface BookingRow {
@@ -46,6 +48,17 @@ interface BookingRow {
 interface SlotWithBookings extends SlotRow {
   bookings: Array<BookingRow & { client_name?: string }>;
 }
+
+/** Who is on the slot: the manually entered client plus active app bookings. */
+const slotPeople = (s: SlotWithBookings, firstNames = false) => {
+  const names = [
+    s.manual_client_name?.trim() || "",
+    ...s.bookings
+      .filter(b => b.status !== "cancelled" && b.status !== "rejected")
+      .map(b => b.client_name || ""),
+  ].filter(Boolean);
+  return (firstNames ? names.map(n => n.split(" ")[0]) : names).join(", ");
+};
 
 const slotTypeLabels: Record<string, string> = {
   individual: "Individuální",
@@ -227,14 +240,12 @@ export default function CalendarPage() {
                 <div>
                   <p className="text-sm font-medium text-foreground">
                     {slotTypeLabels[s.slot_type] || s.slot_type}
-                    {s.bookings.length > 0 && (
-                      <span className="text-xs text-muted-foreground ml-2">
-                        ({s.bookings.filter(b => b.status === "confirmed" || b.status === "pending").map(b => b.client_name).join(", ")})
-                      </span>
+                    {slotPeople(s) && (
+                      <span className="text-xs text-muted-foreground ml-2">({slotPeople(s)})</span>
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {s.booked_count}/{s.capacity} obsazeno
+                    {s.manual_client_name ? "Obsazeno ručně" : `${s.booked_count}/${s.capacity} obsazeno`}
                   </p>
                 </div>
               </div>
@@ -279,9 +290,7 @@ export default function CalendarPage() {
                   >
                     <div className="flex items-center gap-1.5">
                       <span className="font-semibold truncate">
-                        {s.bookings.length > 0 
-                          ? s.bookings.filter(b => b.status !== "cancelled" && b.status !== "rejected").map(b => b.client_name).join(", ") || slotTypeLabels[s.slot_type]
-                          : slotTypeLabels[s.slot_type]}
+                        {slotPeople(s) || slotTypeLabels[s.slot_type]}
                       </span>
                       <span className="text-[10px] opacity-70 shrink-0">
                         {format(start, "H:mm")}–{format(end, "H:mm")}
@@ -346,9 +355,7 @@ export default function CalendarPage() {
                           title={`${slotTypeLabels[s.slot_type]} ${format(start, "H:mm")}–${format(end, "H:mm")}`}
                         >
                           <span className="font-semibold truncate block">
-                            {s.bookings.length > 0
-                              ? s.bookings.filter(b => b.status !== "cancelled").map(b => (b.client_name || "").split(" ")[0]).join(", ") || slotTypeLabels[s.slot_type]
-                              : slotTypeLabels[s.slot_type]}
+                            {slotPeople(s, true) || slotTypeLabels[s.slot_type]}
                           </span>
                           {h >= 30 && <span className="opacity-60">{format(start, "H:mm")}</span>}
                           {hasPending && <Clock className="h-2.5 w-2.5 text-warning" />}
@@ -399,11 +406,7 @@ export default function CalendarPage() {
                   {daySlots.slice(0, 3).map(s => (
                     <div key={s.id}
                       className={cn("text-[10px] leading-tight px-1 py-0.5 rounded truncate border-l-2", statusBlockColors[s.status] || "bg-muted")}>
-                      {format(new Date(s.start_time), "H:mm")} {
-                        s.bookings.length > 0
-                          ? s.bookings[0].client_name?.split(" ")[0]
-                          : slotTypeLabels[s.slot_type]
-                      }
+                      {format(new Date(s.start_time), "H:mm")} {slotPeople(s, true) || slotTypeLabels[s.slot_type]}
                     </div>
                   ))}
                   {daySlots.length > 3 && (

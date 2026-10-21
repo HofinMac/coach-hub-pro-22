@@ -21,6 +21,7 @@ interface SlotRow {
   end_time: string;
   slot_type: string;
   status: string;
+  manual_client_name: string | null;
 }
 
 interface UpcomingSlot extends SlotRow {
@@ -49,7 +50,8 @@ async function loadDashboard() {
   const coachId = await requireUserId();
   const now = new Date();
 
-  const slotCols = "id, start_time, end_time, slot_type, status";
+  // manual_client_name: not in generated types until Lovable regenerates them.
+  const slotCols = "id, start_time, end_time, slot_type, status, manual_client_name";
   const [clients, recordsRes, activityRes, plansRes, todayRes, upcomingRes] = await Promise.all([
     fetchCoachClients(coachId),
     from("coach_client_records").select("client_id, status").eq("coach_id", coachId),
@@ -113,7 +115,7 @@ async function loadDashboard() {
     clientName: p.client_id ? nameById.get(p.client_id) ?? "Klient" : "Bez klienta",
   }));
 
-  const upcomingSlots = (upcomingRes.data ?? []) as SlotRow[];
+  const upcomingSlots = (upcomingRes.data ?? []) as unknown as SlotRow[];
   const clientNamesBySlot = new Map<string, string[]>();
   if (upcomingSlots.length > 0) {
     const { data: bookings, error } = await supabase
@@ -134,14 +136,17 @@ async function loadDashboard() {
     }
   }
 
-  const todaySlots = (todayRes.data ?? []) as SlotRow[];
+  const todaySlots = (todayRes.data ?? []) as unknown as SlotRow[];
   return {
     activeClientCount: activeClients.length,
     todayCount: todaySlots.length,
     nextToday: todaySlots.find(s => new Date(s.start_time) >= now) ?? null,
     atRisk,
     plans,
-    upcoming: upcomingSlots.map<UpcomingSlot>(s => ({ ...s, clientNames: clientNamesBySlot.get(s.id) ?? [] })),
+    upcoming: upcomingSlots.map<UpcomingSlot>(s => ({ ...s, clientNames: [
+      ...(s.manual_client_name?.trim() ? [s.manual_client_name.trim()] : []),
+      ...(clientNamesBySlot.get(s.id) ?? []),
+    ] })),
   };
 }
 
