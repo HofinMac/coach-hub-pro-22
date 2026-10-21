@@ -399,6 +399,7 @@ export type Database = {
           created_at: string
           end_time: string
           id: string
+          manual_client_name: string | null
           notes: string | null
           recurrence_parent_id: string | null
           recurrence_rule: Json | null
@@ -414,6 +415,7 @@ export type Database = {
           created_at?: string
           end_time: string
           id?: string
+          manual_client_name?: string | null
           notes?: string | null
           recurrence_parent_id?: string | null
           recurrence_rule?: Json | null
@@ -429,6 +431,7 @@ export type Database = {
           created_at?: string
           end_time?: string
           id?: string
+          manual_client_name?: string | null
           notes?: string | null
           recurrence_parent_id?: string | null
           recurrence_rule?: Json | null
