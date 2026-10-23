@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supersetLabels } from "@/lib/supersets";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
@@ -341,6 +342,7 @@ export default function ClientDetailPage() {
               <div className="divide-y divide-border">
                 {plans.map((plan) => {
                   const planExercises = Array.isArray(plan.exercises) ? plan.exercises : [];
+                  const labels = supersetLabels(planExercises);
                   return (
                     <div key={plan.id} className="p-4 hover:bg-subtle transition-colors">
                       <div className="flex items-center justify-between">
@@ -356,6 +358,7 @@ export default function ClientDetailPage() {
                         <div className="mt-3 flex flex-wrap gap-2">
                           {planExercises.map((ex, i) => (
                             <span key={`${ex.exerciseId}-${i}`} className="text-xs bg-muted rounded-md px-2 py-1 font-mono text-muted-foreground">
+                              {labels.has(i) && <span className="font-semibold text-primary">{labels.get(i)} </span>}
                               {ex.exerciseName} · {ex.sets}×{ex.reps} · RPE {ex.rpe}
                             </span>
                           ))}

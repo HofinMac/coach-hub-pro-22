@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { groupExercises } from "@/lib/supersets";
 import { format, parseISO } from "date-fns";
 import { cs } from "date-fns/locale";
 import { CheckCircle2, History, Plus } from "lucide-react";
@@ -93,15 +94,36 @@ export default function ClientTrainingPage() {
                     )}
                   </div>
                   <div className="divide-y divide-border">
-                    {(plan.exercises ?? []).map((ex, idx) => (
-                      <div key={idx} className="p-3 px-4">
-                        <p className="text-sm font-medium text-foreground">{ex.exerciseName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {ex.sets} × {ex.reps} · RPE {ex.rpe} · Odpočinek {ex.rest}s
-                        </p>
-                        {ex.notes && <p className="text-xs text-muted-foreground mt-0.5 italic">{ex.notes}</p>}
-                      </div>
-                    ))}
+                    {groupExercises(plan.exercises ?? []).map(block => {
+                      const isSuperset = !!block.label;
+                      return (
+                        <div key={block.items[0].index} className={isSuperset ? "border-l-2 border-l-primary bg-primary/5" : undefined}>
+                          {isSuperset && (
+                            <p className="px-4 pt-3 text-xs font-semibold text-primary">
+                              Supersérie {block.label} · {block.items[0].exercise.sets} {block.items[0].exercise.sets === 1 ? "kolo" : block.items[0].exercise.sets < 5 ? "kola" : "kol"}
+                              <span className="block font-normal text-muted-foreground">
+                                Cviky dělejte po sobě bez pauzy, odpočinek až po posledním.
+                              </span>
+                            </p>
+                          )}
+                          {block.items.map(({ exercise: ex }, n) => {
+                            const last = n === block.items.length - 1;
+                            return (
+                              <div key={n} className="p-3 px-4">
+                                <p className="text-sm font-medium text-foreground">
+                                  {isSuperset && <span className="mr-1.5 text-xs font-semibold text-primary">{block.label}{n + 1}</span>}
+                                  {ex.exerciseName}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {ex.sets} × {ex.reps} · RPE {ex.rpe} · {isSuperset && !last ? "bez pauzy, hned další cvik" : `Odpočinek ${ex.rest}s`}
+                                </p>
+                                {ex.notes && <p className="text-xs text-muted-foreground mt-0.5 italic">{ex.notes}</p>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ))

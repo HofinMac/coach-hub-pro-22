@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { exercises as builtInExercises, type Exercise, type PlanExercise, type ExerciseCategory, type PlanStatus } from "@/lib/domain";
-import { Plus, Trash2, Search, Loader2 } from "lucide-react";
+import { Plus, Trash2, Search, Loader2, Link2, Unlink2 } from "lucide-react";
+import { isLinkedToNext, linkWithNext, normalizeSupersets, supersetLabels as supersetLabelsOf, unlinkFromNext } from "@/lib/supersets";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -96,8 +97,15 @@ export default function PlanEditorDialog({
   };
 
   const removeExercise = (idx: number) => {
-    setPlanExercises(prev => prev.filter((_, i) => i !== idx));
+    setPlanExercises(prev => normalizeSupersets(prev.filter((_, i) => i !== idx)));
   };
+
+  const toggleLinkWithNext = (idx: number) => {
+    setPlanExercises(prev => (isLinkedToNext(prev, idx) ? unlinkFromNext(prev, idx) : linkWithNext(prev, idx)));
+  };
+
+  // "A1", "A2"… for exercises in a superset, keyed by position.
+  const supersetLabels = supersetLabelsOf(planExercises);
 
   const updateExercise = (idx: number, field: keyof PlanExercise, value: string | number) => {
     setPlanExercises(prev =>
@@ -110,7 +118,7 @@ export default function PlanEditorDialog({
     if (newIdx < 0 || newIdx >= planExercises.length) return;
     const arr = [...planExercises];
     [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
-    setPlanExercises(arr);
+    setPlanExercises(normalizeSupersets(arr));
   };
 
   const handleSave = async () => {
@@ -236,12 +244,19 @@ export default function PlanEditorDialog({
                       <th className="text-center text-xs font-medium text-muted-foreground px-1 py-1.5 w-20">Opak.</th>
                       <th className="text-center text-xs font-medium text-muted-foreground px-1 py-1.5 w-16">RPE</th>
                       <th className="text-center text-xs font-medium text-muted-foreground px-1 py-1.5 w-16">Odp.(s)</th>
-                      <th className="w-8"></th>
+                      <th className="w-14"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
                     {planExercises.map((ex, i) => (
-                      <tr key={i} className="group">
+                      <tr
+                        key={i}
+                        className={cn(
+                          "group",
+                          supersetLabels.has(i) && "bg-primary/5",
+                          isLinkedToNext(planExercises, i) && "!border-b-0",
+                        )}
+                      >
                         <td className="px-1">
                           <div className="flex flex-col items-center">
                             <button
@@ -258,7 +273,14 @@ export default function PlanEditorDialog({
                             >▼</button>
                           </div>
                         </td>
-                        <td className="px-2 py-1.5 text-sm font-medium text-foreground">{ex.exerciseName}</td>
+                        <td className={cn("px-2 py-1.5 text-sm font-medium text-foreground", supersetLabels.has(i) && "border-l-2 border-l-primary")}>
+                          {supersetLabels.has(i) && (
+                            <span className="mr-1.5 inline-flex rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary align-middle">
+                              {supersetLabels.get(i)}
+                            </span>
+                          )}
+                          {ex.exerciseName}
+                        </td>
                         <td className="px-1 py-1">
                           <Input
                             type="number" min={1} value={ex.sets}
@@ -288,6 +310,21 @@ export default function PlanEditorDialog({
                           />
                         </td>
                         <td className="px-1">
+                          <div className="flex items-center">
+                          {i < planExercises.length - 1 && (
+                            <button
+                              type="button"
+                              onClick={() => toggleLinkWithNext(i)}
+                              className={cn(
+                                "p-1 transition-colors",
+                                isLinkedToNext(planExercises, i) ? "text-primary hover:text-destructive" : "text-muted-foreground hover:text-primary",
+                              )}
+                              title={isLinkedToNext(planExercises, i) ? "Rozpojit supersérii" : "Spojit s dalším cvikem do supersérie"}
+                              aria-label={isLinkedToNext(planExercises, i) ? "Rozpojit supersérii" : "Spojit s dalším cvikem do supersérie"}
+                            >
+                              {isLinkedToNext(planExercises, i) ? <Unlink2 className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => removeExercise(i)}
@@ -295,12 +332,21 @@ export default function PlanEditorDialog({
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+            )}
+            {planExercises.length > 1 && (
+              <p className="mt-1.5 text-[11px] text-muted-foreground flex items-center gap-1">
+                <Link2 className="h-3 w-3 shrink-0" />
+                {supersetLabels.size > 0
+                  ? "Supersérie (A1, A2…) se cvičí po sobě bez pauzy, odpočinek platí až po posledním cviku."
+                  : "Ikonou řetězu spojíte cvik s následujícím do supersérie."}
+              </p>
             )}
           </div>
 

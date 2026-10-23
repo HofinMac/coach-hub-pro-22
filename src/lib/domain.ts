@@ -23,6 +23,8 @@ export interface PlanExercise {
   rpe: number;
   rest: number;
   notes?: string;
+  /** Consecutive exercises with the same id form a superset (performed back to back). */
+  supersetId?: string;
 }
 
 // ===== Built-in exercise library =====

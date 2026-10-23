@@ -1,4 +1,6 @@
 import { PageHeader } from "@/components/PageHeader";
+import { supersetLabels } from "@/lib/supersets";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Copy, Trash2, Video, ExternalLink, Search, Camera, Upload, X, MoreHorizontal, ClipboardList } from "lucide-react";
 import { exercises as defaultExercises, type Exercise, type ExerciseCategory, type PlanExercise, type PlanStatus } from "@/lib/domain";
@@ -391,6 +393,7 @@ export default function TrainingPage() {
           {plans.map(plan => {
             const clientName = clientNameOf(plan.client_id);
             const planExercises = plan.exercises ?? [];
+            const labels = supersetLabels(planExercises);
             return (
             <div key={plan.id} className="rounded-xl bg-card shadow-card p-5 hover:shadow-elevated transition-shadow">
               <div className="flex items-start justify-between gap-3 mb-3">
@@ -452,8 +455,13 @@ export default function TrainingPage() {
                   </thead>
                   <tbody className="divide-y divide-border">
                     {planExercises.map((ex, i) => (
-                      <tr key={i}>
-                        <td className="px-3 py-2 text-sm font-medium text-foreground">{ex.exerciseName}</td>
+                      <tr key={i} className={labels.has(i) ? "bg-primary/5" : undefined}>
+                        <td className={cn("px-3 py-2 text-sm font-medium text-foreground", labels.has(i) && "border-l-2 border-l-primary")}>
+                          {labels.has(i) && (
+                            <span className="mr-1.5 inline-flex rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary align-middle">{labels.get(i)}</span>
+                          )}
+                          {ex.exerciseName}
+                        </td>
                         <td className="px-3 py-2 text-sm text-center font-mono tabular-nums text-foreground">{ex.sets}</td>
                         <td className="px-3 py-2 text-sm text-center font-mono tabular-nums text-foreground">{ex.reps}</td>
                         <td className="px-3 py-2 text-sm text-center font-mono tabular-nums text-foreground">{ex.rpe}</td>
