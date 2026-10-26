@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/PageHeader";
+import { from } from "@/lib/db";
 import { AvatarCircle } from "@/components/AvatarCircle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +48,8 @@ interface BookingRow {
 
 interface SlotWithBookings extends SlotRow {
   bookings: Array<BookingRow & { client_name?: string }>;
+  /** Accepted invitees without the app (e-mail invitations). */
+  guests: string[];
 }
 
 /** Who is on the slot: the manually entered client plus active app bookings. */
@@ -56,6 +59,7 @@ const slotPeople = (s: SlotWithBookings, firstNames = false) => {
     ...s.bookings
       .filter(b => b.status !== "cancelled" && b.status !== "rejected")
       .map(b => b.client_name || ""),
+    ...s.guests,
   ].filter(Boolean);
   return (firstNames ? names.map(n => n.split(" ")[0]) : names).join(", ");
 };
@@ -101,6 +105,17 @@ export default function CalendarPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [displayMode, setDisplayMode] = useState<DisplayMode>("graphic");
   const [createSlotOpen, setCreateSlotOpen] = useState(false);
+  // Fresh dialog per opening (key) with the tapped day/hour prefilled.
+  const [createPrefill, setCreatePrefill] = useState<{ key: number; date: string; time?: string }>(
+    { key: 0, date: format(new Date(), "yyyy-MM-dd") });
+  const openCreate = (day: Date, hour?: number) => {
+    setCreatePrefill(p => ({
+      key: p.key + 1,
+      date: format(day, "yyyy-MM-dd"),
+      time: hour === undefined ? undefined : `${String(hour).padStart(2, "0")}:00`,
+    }));
+    setCreateSlotOpen(true);
+  };
   const [shareOpen, setShareOpen] = useState(false);
   const [slots, setSlots] = useState<SlotWithBookings[]>([]);
   const [loading, setLoading] = useState(true);
@@ -121,12 +136,17 @@ export default function CalendarPage() {
 
       const slotIds = (slotsData || []).map((s: any) => s.id);
       let bookingsData: any[] = [];
+      const guestsBySlot = new Map<string, string[]>();
       if (slotIds.length > 0) {
-        const { data: bData } = await supabase
-          .from("slot_bookings")
-          .select("*")
-          .in("slot_id", slotIds);
+        const [{ data: bData }, { data: gData }] = await Promise.all([
+          supabase.from("slot_bookings").select("*").in("slot_id", slotIds),
+          from("slot_invitations").select("slot_id, name, email").in("slot_id", slotIds)
+            .eq("status", "accepted").is("client_id", null),
+        ]);
         bookingsData = bData || [];
+        for (const g of (gData ?? []) as Array<{ slot_id: string; name: string; email: string }>) {
+          guestsBySlot.set(g.slot_id, [...(guestsBySlot.get(g.slot_id) ?? []), g.name || g.email]);
+        }
       }
 
       // Fetch client names
@@ -145,6 +165,7 @@ export default function CalendarPage() {
         bookings: bookingsData
           .filter((b: any) => b.slot_id === s.id)
           .map((b: any) => ({ ...b, client_name: profileMap[b.client_id] || "Klient" })),
+        guests: guestsBySlot.get(s.id) ?? [],
       }));
 
       setSlots(enriched);
@@ -229,7 +250,7 @@ export default function CalendarPage() {
           const end = new Date(s.end_time);
           const hasPending = s.bookings.some(b => b.status === "pending");
           return (
-            <button key={s.id} onClick={() => setSelectedSlot(s)}
+            <button key={s.id} onClick={(e) => { e.stopPropagation(); setSelectedSlot(s); }}
               className="flex items-center justify-between p-4 hover:bg-subtle transition-colors w-full text-left">
               <div className="flex items-center gap-4">
                 <div className="text-right min-w-[60px]">
@@ -270,7 +291,11 @@ export default function CalendarPage() {
           <div className="w-14 shrink-0 py-1 pr-2 text-right">
             <span className="text-xs font-mono tabular-nums text-muted-foreground">{`${hour}:00`}</span>
           </div>
-          <div className="flex-1 relative">
+          <div
+            className="flex-1 relative cursor-pointer hover:bg-primary/5 transition-colors"
+            onClick={() => openCreate(date, hour)}
+            title={`Nový termín ${hour}:00`}
+          >
             {items
               .filter(s => new Date(s.start_time).getHours() === hour && isSameDay(new Date(s.start_time), date))
               .map(s => {
@@ -281,7 +306,7 @@ export default function CalendarPage() {
                 const height = Math.max(duration, 30);
                 const hasPending = s.bookings.some(b => b.status === "pending");
                 return (
-                  <button key={s.id} onClick={() => setSelectedSlot(s)}
+                  <button key={s.id} onClick={(e) => { e.stopPropagation(); setSelectedSlot(s); }}
                     className={cn(
                       "absolute left-1 right-2 rounded-md border-l-[3px] px-2 py-1 text-xs overflow-hidden transition-shadow hover:shadow-md cursor-pointer text-left",
                       statusBlockColors[s.status] || "bg-muted"
@@ -337,7 +362,11 @@ export default function CalendarPage() {
                   return start.getHours() === hour && isSameDay(start, d);
                 });
                 return (
-                  <div key={d.toISOString()} className="flex-1 border-l border-border/30 relative px-0.5">
+                  <div
+                    key={d.toISOString()}
+                    className="flex-1 border-l border-border/30 relative px-0.5 cursor-pointer hover:bg-primary/5 transition-colors"
+                    onClick={() => openCreate(d, hour)}
+                  >
                     {hourSlots.map(s => {
                       const start = new Date(s.start_time);
                       const end = new Date(s.end_time);
@@ -346,7 +375,7 @@ export default function CalendarPage() {
                       const h = Math.max((duration / 60) * 48, 20);
                       const hasPending = s.bookings.some(b => b.status === "pending");
                       return (
-                        <button key={s.id} onClick={() => setSelectedSlot(s)}
+                        <button key={s.id} onClick={(e) => { e.stopPropagation(); setSelectedSlot(s); }}
                           className={cn(
                             "absolute left-0.5 right-0.5 rounded border-l-2 px-1 py-0.5 text-[10px] leading-tight overflow-hidden cursor-pointer hover:shadow-sm text-left",
                             statusBlockColors[s.status] || "bg-muted"
@@ -428,8 +457,8 @@ export default function CalendarPage() {
           <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShareOpen(true)}>
             <Share2 className="h-3.5 w-3.5" /> Sdílet termíny
           </Button>
-          <Button size="sm" className="gap-1.5" onClick={() => setCreateSlotOpen(true)}>
-            <CalendarPlus className="h-3.5 w-3.5" /> Volný termín
+          <Button size="sm" className="gap-1.5" onClick={() => openCreate(currentDate)}>
+            <CalendarPlus className="h-3.5 w-3.5" /> Nový termín
           </Button>
         </div>
       </PageHeader>
@@ -584,9 +613,11 @@ export default function CalendarPage() {
       </div>
 
       <CreateSlotDialog
+        key={createPrefill.key}
         open={createSlotOpen}
         onOpenChange={setCreateSlotOpen}
-        defaultDate={format(currentDate, "yyyy-MM-dd")}
+        defaultDate={createPrefill.date}
+        defaultStartTime={createPrefill.time}
         onCreated={fetchSlots}
       />
 

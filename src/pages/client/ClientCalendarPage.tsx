@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/PageHeader";
+import { ClientInvitations } from "@/components/ClientInvitations";
 import { Button } from "@/components/ui/button";
 import { format, parseISO } from "date-fns";
 import { cs } from "date-fns/locale";
@@ -169,6 +170,8 @@ export default function ClientCalendarPage() {
         title="Kalendář"
         description={coachName ? `Dostupné termíny u trenéra ${coachName} a tvoje rezervace` : "Dostupné termíny a tvoje rezervace"}
       />
+
+      <ClientInvitations onChanged={fetchData} />
 
       {/* Tab toggle */}
       <div className="flex bg-muted rounded-lg p-0.5 mb-6 w-fit">
