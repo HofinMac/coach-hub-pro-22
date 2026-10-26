@@ -1145,6 +1145,69 @@ export type Database = {
           },
         ]
       }
+      slot_invitations: {
+        Row: {
+          booking_id: string | null
+          client_id: string | null
+          coach_id: string
+          created_at: string
+          email: string | null
+          email_error: string | null
+          email_sent_at: string | null
+          id: string
+          name: string
+          responded_at: string | null
+          slot_id: string
+          status: string
+          token: string
+        }
+        Insert: {
+          booking_id?: string | null
+          client_id?: string | null
+          coach_id: string
+          created_at?: string
+          email?: string | null
+          email_error?: string | null
+          email_sent_at?: string | null
+          id?: string
+          name?: string
+          responded_at?: string | null
+          slot_id: string
+          status?: string
+          token?: string
+        }
+        Update: {
+          booking_id?: string | null
+          client_id?: string | null
+          coach_id?: string
+          created_at?: string
+          email?: string | null
+          email_error?: string | null
+          email_sent_at?: string | null
+          id?: string
+          name?: string
+          responded_at?: string | null
+          slot_id?: string
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slot_invitations_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "slot_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "slot_invitations_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "coach_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       slot_share_log: {
         Row: {
           coach_id: string
@@ -1371,7 +1434,47 @@ export type Database = {
         }[]
       }
       get_invite_coach_name: { Args: { _token: string }; Returns: string }
+      get_my_slot_invitations: {
+        Args: never
+        Returns: {
+          closed: boolean
+          coach_name: string
+          end_time: string
+          full: boolean
+          id: string
+          notes: string
+          slot_type: string
+          start_time: string
+          status: string
+          token: string
+        }[]
+      }
+      get_slot_invitation: { Args: { _token: string }; Returns: Json }
       get_user_role: { Args: { _user_id: string }; Returns: string }
+      invite_to_slot: {
+        Args: { _client_ids: string[]; _emails: string[]; _slot_id: string }
+        Returns: {
+          booking_id: string | null
+          client_id: string | null
+          coach_id: string
+          created_at: string
+          email: string | null
+          email_error: string | null
+          email_sent_at: string | null
+          id: string
+          name: string
+          responded_at: string | null
+          slot_id: string
+          status: string
+          token: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "slot_invitations"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       is_my_client: { Args: { _client_id: string }; Returns: boolean }
       is_slot_owner: { Args: { _slot_id: string }; Returns: boolean }
       mark_conversation_read: {
@@ -1387,7 +1490,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      respond_to_slot_invitation: {
+        Args: { _accept: boolean; _token: string }
+        Returns: Json
+      }
       send_test_notification: { Args: never; Returns: undefined }
+      withdraw_slot_invitation: { Args: { _id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

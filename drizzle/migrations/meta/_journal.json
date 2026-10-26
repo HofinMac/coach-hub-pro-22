@@ -36,6 +36,13 @@
       "when": 1792593122020,
       "tag": "0004_manual_slot_client",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793013321778,
+      "tag": "0005_slot_invitations",
+      "breakpoints": true
     }
   ]
 }
