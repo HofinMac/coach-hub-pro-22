@@ -1413,6 +1413,10 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      coach_book_client: {
+        Args: { _client_id: string; _slot_ids: string[] }
+        Returns: number
+      }
       enqueue_due_reminders: { Args: never; Returns: number }
       enqueue_notification: {
         Args: {
