@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
 } from "@/components/ui/dialog";
@@ -12,7 +12,9 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
 import { SlotInvitations } from "@/components/SlotInvitations";
-import { Check, X, Clock, CalendarX, CalendarClock, UserX, UserPlus, UserMinus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { fetchCoachClients, requireUserId, rpc, type ProfileRow } from "@/lib/db";
+import { Check, X, Clock, CalendarX, CalendarClock, UserX, UserPlus, UserMinus, PenLine } from "lucide-react";
 
 interface SlotWithBookings {
   id: string;
@@ -64,8 +66,15 @@ const statusVariants: Record<string, "default" | "secondary" | "destructive" | "
 };
 
 export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }: SlotDetailDialogProps) {
-  const [action, setAction] = useState<"none" | "cancel" | "reschedule" | "complete" | "no_show" | "occupy">("none");
+  const [action, setAction] = useState<"none" | "cancel" | "reschedule" | "complete" | "no_show" | "occupy" | "book">("none");
   const [manualName, setManualName] = useState("");
+  const [bookClientId, setBookClientId] = useState("");
+  const [clients, setClients] = useState<ProfileRow[]>([]);
+
+  useEffect(() => {
+    if (action !== "book" || clients.length > 0) return;
+    requireUserId().then(fetchCoachClients).then(setClients).catch(() => setClients([]));
+  }, [action, clients.length]);
   const [reason, setReason] = useState("");
   const [newDate, setNewDate] = useState("");
   const [newStartTime, setNewStartTime] = useState("");
@@ -89,6 +98,7 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
     setNewStartTime("");
     setNewEndTime("");
     setManualName("");
+    setBookClientId("");
   };
 
   // Occupy the slot for a client outside the app, or free it again.
@@ -153,6 +163,21 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
   };
 
   const handleAction = async () => {
+    if (action === "book") {
+      if (!bookClientId) { toast.error("Vyberte klienta"); return; }
+      setSaving(true);
+      const { error } = await rpc("coach_book_client", { _slot_ids: [slot.id], _client_id: bookClientId });
+      setSaving(false);
+      if (error) {
+        toast.error(error.message?.includes("SLOT_FULL") ? "Termín je plně obsazený" : "Klienta se nepodařilo zapsat");
+        return;
+      }
+      toast.success("Klient zapsán, dostane notifikaci");
+      resetAction();
+      onOpenChange(false);
+      onUpdated();
+      return;
+    }
     if (action === "occupy") {
       if (!manualName.trim()) {
         toast.error("Doplňte, kdo termín obsadil");
@@ -335,9 +360,14 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
                   <UserX className="h-3.5 w-3.5" /> Nepřišel
                 </Button>
               )}
+              {!manualClient && (slot.status === "available" || slot.status === "partially_booked") && !isPast && (
+                <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAction("book")}>
+                  <UserPlus className="h-3.5 w-3.5" /> Zapsat klienta
+                </Button>
+              )}
               {!manualClient && activeBookings.length === 0 && slot.status === "available" && (
                 <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAction("occupy")}>
-                  <UserPlus className="h-3.5 w-3.5" /> Obsadit ručně
+                  <PenLine className="h-3.5 w-3.5" /> Obsadit ručně
                 </Button>
               )}
               <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAction("reschedule")}>
@@ -387,6 +417,25 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
               <p className="text-sm font-semibold text-warning">Označit jako neúčast</p>
               <Label>Poznámka (volitelné)</Label>
               <Textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Poznámka k neúčasti..." rows={2} />
+            </div>
+          )}
+
+          {action === "book" && (
+            <div className="space-y-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <p className="text-sm font-semibold text-primary">Zapsat klienta z aplikace</p>
+              {clients.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Načítám klienty…</p>
+              ) : (
+                <Select value={bookClientId} onValueChange={setBookClientId}>
+                  <SelectTrigger aria-label="Klient"><SelectValue placeholder="Vyberte klienta" /></SelectTrigger>
+                  <SelectContent>
+                    {clients
+                      .filter(c => !slot.bookings.some(b => b.client_id === c.id && b.status !== "cancelled" && b.status !== "rejected"))
+                      .map(c => <SelectItem key={c.id} value={c.id}>{c.full_name || c.email}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
+              <p className="text-xs text-muted-foreground">Klient dostane notifikaci, že jste ho zapsali.</p>
             </div>
           )}
 
