@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { supabase } from "@/integrations/supabase/client";
+import { setupPwaUpdates } from "@/lib/pwa-update";
 
 // Sign out on tab close if "remember me" was unchecked
 window.addEventListener("beforeunload", () => {
@@ -11,3 +12,4 @@ window.addEventListener("beforeunload", () => {
 });
 
 createRoot(document.getElementById("root")!).render(<App />);
+setupPwaUpdates();

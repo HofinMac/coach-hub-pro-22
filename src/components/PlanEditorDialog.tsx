@@ -240,10 +240,10 @@ export default function PlanEditorDialog({
                     <tr className="bg-subtle border-b border-border">
                       <th className="w-8"></th>
                       <th className="text-left text-xs font-medium text-muted-foreground px-2 py-1.5">Cvik</th>
-                      <th className="text-center text-xs font-medium text-muted-foreground px-1 py-1.5 w-16">Série</th>
+                      <th className="text-center text-xs font-medium text-muted-foreground px-1 py-1.5 w-12">Série</th>
                       <th className="text-center text-xs font-medium text-muted-foreground px-1 py-1.5 w-20">Opak.</th>
-                      <th className="text-center text-xs font-medium text-muted-foreground px-1 py-1.5 w-16">RPE</th>
-                      <th className="text-center text-xs font-medium text-muted-foreground px-1 py-1.5 w-16">Odp.(s)</th>
+                      <th className="text-center text-xs font-medium text-muted-foreground px-1 py-1.5 w-12">RPE</th>
+                      <th className="text-center text-xs font-medium text-muted-foreground px-1 py-1.5 w-[4.5rem]">Odp.(s)</th>
                       <th className="w-14"></th>
                     </tr>
                   </thead>
@@ -311,7 +311,7 @@ export default function PlanEditorDialog({
                         </td>
                         <td className="px-1">
                           <div className="flex items-center">
-                          {i < planExercises.length - 1 && (
+                          {i < planExercises.length - 1 ? (
                             <button
                               type="button"
                               onClick={() => toggleLinkWithNext(i)}
@@ -324,6 +324,8 @@ export default function PlanEditorDialog({
                             >
                               {isLinkedToNext(planExercises, i) ? <Unlink2 className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
                             </button>
+                          ) : (
+                            <span className="w-[22px]" aria-hidden />
                           )}
                           <button
                             type="button"
