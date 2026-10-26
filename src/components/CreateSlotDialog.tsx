@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { addDays, format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, shiftEndTime } from "@/lib/utils";
 import { fetchCoachClients, requireUserId, rpc, type ProfileRow } from "@/lib/db";
 import { InvitePicker } from "@/components/InvitePicker";
 import { emptyInviteSelection, inviteCount, inviteErrorText, inviteToSlot, parseEmails, type InviteSelection } from "@/lib/invitations";
@@ -214,11 +214,11 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, defa
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
               <Label>Od</Label>
-              <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
+              <Input type="time" step={900} value={startTime} onChange={e => { setEndTime(shiftEndTime(startTime, e.target.value, endTime)); setStartTime(e.target.value); }} />
             </div>
             <div className="grid gap-2">
               <Label>Do</Label>
-              <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+              <Input type="time" step={900} value={endTime} onChange={e => setEndTime(e.target.value)} />
             </div>
           </div>
           <div className="rounded-lg border border-border p-3 space-y-3">

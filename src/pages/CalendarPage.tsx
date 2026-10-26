@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/PageHeader";
+import { layoutOverlaps } from "@/lib/calendar-layout";
 import { from } from "@/lib/db";
 import { AvatarCircle } from "@/components/AvatarCircle";
 import { Button } from "@/components/ui/button";
@@ -221,6 +222,17 @@ export default function CalendarPage() {
   };
 
   const visibleSlots = getVisibleSlots();
+  // Cancelled slots stay in the list view only: in the grid they'd cover the slot
+  // that replaced them. Overlapping slots are placed side by side.
+  const gridSlots = visibleSlots.filter(s => s.status !== "cancelled");
+  const placement = layoutOverlaps(gridSlots);
+  const placeStyle = (id: string, inset: number) => {
+    const p = placement.get(id) ?? { col: 0, cols: 1 };
+    return {
+      left: `calc(${(p.col / p.cols) * 100}% + ${inset}px)`,
+      width: `calc(${100 / p.cols}% - ${inset * 2}px)`,
+    };
+  };
 
   const handleQuickApprove = async (bookingId: string, slotId: string) => {
     const { error } = await supabase.from("slot_bookings").update({ status: "confirmed" } as any).eq("id", bookingId);
@@ -308,10 +320,10 @@ export default function CalendarPage() {
                 return (
                   <button key={s.id} onClick={(e) => { e.stopPropagation(); setSelectedSlot(s); }}
                     className={cn(
-                      "absolute left-1 right-2 rounded-md border-l-[3px] px-2 py-1 text-xs overflow-hidden transition-shadow hover:shadow-md cursor-pointer text-left",
+                      "absolute rounded-md border-l-[3px] px-2 py-1 text-xs overflow-hidden transition-shadow hover:shadow-md cursor-pointer text-left",
                       statusBlockColors[s.status] || "bg-muted"
                     )}
-                    style={{ top: `${topOffset}px`, height: `${height}px` }}
+                    style={{ top: `${topOffset}px`, height: `${height}px`, ...placeStyle(s.id, 4) }}
                   >
                     <div className="flex items-center gap-1.5">
                       <span className="font-semibold truncate">
@@ -377,10 +389,10 @@ export default function CalendarPage() {
                       return (
                         <button key={s.id} onClick={(e) => { e.stopPropagation(); setSelectedSlot(s); }}
                           className={cn(
-                            "absolute left-0.5 right-0.5 rounded border-l-2 px-1 py-0.5 text-[10px] leading-tight overflow-hidden cursor-pointer hover:shadow-sm text-left",
+                            "absolute rounded border-l-2 px-1 py-0.5 text-[10px] leading-tight overflow-hidden cursor-pointer hover:shadow-sm text-left",
                             statusBlockColors[s.status] || "bg-muted"
                           )}
-                          style={{ top: `${topOff}px`, height: `${h}px` }}
+                          style={{ top: `${topOff}px`, height: `${h}px`, ...placeStyle(s.id, 2) }}
                           title={`${slotTypeLabels[s.slot_type]} ${format(start, "H:mm")}–${format(end, "H:mm")}`}
                         >
                           <span className="font-semibold truncate block">
@@ -603,11 +615,11 @@ export default function CalendarPage() {
           </>
         ) : (
           <>
-            {viewMode === "day" && <GraphicDayView date={currentDate} items={visibleSlots} />}
+            {viewMode === "day" && <GraphicDayView date={currentDate} items={gridSlots} />}
             {viewMode === "week" && (
-              <GraphicWeekView weekStart={startOfWeek(currentDate, { weekStartsOn: 1 })} items={visibleSlots} />
+              <GraphicWeekView weekStart={startOfWeek(currentDate, { weekStartsOn: 1 })} items={gridSlots} />
             )}
-            {viewMode === "month" && <MonthView month={currentDate} items={slots} />}
+            {viewMode === "month" && <MonthView month={currentDate} items={slots.filter(s => s.status !== "cancelled")} />}
           </>
         )}
       </div>

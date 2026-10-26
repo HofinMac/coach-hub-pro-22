@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { shiftEndTime } from "@/lib/utils";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
 } from "@/components/ui/dialog";
@@ -370,7 +371,13 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
                   <PenLine className="h-3.5 w-3.5" /> Obsadit ručně
                 </Button>
               )}
-              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAction("reschedule")}>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => {
+                // Start from the original time: pickers otherwise open at "now" (e.g. 11:42).
+                setNewDate(format(startDate, "yyyy-MM-dd"));
+                setNewStartTime(format(startDate, "HH:mm"));
+                setNewEndTime(format(endDate, "HH:mm"));
+                setAction("reschedule");
+              }}>
                 <CalendarClock className="h-3.5 w-3.5" /> Přeložit
               </Button>
               <Button size="sm" variant="outline" className="gap-1.5 text-destructive" onClick={() => setAction("cancel")}>
@@ -398,11 +405,11 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label>Od</Label>
-                  <Input type="time" value={newStartTime} onChange={e => setNewStartTime(e.target.value)} />
+                  <Input type="time" step={900} value={newStartTime} onChange={e => { setNewEndTime(shiftEndTime(newStartTime, e.target.value, newEndTime)); setNewStartTime(e.target.value); }} />
                 </div>
                 <div>
                   <Label>Do</Label>
-                  <Input type="time" value={newEndTime} onChange={e => setNewEndTime(e.target.value)} />
+                  <Input type="time" step={900} value={newEndTime} onChange={e => setNewEndTime(e.target.value)} />
                 </div>
               </div>
               <div className="grid gap-2">

@@ -37,17 +37,7 @@ export default function ExerciseTimer({
   const [running, setRunning] = useState(false);
   const [countdownTotal, setCountdownTotal] = useState(120); // simple countdown
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioRef = useRef<AudioContext | null>(null);
-
-  const clearTimer = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
-
-  useEffect(() => () => clearTimer(), [clearTimer]);
 
   const playBeep = useCallback((freq = 800, duration = 150) => {
     try {
@@ -66,9 +56,11 @@ export default function ExerciseTimer({
 
   // Interval mode
   useEffect(() => {
-    if (!running || timerMode !== "interval") { clearTimer(); return; }
+    // Each mode owns its interval: a shared one was cleared by the other modes'
+    // effects, so only the countdown (the last effect) actually ticked.
+    if (!running || timerMode !== "interval") return;
 
-    intervalRef.current = setInterval(() => {
+    const id = setInterval(() => {
       setRemaining(prev => {
         if (prev <= 1) {
           playBeep(phase === "work" ? 600 : 900);
@@ -93,20 +85,20 @@ export default function ExerciseTimer({
       });
     }, 1000);
 
-    return clearTimer;
-  }, [running, phase, currentRound, rounds, workSeconds, restSeconds, clearTimer, timerMode, playBeep]);
+    return () => clearInterval(id);
+  }, [running, phase, currentRound, rounds, workSeconds, restSeconds, timerMode, playBeep]);
 
   // Stopwatch mode
   useEffect(() => {
-    if (!running || timerMode !== "stopwatch") { clearTimer(); return; }
-    intervalRef.current = setInterval(() => setElapsed(p => p + 1), 1000);
-    return clearTimer;
-  }, [running, timerMode, clearTimer]);
+    if (!running || timerMode !== "stopwatch") return;
+    const id = setInterval(() => setElapsed(p => p + 1), 1000);
+    return () => clearInterval(id);
+  }, [running, timerMode]);
 
   // Countdown mode
   useEffect(() => {
-    if (!running || timerMode !== "countdown") { clearTimer(); return; }
-    intervalRef.current = setInterval(() => {
+    if (!running || timerMode !== "countdown") return;
+    const id = setInterval(() => {
       setRemaining(prev => {
         if (prev <= 1) {
           setRunning(false);
@@ -118,8 +110,8 @@ export default function ExerciseTimer({
         return prev - 1;
       });
     }, 1000);
-    return clearTimer;
-  }, [running, timerMode, clearTimer, playBeep]);
+    return () => clearInterval(id);
+  }, [running, timerMode, playBeep]);
 
   const start = () => {
     if (timerMode === "stopwatch") {

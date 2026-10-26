@@ -26,6 +26,8 @@ describe("CreateSlotDialog", () => {
     render(<CreateSlotDialog open onOpenChange={() => {}} defaultDate="2026-11-02" defaultStartTime="14:00" />);
     expect(screen.getByDisplayValue("14:00")).toBeInTheDocument();
     expect(screen.getByDisplayValue("15:00")).toBeInTheDocument();
+    fireEvent.change(screen.getByDisplayValue("14:00"), { target: { value: "16:30" } });
+    expect(screen.getByDisplayValue("17:30")).toBeInTheDocument();
   });
 
   it("creates an occupied slot for a client outside the app", async () => {
