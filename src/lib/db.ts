@@ -19,6 +19,7 @@ type UntypedTable =
   | "gym_reviews"
   | "coach_exercises"
   | "push_subscriptions"
+  | "slot_invitations"
   | "client_invites"
   | "gyms";
 
@@ -161,6 +162,23 @@ export interface CoachExerciseRow {
   category: ExerciseCategory;
   default_notes: string;
   video_url: string | null;
+}
+
+export type InvitationStatus = "pending" | "accepted" | "declined" | "withdrawn";
+
+export interface SlotInvitationRow {
+  id: string;
+  slot_id: string;
+  coach_id: string;
+  client_id: string | null;
+  email: string | null;
+  name: string;
+  token: string;
+  status: InvitationStatus;
+  responded_at: string | null;
+  email_sent_at: string | null;
+  email_error: string | null;
+  created_at: string;
 }
 
 export interface GymReviewRow {

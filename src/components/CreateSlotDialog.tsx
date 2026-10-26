@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { addDays, format } from "date-fns";
+import { InvitePicker } from "@/components/InvitePicker";
+import { emptyInviteSelection, inviteCount, inviteErrorText, inviteToSlot, parseEmails, type InviteSelection } from "@/lib/invitations";
 
 interface CreateSlotDialogProps {
   open: boolean;
@@ -41,6 +43,7 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
   const [notes, setNotes] = useState("");
   const [occupied, setOccupied] = useState(false);
   const [manualClientName, setManualClientName] = useState("");
+  const [invites, setInvites] = useState<InviteSelection>(emptyInviteSelection);
   const [recurrence, setRecurrence] = useState("none");
   const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [saving, setSaving] = useState(false);
@@ -62,6 +65,11 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
     }
     if (startTime >= endTime) {
       toast.error("Čas konce musí být po čase začátku.");
+      return;
+    }
+    const canInvite = slotType === "group" && recurrence === "none" && !occupied;
+    if (canInvite && parseEmails(invites.emailsText).invalid.length > 0) {
+      toast.error("Opravte neplatné e-maily v pozvánkách.");
       return;
     }
     if (occupied && !manualClientName.trim()) {
@@ -124,13 +132,26 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
         }
       }
 
-      const { error } = await supabase
+      const { data: created, error } = await supabase
         .from("coach_slots" as any)
-        .insert(slots as any);
+        .insert(slots as any)
+        .select("id");
 
       if (error) throw error;
 
       toast.success(`Vytvořeno ${slots.length} ${slots.length === 1 ? "slot" : "slotů"}`);
+
+      const slotId = (created as unknown as Array<{ id: string }> | null)?.[0]?.id;
+      if (canInvite && slotId && inviteCount(invites) > 0) {
+        try {
+          const r = await inviteToSlot(slotId, invites.clientIds, parseEmails(invites.emailsText).emails);
+          if (r.emailFailed > 0) toast.warning(`Pozvánky vytvořeny, ${r.emailFailed} e-mailů se nepodařilo odeslat.`);
+          else toast.success(`Odesláno ${r.created} ${r.created === 1 ? "pozvánka" : r.created < 5 ? "pozvánky" : "pozvánek"}`);
+        } catch (err) {
+          toast.error(inviteErrorText(err));
+        }
+      }
+      setInvites(emptyInviteSelection);
       setOccupied(false);
       setManualClientName("");
       onOpenChange(false);
@@ -145,7 +166,7 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{occupied ? "Nový obsazený termín" : "Nový volný termín"}</DialogTitle>
         </DialogHeader>
@@ -197,6 +218,19 @@ export default function CreateSlotDialog({ open, onOpenChange, defaultDate, onCr
             <div className="grid gap-2">
               <Label>Kapacita (max. osob)</Label>
               <Input type="number" min={2} max={50} value={capacity} onChange={e => setCapacity(e.target.value)} className="w-24" />
+            </div>
+          )}
+          {slotType === "group" && !occupied && (
+            <div className="rounded-lg border border-border p-3 space-y-2">
+              <div>
+                <Label>Pozvat na lekci (volitelné)</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {recurrence === "none"
+                    ? "Po uložení rozešleme pozvánky. Klienti v aplikaci potvrdí v aplikaci, ostatní kliknutím v e-mailu."
+                    : "Pozvánky jdou poslat jen u jednorázové lekce. U opakované je pošlete z detailu konkrétního termínu."}
+                </p>
+              </div>
+              {recurrence === "none" && <InvitePicker value={invites} onChange={setInvites} />}
             </div>
           )}
           <div className="grid gap-2">

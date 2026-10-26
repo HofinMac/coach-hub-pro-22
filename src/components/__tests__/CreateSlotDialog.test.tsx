@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-const insert = vi.fn(async () => ({ error: null }));
+const insert = vi.fn((_rows: unknown) => ({ select: async () => ({ data: [{ id: "slot-1" }], error: null }) }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     auth: { getUser: async () => ({ data: { user: { id: "coach-1" } } }) },

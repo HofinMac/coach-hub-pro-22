@@ -53,6 +53,7 @@ Supabase tables (see `supabase/migrations/`):
 - Scheduling: `coach_slots`, `slot_bookings` (clients book/cancel only via RPCs `book_coach_slot` / `cancel_client_booking`), `slot_share_log`.
 - Business: `client_packages` (session credits; a trigger consumes one when a booking becomes `completed`), `payments`.
 - Places: `gyms`, `coach_gyms`, `gym_reviews`.
+- Group invitations: `slot_invitations` (app clients and plain e-mails; created by RPC `invite_to_slot`, answered by `respond_to_slot_invitation(token)` — also anonymously from the e-mail link page `/pozvanka/:token`; e-mails sent by edge function `send-slot-invitations`; never deleted, `withdraw_slot_invitation` instead so e-mail limits hold).
 - Partner program: `promo_campaigns`, `campaign_rules`, `promo_codes`, `partners`, `partner_audit_log`, `redemptions`, `reward_history`, `eligibility`, `coach_benefits`, `coach_certificates`, `client_challenges`.
 
 Tables added after the last Lovable type generation are queried through `from()` / `rpc()` in `src/lib/db.ts`, which also holds their row interfaces. `src/lib/domain.ts` holds client-side domain types (`PlanExercise`, `PlanStatus`, `ClientStatus`, `ExerciseCategory`, …), the built-in exercise library and status colors; `src/lib/plan-templates.ts` holds plan templates.

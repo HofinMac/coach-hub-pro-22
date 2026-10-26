@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/PageHeader";
+import { from } from "@/lib/db";
 import { AvatarCircle } from "@/components/AvatarCircle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +48,8 @@ interface BookingRow {
 
 interface SlotWithBookings extends SlotRow {
   bookings: Array<BookingRow & { client_name?: string }>;
+  /** Accepted invitees without the app (e-mail invitations). */
+  guests: string[];
 }
 
 /** Who is on the slot: the manually entered client plus active app bookings. */
@@ -56,6 +59,7 @@ const slotPeople = (s: SlotWithBookings, firstNames = false) => {
     ...s.bookings
       .filter(b => b.status !== "cancelled" && b.status !== "rejected")
       .map(b => b.client_name || ""),
+    ...s.guests,
   ].filter(Boolean);
   return (firstNames ? names.map(n => n.split(" ")[0]) : names).join(", ");
 };
@@ -121,12 +125,17 @@ export default function CalendarPage() {
 
       const slotIds = (slotsData || []).map((s: any) => s.id);
       let bookingsData: any[] = [];
+      const guestsBySlot = new Map<string, string[]>();
       if (slotIds.length > 0) {
-        const { data: bData } = await supabase
-          .from("slot_bookings")
-          .select("*")
-          .in("slot_id", slotIds);
+        const [{ data: bData }, { data: gData }] = await Promise.all([
+          supabase.from("slot_bookings").select("*").in("slot_id", slotIds),
+          from("slot_invitations").select("slot_id, name, email").in("slot_id", slotIds)
+            .eq("status", "accepted").is("client_id", null),
+        ]);
         bookingsData = bData || [];
+        for (const g of (gData ?? []) as Array<{ slot_id: string; name: string; email: string }>) {
+          guestsBySlot.set(g.slot_id, [...(guestsBySlot.get(g.slot_id) ?? []), g.name || g.email]);
+        }
       }
 
       // Fetch client names
@@ -145,6 +154,7 @@ export default function CalendarPage() {
         bookings: bookingsData
           .filter((b: any) => b.slot_id === s.id)
           .map((b: any) => ({ ...b, client_name: profileMap[b.client_id] || "Klient" })),
+        guests: guestsBySlot.get(s.id) ?? [],
       }));
 
       setSlots(enriched);

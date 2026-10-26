@@ -42,6 +42,7 @@ import InstallPage from "@/pages/InstallPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import TimerPage from "@/pages/TimerPage";
+import InvitationPage from "@/pages/InvitationPage";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +69,7 @@ const App = () => (
           <Route path="/install" element={<InstallPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/pozvanka/:token" element={<InvitationPage />} />
 
           {/* Onboarding */}
           <Route path="/onboarding/trener" element={<CoachOnboarding />} />

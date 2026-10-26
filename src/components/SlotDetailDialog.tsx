@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
+import { SlotInvitations } from "@/components/SlotInvitations";
 import { Check, X, Clock, CalendarX, CalendarClock, UserX, UserPlus, UserMinus } from "lucide-react";
 
 interface SlotWithBookings {
@@ -239,7 +240,7 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetAction(); onOpenChange(v); }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Detail termínu</DialogTitle>
         </DialogHeader>
@@ -314,6 +315,12 @@ export default function SlotDetailDialog({ slot, open, onOpenChange, onUpdated }
               </div>
             </div>
           )}
+
+          <SlotInvitations
+            slotId={slot.id}
+            canInvite={!isPast && slot.status !== "cancelled" && slot.status !== "completed" && !manualClient}
+            onChanged={onUpdated}
+          />
 
           {/* Action buttons */}
           {action === "none" && slot.status !== "cancelled" && slot.status !== "completed" && slot.status !== "no_show" && (
