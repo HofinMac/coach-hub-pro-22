@@ -16,6 +16,7 @@ import { Plus, Trash2, Search, Loader2, Link2, Unlink2 } from "lucide-react";
 import { isLinkedToNext, linkWithNext, normalizeSupersets, supersetLabels as supersetLabelsOf, unlinkFromNext } from "@/lib/supersets";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { DurationStepper, NumberStepper, RepsStepper } from "@/components/NumberStepper";
 
 const categoryLabels: Record<ExerciseCategory, string> = {
   knee_dominant: "Dominance kolene",
@@ -234,112 +235,88 @@ export default function PlanEditorDialog({
             )}
 
             {planExercises.length > 0 && (
-              <div className="rounded-lg border border-border overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-subtle border-b border-border">
-                      <th className="w-8"></th>
-                      <th className="text-left text-xs font-medium text-muted-foreground px-2 py-1.5">Cvik</th>
-                      <th className="text-center text-xs font-medium text-muted-foreground px-1 py-1.5 w-12">Série</th>
-                      <th className="text-center text-xs font-medium text-muted-foreground px-1 py-1.5 w-20">Opak.</th>
-                      <th className="text-center text-xs font-medium text-muted-foreground px-1 py-1.5 w-12">RPE</th>
-                      <th className="text-center text-xs font-medium text-muted-foreground px-1 py-1.5 w-[4.5rem]">Odp.(s)</th>
-                      <th className="w-14"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {planExercises.map((ex, i) => (
-                      <tr
-                        key={i}
-                        className={cn(
-                          "group",
-                          supersetLabels.has(i) && "bg-primary/5",
-                          isLinkedToNext(planExercises, i) && "!border-b-0",
-                        )}
-                      >
-                        <td className="px-1">
-                          <div className="flex flex-col items-center">
+              <div>
+                {planExercises.map((ex, i) => {
+                  const label = supersetLabels.get(i);
+                  const linked = isLinkedToNext(planExercises, i);
+                  return (
+                    <div key={i}>
+                      <div className={cn(
+                        "rounded-lg border border-border p-2.5 space-y-2",
+                        label && "border-l-[3px] border-l-primary bg-primary/5",
+                      )}>
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex flex-col">
                             <button
                               type="button"
                               onClick={() => moveExercise(i, -1)}
                               disabled={i === 0}
-                              className="text-muted-foreground hover:text-foreground disabled:opacity-20 text-xs"
+                              aria-label="Posunout výš"
+                              className="text-muted-foreground hover:text-foreground disabled:opacity-20 text-[10px] leading-none p-0.5"
                             >▲</button>
                             <button
                               type="button"
                               onClick={() => moveExercise(i, 1)}
                               disabled={i === planExercises.length - 1}
-                              className="text-muted-foreground hover:text-foreground disabled:opacity-20 text-xs"
+                              aria-label="Posunout níž"
+                              className="text-muted-foreground hover:text-foreground disabled:opacity-20 text-[10px] leading-none p-0.5"
                             >▼</button>
                           </div>
-                        </td>
-                        <td className={cn("px-2 py-1.5 text-sm font-medium text-foreground", supersetLabels.has(i) && "border-l-2 border-l-primary")}>
-                          {supersetLabels.has(i) && (
-                            <span className="mr-1.5 inline-flex rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary align-middle">
-                              {supersetLabels.get(i)}
-                            </span>
+                          {label && (
+                            <span className="inline-flex rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary">{label}</span>
                           )}
-                          {ex.exerciseName}
-                        </td>
-                        <td className="px-1 py-1">
-                          <Input
-                            type="number" min={1} value={ex.sets}
-                            onChange={e => updateExercise(i, "sets", parseInt(e.target.value) || 1)}
-                            className="h-7 text-center text-xs px-1"
-                          />
-                        </td>
-                        <td className="px-1 py-1">
-                          <Input
-                            value={ex.reps}
-                            onChange={e => updateExercise(i, "reps", e.target.value)}
-                            className="h-7 text-center text-xs px-1"
-                          />
-                        </td>
-                        <td className="px-1 py-1">
-                          <Input
-                            type="number" min={1} max={10} step={0.5} value={ex.rpe}
-                            onChange={e => updateExercise(i, "rpe", parseFloat(e.target.value) || 5)}
-                            className="h-7 text-center text-xs px-1"
-                          />
-                        </td>
-                        <td className="px-1 py-1">
-                          <Input
-                            type="number" min={0} step={15} value={ex.rest}
-                            onChange={e => updateExercise(i, "rest", parseInt(e.target.value) || 0)}
-                            className="h-7 text-center text-xs px-1"
-                          />
-                        </td>
-                        <td className="px-1">
-                          <div className="flex items-center">
-                          {i < planExercises.length - 1 ? (
-                            <button
-                              type="button"
-                              onClick={() => toggleLinkWithNext(i)}
-                              className={cn(
-                                "p-1 transition-colors",
-                                isLinkedToNext(planExercises, i) ? "text-primary hover:text-destructive" : "text-muted-foreground hover:text-primary",
-                              )}
-                              title={isLinkedToNext(planExercises, i) ? "Rozpojit supersérii" : "Spojit s dalším cvikem do supersérie"}
-                              aria-label={isLinkedToNext(planExercises, i) ? "Rozpojit supersérii" : "Spojit s dalším cvikem do supersérie"}
-                            >
-                              {isLinkedToNext(planExercises, i) ? <Unlink2 className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
-                            </button>
-                          ) : (
-                            <span className="w-[22px]" aria-hidden />
-                          )}
+                          <p className="flex-1 min-w-0 truncate text-sm font-medium text-foreground">{ex.exerciseName}</p>
                           <button
                             type="button"
                             onClick={() => removeExercise(i)}
+                            aria-label={`Odebrat ${ex.exerciseName}`}
                             className="text-muted-foreground hover:text-destructive transition-colors p-1"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          <label className="space-y-1">
+                            <span className="text-[11px] text-muted-foreground">Série</span>
+                            <NumberStepper label="Série" value={ex.sets} min={1} max={20}
+                              onChange={n => updateExercise(i, "sets", n)} />
+                          </label>
+                          <label className="space-y-1">
+                            <span className="text-[11px] text-muted-foreground">Opakování</span>
+                            <RepsStepper label="Opakování" value={ex.reps}
+                              onChange={t => updateExercise(i, "reps", t)} />
+                          </label>
+                          <label className="space-y-1">
+                            <span className="text-[11px] text-muted-foreground">RPE</span>
+                            <NumberStepper label="RPE" value={ex.rpe} min={1} max={10} step={0.5} decimals={1}
+                              onChange={n => updateExercise(i, "rpe", n)} />
+                          </label>
+                          <label className="space-y-1">
+                            <span className="text-[11px] text-muted-foreground">Odpočinek</span>
+                            <DurationStepper label="Odpočinek" value={ex.rest}
+                              onChange={n => updateExercise(i, "rest", n)} />
+                          </label>
+                        </div>
+                      </div>
+                      {i < planExercises.length - 1 && (
+                        <div className={cn("flex justify-center", linked ? "-my-0.5" : "my-1")}>
+                          <button
+                            type="button"
+                            onClick={() => toggleLinkWithNext(i)}
+                            aria-label={linked ? "Rozpojit supersérii" : "Spojit s dalším cvikem do supersérie"}
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] transition-colors",
+                              linked ? "text-primary hover:text-destructive" : "text-muted-foreground hover:text-primary",
+                            )}
+                          >
+                            {linked ? <Unlink2 className="h-3 w-3" /> : <Link2 className="h-3 w-3" />}
+                            {linked ? "supersérie · rozpojit" : "spojit do supersérie"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
             {planExercises.length > 1 && (
@@ -347,7 +324,7 @@ export default function PlanEditorDialog({
                 <Link2 className="h-3 w-3 shrink-0" />
                 {supersetLabels.size > 0
                   ? "Supersérie (A1, A2…) se cvičí po sobě bez pauzy, odpočinek platí až po posledním cviku."
-                  : "Ikonou řetězu spojíte cvik s následujícím do supersérie."}
+                  : "Tlačítkem „spojit do supersérie“ mezi cviky je spojíte do supersérie."}
               </p>
             )}
           </div>
