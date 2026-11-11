@@ -3,7 +3,11 @@
 // the request body is ignored — it only drains the queue, so it needs no auth
 // (verify_jwt = false in supabase/config.toml).
 import { createClient } from "npm:@supabase/supabase-js@2";
-import webpush from "https://esm.sh/web-push@3.6.7";
+import * as webpushNs from "https://esm.sh/web-push@3.6.7";
+
+// esm.sh serves web-push as CJS; the runtime default export interop is kept,
+// only the (broken) bundled typings are bypassed.
+const webpush = (webpushNs as { default?: typeof webpushNs }).default ?? webpushNs;
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -112,7 +116,8 @@ Deno.serve(async () => {
 });
 
 async function finish(
-  db: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  db: any,
   id: string,
   status: "sent" | "skipped" | "failed" | "processing",
   error: string | null,
