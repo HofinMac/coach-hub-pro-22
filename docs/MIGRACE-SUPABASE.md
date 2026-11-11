@@ -23,17 +23,13 @@ Stav k 31. 10. 2026. Cíl: databáze, přihlašování, soubory a funkce na serv
 - **Úložiště souborů**: buckety `profile-assets` (fotky, videa cviků) a `certificates` (soukromý). Vytvoří je migrace, soubory se přenesou zvlášť.
 - **Lovable v kódu**: `src/integrations/lovable/index.ts` (Google/Apple přihlášení), `src/integrations/supabase/previewAuthStorage.ts` a `client.ts` (generuje Lovable), drizzle kopie migrací ve složce `drizzle/`.
 
-## Rozhodnutí, která potřebuju od tebe
+## Rozhodnutí (11. 11. 2026)
 
-1. **Data:**
-   - **A) Čistý start (doporučuji, jsme ve fázi testování).** Nový projekt bude prázdný a ty i testeři se zaregistrujete znovu. Rychlé a bez rizika, testovací data se ztratí.
-   - **B) Přenést data.** Účty (včetně hesel), klienty, plány, rezervace i soubory. Export z Lovable Cloud ale jde jen přes Lovable, takže to bude chtít dobít kredity, a je to zhruba o půl dne práce víc.
-2. **Google přihlášení:**
-   - ponechat (jednorázově založíš OAuth klienta v Google Cloud Console, provedu tě), nebo
-   - zatím vypnout a nechat jen e-mail a heslo.
-   - Apple přihlášení navrhuji vypnout, vyžaduje placený Apple Developer účet.
-3. **Tarif:** na testování stačí Free. Před ostrým spuštěním Pro.
-4. **Lovable dál:** po přesunu doporučuji odpojit Lovable od GitHubu, jinak může přepsat konfiguraci zpět na Lovable Cloud. Úpravy aplikace děláme v Claude Code.
+1. **Data: přenést všechno** (varianta B). Testeři, hlavně Vojta, si nechají účty, hesla i data.
+   Export zajistí dočasná funkce `export-data` (chráněná klíčem `EXPORT_TOKEN`), kterou Lovable jen nasadí. Hned po exportu se funkce i klíč smažou.
+2. **Google přihlášení ponechat.** Založíme vlastního OAuth klienta v Google Cloud Console (provedu tě). **Apple vypnout.**
+3. **Tarif:** nová organizace na Supabase s tarifem Pro (zhruba 25 $ měsíčně). Free dovoluje jen 2 aktivní projekty a ty už má 1 % Better. Pro se neuspí a má denní zálohy.
+4. **Lovable** po přesunu odpojíme od GitHubu.
 
 ## Postup
 
@@ -51,15 +47,15 @@ Stav k 31. 10. 2026. Cíl: databáze, přihlašování, soubory a funkce na serv
 7. **Já:** v kódu nahradím přihlášení přes Lovable přímým `supabase.auth.signInWithOAuth` (nebo tlačítka Google/Apple skryju), vyhodím `previewAuthStorage`, přegeneruji typy (`supabase gen types`) a postupně odstraním obcházení přes `from()` v `src/lib/db.ts`.
 8. **Já:** upravím CLAUDE.md, skills (`/lovable-handoff` nahradí `/db-deploy`) a hook pro pořadí migrací.
 
-### Fáze 2: Data (jen při variantě B)
-9. **Ty:** dobiješ kredity Lovable a necháš Lovable vyexportovat databázi (`pg_dump` dat ze schémat `public` a `auth`) a soubory ze storage. Přesné zadání pro Lovable připravím.
+### Fáze 2: Data
+9. **Ty:** dobiješ trochu kreditů Lovable a necháš Lovable nasadit funkci `export-data` a otevřít formulář na `EXPORT_TOKEN` (hodnotu vložíš jen do formuláře). Export pak stáhnu já a funkci i klíč necháme smazat.
 10. **Já:** nahraju data do nového projektu, zkontroluji počty řádků tabulku po tabulce a přenesu soubory.
 
 ### Fáze 3: Přepnutí (zhruba 15 minut výpadku)
 11. **Ty:** dáš testerům vědět, ideálně den předem.
 12. **Já:** ve Vercelu nastavím `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` a `VITE_SUPABASE_PROJECT_ID` (Production i Preview), odstraním `.env` z repozitáře a nasadím.
 13. **Já:** spustím `/verify-prod`: web, přihlášení, registraci přes pozvánku, rezervaci, zprávy v reálném čase, zkušební notifikaci a e-mail s pozvánkou na lekci.
-14. **Testeři:** po aktualizaci aplikace se znovu přihlásí (varianta A: zaregistrují se znovu) a znovu si zapnou upozornění. Push odběry jsou vázané na databázi.
+14. **Testeři:** po aktualizaci aplikace se znovu přihlásí a znovu si zapnou upozornění. Push odběry jsou vázané na databázi.
 
 ### Fáze 4: Úklid
 15. **Ty:** odpojíš Lovable od GitHubu (Lovable → projekt → GitHub → Disconnect).
