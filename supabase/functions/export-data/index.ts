@@ -40,15 +40,27 @@ Deno.serve(async (req) => {
 
     const authUsers = await sql`SELECT * FROM auth.users`;
     const authIdentities = await sql`SELECT * FROM auth.identities`;
-    const objects = await sql<{ bucket_id: string; name: string; metadata: unknown }[]>`
-      SELECT bucket_id, name, metadata FROM storage.objects ORDER BY bucket_id, name`;
-    const buckets = await sql`SELECT id, name, public, file_size_limit, allowed_mime_types FROM storage.buckets`;
-
+    // storage.* isn't reachable over SUPABASE_DB_URL on Lovable Cloud, so walk buckets via the Storage API.
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-    const files = [];
-    for (const o of objects) {
-      const { data } = await admin.storage.from(o.bucket_id).createSignedUrl(o.name, 60 * 60 * 6);
-      files.push({ bucket: o.bucket_id, path: o.name, metadata: o.metadata, url: data?.signedUrl ?? null });
+    const { data: buckets, error: bucketsError } = await admin.storage.listBuckets();
+    if (bucketsError) throw bucketsError;
+    const files: { bucket: string; path: string; metadata: unknown; url: string | null }[] = [];
+    for (const bucket of buckets ?? []) {
+      const folders = [""];
+      while (folders.length) {
+        const prefix = folders.pop()!;
+        for (let offset = 0; ; offset += 1000) {
+          const { data: entries, error } = await admin.storage.from(bucket.id).list(prefix, { limit: 1000, offset });
+          if (error) throw error;
+          for (const e of entries ?? []) {
+            const path = prefix ? `${prefix}/${e.name}` : e.name;
+            if (e.id === null) { folders.push(path); continue; }
+            const { data } = await admin.storage.from(bucket.id).createSignedUrl(path, 60 * 60 * 6);
+            files.push({ bucket: bucket.id, path, metadata: e.metadata, url: data?.signedUrl ?? null });
+          }
+          if (!entries || entries.length < 1000) break;
+        }
+      }
     }
 
     return json({
