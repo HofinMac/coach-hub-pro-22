@@ -1,3 +1,6 @@
 project_id = "oqtxwelesrwmvvurzslj"
 [functions.send-push]
 verify_jwt = false
+
+[functions.export-data]
+verify_jwt = false
